@@ -1,0 +1,33 @@
+﻿# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Credentials & Tokens
+credentials.txt
+*.token
+
+# Generated Outputs & Cache
+output/
+logs/
+*.log
+_temp_*
+temp_*
+*.tmp
+
+# SQLite Database
+*.db-journal
+*.db-wal
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
