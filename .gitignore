@@ -1,4 +1,4 @@
-﻿# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -13,6 +13,19 @@ ENV/
 # Credentials & Tokens
 credentials.txt
 *.token
+gdrive_token.json
+credentials_gdrive.json
+client_secret*.json
+service_account*.json
+credentials.json
+chatgpt_cookies.json
+
+# ChatGPT Browser Session Profile (large binary data, sensitive)
+.chatgpt_profile/
+
+# SSL Certificates (auto-generated)
+adaab_cert.pem
+adaab_key.pem
 
 # Generated Outputs & Cache
 output/
@@ -22,7 +35,8 @@ _temp_*
 temp_*
 *.tmp
 
-# SQLite Database
+# SQLite Database (runtime data)
+adaab_history.db
 *.db-journal
 *.db-wal
 
@@ -31,3 +45,24 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 .DS_Store
+
+# Cloudflared binary (platform-specific)
+cloudflared.exe
+cloudflared
+
+# Generated audio files
+*.mp3
+*.wav
+tabraiz_opening_greeting.mp3
+tehzeeb_opening_greeting.mp3
+tehzeeb_memory_summary.mp3
+tehzeeb_conversation_reply.mp3
+test_speech.mp3
+test_enhanced_recitation.mp3
+
+# Gradio temp files
+.gradio/
+
+# JS build artifacts
+extracted_head.js
+

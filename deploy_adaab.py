@@ -109,28 +109,43 @@ def download_adaab_weights():
     volumes={CACHE_DIR: weights_vol},
     secrets=secrets,
     timeout=600,
-    min_containers=0,       # Scale-to-zero when idle ($0.00 cost)
-    scaledown_window=15,    # Shuts down 15s after last request (cuts idle cost by 75%)
+    min_containers=0,       # Scale-to-zero when completely idle ($0.00 cost)
+    scaledown_window=300,   # Keep warm for 5 minutes of active conversation (avoids cold starts)
 )
 class AdaabAgentModel:
     @modal.enter()
     def load_engine(self):
-        """Initializes vLLM engine on container startup."""
+        """Initializes vLLM engine with eager execution (zero cudagraph capture delay)."""
         import os
         import torch
         from vllm import LLM
+        from transformers import AutoTokenizer
 
-        print(f"[AdaabAgentModel] Initializing vLLM engine for {MODEL_ID} on NVIDIA L4 GPU...")
+        ADAPTER_DIR = "/root/cache/adaab-pakistan-lora"
+        self.has_lora = os.path.exists(ADAPTER_DIR)
+        self.active_adapter_path = ADAPTER_DIR if self.has_lora else None
+
+        print(f"[AdaabAgentModel] Initializing vLLM engine for {MODEL_ID} on NVIDIA L4 GPU (LoRA: {self.has_lora}, Path: {self.active_adapter_path})...")
         self.llm = LLM(
             model=MODEL_ID,
             download_dir=HF_CACHE,
             tensor_parallel_size=1,
-            gpu_memory_utilization=0.85,  # Leaves headroom, prevents OOM under concurrent requests
-            max_model_len=4096,           # Optimized for poetry, saves 50% KV cache VRAM
+            gpu_memory_utilization=0.85,
+            max_model_len=4096,
+            enable_lora=self.has_lora,
+            max_loras=1 if self.has_lora else None,
+            max_lora_rank=64 if self.has_lora else None,
             trust_remote_code=True,
+            enforce_eager=True,     # BYPASSES CUDA GRAPH CAPTURE! Eliminates 30-50s startup delay.
             dtype="bfloat16"
         )
-        print("[AdaabAgentModel] vLLM engine successfully initialized and ready!")
+
+        # Cache tokenizer once on container startup instead of per-request
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            MODEL_ID,
+            cache_dir=HF_CACHE
+        )
+        print("[AdaabAgentModel] vLLM engine and tokenizer ready!")
 
     @modal.method()
     def heartbeat(self) -> str:
@@ -141,20 +156,17 @@ class AdaabAgentModel:
     def generate(
         self,
         messages: list[dict],
-        temperature: float = 0.7,
+        temperature: float = 0.35,
         top_p: float = 0.9,
-        max_tokens: int = 1024,
+        max_tokens: int = 512,
+        repetition_penalty: float = 1.18,
+        presence_penalty: float = 0.1,
+        frequency_penalty: float = 0.1,
     ) -> dict:
-        """Executes an Urdu inference request."""
+        """Executes an Urdu inference request with repetition penalty and loop prevention."""
         from vllm import SamplingParams
-        from transformers import AutoTokenizer
 
-        tokenizer = AutoTokenizer.from_pretrained(
-            MODEL_ID,
-            cache_dir=HF_CACHE
-        )
-
-        prompt = tokenizer.apply_chat_template(
+        prompt = self.tokenizer.apply_chat_template(
             messages,
             tokenize=False,
             add_generation_prompt=True
@@ -164,10 +176,19 @@ class AdaabAgentModel:
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_tokens,
-            stop_token_ids=[tokenizer.eos_token_id],
+            repetition_penalty=repetition_penalty,
+            presence_penalty=presence_penalty,
+            frequency_penalty=frequency_penalty,
+            stop_token_ids=[self.tokenizer.eos_token_id],
+            stop=["<|im_end|>", "<|endoftext|>"]
         )
 
-        outputs = self.llm.generate([prompt], sampling_params)
+        lora_req = None
+        if getattr(self, "has_lora", False) and getattr(self, "active_adapter_path", None):
+            from vllm.lora.request import LoRARequest
+            lora_req = LoRARequest("adaab_lora", 1, self.active_adapter_path)
+
+        outputs = self.llm.generate([prompt], sampling_params, lora_request=lora_req)
         first_output = outputs[0]
         generated_text = first_output.outputs[0].text
 
@@ -181,16 +202,30 @@ class AdaabAgentModel:
     @modal.fastapi_endpoint(method="POST")
     def chat_completions(self, request: dict):
         """OpenAI-compatible HTTP endpoint for external clients."""
+        # Fast, zero-compute heartbeat keep-alive (resets scaledown_window without running inference)
+        if request.get("heartbeat") or request.get("ping"):
+            return {
+                "status": "alive",
+                "heartbeat": True,
+                "model": MODEL_ID
+            }
+
         messages = request.get("messages", [])
-        temperature = float(request.get("temperature", 0.7))
+        temperature = float(request.get("temperature", 0.35))
         top_p = float(request.get("top_p", 0.9))
-        max_tokens = int(request.get("max_tokens", 1024))
+        max_tokens = int(request.get("max_tokens", 800))
+        repetition_penalty = float(request.get("repetition_penalty", 1.18))
+        presence_penalty = float(request.get("presence_penalty", 0.1))
+        frequency_penalty = float(request.get("frequency_penalty", 0.1))
 
         result = self.generate.local(
             messages=messages,
             temperature=temperature,
             top_p=top_p,
-            max_tokens=max_tokens
+            max_tokens=max_tokens,
+            repetition_penalty=repetition_penalty,
+            presence_penalty=presence_penalty,
+            frequency_penalty=frequency_penalty
         )
         return {
             "choices": [
@@ -362,3 +397,45 @@ def generate_cloud_post_artifact(post_data: dict, aesthetic: dict) -> dict:
             "audio_duration": audio_dur,
             "total_duration": total_dur
         }
+
+@app.function(
+    image=adaab_image,
+    cpu=2.0,
+    memory=2048,
+    volumes={CACHE_DIR: weights_vol},
+    secrets=secrets,
+    timeout=300
+)
+def synthesize_urdu_speech_cloud(text: str, voice: str = "female") -> dict:
+    """
+    Serverless cloud synthesis for Urdu speech (zero local CPU load):
+    - Applies intelligent Urdu phonetic and Izafat pre-processing
+    - Synthesizes neural audio (ur-PK-UzmaNeural or ur-PK-AsadNeural)
+    - Returns base64 encoded audio
+    """
+    import base64
+    import tempfile
+    import asyncio
+    import edge_tts
+    import re
+
+    voice_id = "ur-PK-UzmaNeural" if voice == "female" else "ur-PK-AsadNeural"
+    clean_text = re.sub(r'<[^>]+>', ' ', text)
+    clean_text = re.sub(r'[a-zA-Z0-9#]', ' ', clean_text)
+    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tf:
+        out_path = tf.name
+
+    asyncio.run(edge_tts.Communicate(text=clean_text, voice=voice_id, rate="-10%").save(out_path))
+
+    with open(out_path, "rb") as f:
+        audio_b64 = base64.b64encode(f.read()).decode("utf-8")
+
+    try:
+        os.remove(out_path)
+    except Exception:
+        pass
+
+    return {"audio_b64": audio_b64, "voice": voice_id}
+

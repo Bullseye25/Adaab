@@ -91,7 +91,7 @@ def log_error_event(stage: str, error: Exception, context: dict = None, is_cloud
 
     # Also log into SQLite telemetry
     try:
-        from poetry_db import log_telemetry_event
+        from memory_engine import log_telemetry_event
         log_telemetry_event(
             event_type=f"CRASH_{stage.upper()}",
             details=json.dumps(context or {}, ensure_ascii=False),

@@ -2,13 +2,14 @@ import os
 import sys
 import json
 import time
+import threading
 import urllib.request
 import urllib.error
 
 # Default endpoint URL (populated automatically upon running modal deploy deploy_adaab.py)
 ENDPOINT_URL = os.environ.get(
     "ADAAB_ENDPOINT_URL",
-    "https://ammadraza27--adaab-agent-backend-adaabagentmodel-chat--66c2c9.modal.run"
+    "https://ammadraza01--adaab-agent-backend-adaabagentmodel-chat-co-e81752.modal.run"
 )
 
 def get_modal_client():
@@ -18,39 +19,101 @@ def get_modal_client():
 class AdaabClient:
     def __init__(self, endpoint_url: str = ENDPOINT_URL):
         self.endpoint_url = endpoint_url
+        self._heartbeat_thread = None
+        self._stop_heartbeat_event = threading.Event()
+        self._last_heartbeat_time = 0.0
 
-    def health_check(self) -> dict:
-        """Pings the Modal backend to check status."""
+    def heartbeat(self, timeout: float = 10.0) -> dict:
+        """
+        Sends a fast, zero-compute keep-alive ping to the Modal GPU container.
+        Resets Modal's scaledown_window (300s) without running inference or generating tokens.
+        """
         try:
             req = urllib.request.Request(
                 self.endpoint_url,
-                data=json.dumps({"messages": [{"role": "user", "content": "ping"}]}).encode("utf-8"),
+                data=json.dumps({"heartbeat": True}).encode("utf-8"),
                 headers={"Content-Type": "application/json"},
                 method="POST"
             )
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                return {"status": "online", "code": resp.status}
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                self._last_heartbeat_time = time.time()
+                return {"status": "alive", "heartbeat": True, "code": resp.status, "model": data.get("model")}
         except Exception as e:
             return {"status": "offline_or_cold", "error": str(e)}
+
+    def start_heartbeat(self, interval_sec: float = 48.0, verbose: bool = False):
+        """
+        Starts a background daemon thread that sends a keep-alive heartbeat every 45~50 seconds
+        (default: 48s) as long as the CLI/app is active.
+        Terminates automatically when the main Python CLI process exits.
+        """
+        if self._heartbeat_thread and self._heartbeat_thread.is_alive():
+            return
+
+        self._stop_heartbeat_event.clear()
+
+        def _heartbeat_loop():
+            # Initial ping to verify container state
+            res = self.heartbeat(timeout=30.0)
+            if verbose:
+                print(f"[Heartbeat] Initial GPU keep-alive status: {res.get('status')}", flush=True)
+
+            while not self._stop_heartbeat_event.is_set():
+                # Sleep in 1-second slices so thread terminates immediately upon process exit/Ctrl+C
+                for _ in range(int(interval_sec)):
+                    if self._stop_heartbeat_event.is_set():
+                        return
+                    time.sleep(1.0)
+
+                # Send lightweight keep-alive ping (45~50s cadence)
+                res = self.heartbeat(timeout=15.0)
+                if verbose:
+                    t_str = time.strftime('%H:%M:%S')
+                    print(f"[Heartbeat] GPU keep-alive ping ({t_str}): {res.get('status')}", flush=True)
+
+        self._heartbeat_thread = threading.Thread(
+            target=_heartbeat_loop,
+            name="AdaabGPUHeartbeatThread",
+            daemon=True
+        )
+        self._heartbeat_thread.start()
+        print(f"[Adaab] GPU Heartbeat active (pinging every {int(interval_sec)}s to maintain warm GPU container)...", flush=True)
+
+    def stop_heartbeat(self):
+        """Stops the heartbeat background loop."""
+        self._stop_heartbeat_event.set()
+        if self._heartbeat_thread and self._heartbeat_thread.is_alive():
+            self._heartbeat_thread.join(timeout=2.0)
+
+    def health_check(self) -> dict:
+        """Pings the Modal backend to check status."""
+        res = self.heartbeat(timeout=15.0)
+        if res.get("status") == "alive":
+            return {"status": "online", "code": 200, "model": res.get("model")}
+        return {"status": "offline_or_cold", "error": res.get("error", "Unknown error")}
+
 
     def chat_completion(
         self,
         messages: list[dict],
-        temperature: float = 0.7,
+        temperature: float = 0.35,
         top_p: float = 0.9,
-        max_tokens: int = 1024,
+        max_tokens: int = 800,
+        repetition_penalty: float = 1.18,
         max_retries: int = 3,
         retry_delay: float = 5.0
     ) -> dict:
         """
         Sends an inference request to the serverless Modal Qwen 2.5 7B backend.
-        Includes cold-start container spin-up retry handling.
+        Includes cold-start container spin-up retry handling and anti-repetition penalty.
         """
         payload = {
             "messages": messages,
             "temperature": temperature,
             "top_p": top_p,
-            "max_tokens": max_tokens
+            "max_tokens": max_tokens,
+            "repetition_penalty": repetition_penalty
         }
         data_bytes = json.dumps(payload).encode("utf-8")
         last_error = None
