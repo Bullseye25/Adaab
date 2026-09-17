@@ -144,9 +144,6 @@ if modal_available:
             task_type="CAUSAL_LM"
         )
 
-        model = get_peft_model(model, lora_config)
-        model.print_trainable_parameters()
-
         try:
             from trl import SFTConfig
             ConfigClass = SFTConfig
