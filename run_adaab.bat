@@ -1,7 +1,12 @@
 @echo off
 chcp 65001 >nul
-title Adaab - Urdu AI Agent & Cloud Studio
+title Adaab - Urdu AI Agent ^& Cloud Studio
 cd /d "%~dp0"
+
+if not "%~1"=="" (
+    python -X utf8 start.py %*
+    goto :eof
+)
 
 :menu
 cls

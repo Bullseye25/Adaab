@@ -53,9 +53,12 @@ def main():
     print("\n[Memory and Topics Database]")
     print(" 17. View Recorded Conversation Topics & SQLite Memory")
     print(" 18. Clear / Reset Conversation and User Database")
+
+    print("\n[Pakistan 200 Topics & Curriculum Engine]")
+    print(" 19. Pakistan 200 Topics Engine (Random 50 Sampler, ChatGPT Q&A, LoRA Train)")
     print(" 0. Exit")
 
-    choice = input("\nEnter choice [0-18] (default 1 for Web Studio): ").strip().lower() or "1"
+    choice = sys.argv[1].lower() if len(sys.argv) > 1 else (input("\nEnter choice [0-19] (default 1 for Web Studio): ").strip().lower() or "1")
 
     # ── Option 1: Web Studio (Default) ──
     if choice in ["1", "web", "studio", "frontend", "ui"]:
@@ -258,13 +261,16 @@ def main():
         from dataset_manager import show_dataset_summary, interactive_add_topic, build_master_dataset
         show_dataset_summary()
         print("[Dataset Operations]")
-        print(" 1. Add a New Topic / Q&A Pair Interactively")
-        print(" 2. Rebuild & Validate Master Training Dataset")
-        print(" 3. Return to Main Menu")
-        sub_c = input("\nEnter choice [1-3] (default 1): ").strip() or "1"
+        print(" 1. Pakistan 200 Topics Engine (50 Random Sampler & ChatGPT Q&A)")
+        print(" 2. Add a New Topic / Q&A Pair Interactively")
+        print(" 3. Rebuild & Validate Master Training Dataset")
+        print(" 4. Return to Main Menu")
+        sub_c = input("\nEnter choice [1-4] (default 1): ").strip() or "1"
         if sub_c == "1":
-            interactive_add_topic()
+            subprocess.run([sys.executable, "-X", "utf8", "pakistan_curriculum_engine.py"])
         elif sub_c == "2":
+            interactive_add_topic()
+        elif sub_c == "3":
             master_file = build_master_dataset()
             print(f"\n✓ Master dataset updated and validated at: {master_file}")
             show_dataset_summary()
@@ -358,6 +364,11 @@ def main():
             print("✓ SQLite conversation and user memory cleared successfully!")
         else:
             print("Operation cancelled. Database untouched.")
+
+    # ── Option 19: Pakistan 200 Topics Curriculum Engine ──
+    elif choice in ["19", "curriculum", "topics200", "200", "sampler", "chatgpt_qa"]:
+        cmd = [sys.executable, "-X", "utf8", "pakistan_curriculum_engine.py"]
+        subprocess.run(cmd)
 
     # ── Option 0: Exit ──
     elif choice in ["0", "exit", "q"]:
