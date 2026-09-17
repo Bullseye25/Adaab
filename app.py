@@ -92,395 +92,683 @@ def get_audio_data_uri(file_path: str | None) -> str:
         print(f"[Adaab Audio] Base64 encoding notice: {err}")
         return ""
 
+PATH_BOT_AVATAR = get_icon_path("bot_robot_avatar.png")
+PATH_USER_AVATAR = get_icon_path("user_avatar.png")
+
 def format_assistant_message(urdu_text: str, audio_path: str | None = None, prebuilt_uri: str | None = None) -> str:
     """
-    Renders assistant response with Urdu Nastaliq text and an interactive,
-    zero-emoji replay button placed directly under the response text.
-    Accepts either a file path (audio_path) or a pre-encoded base64 URI (prebuilt_uri).
+    Renders assistant response matching the tablet mockup:
+    Urdu Nastaliq text, sleek dark audio player pill with play/pause and animated waveform bars,
+    and a subtle copy button below.
     """
     audio_uri = prebuilt_uri or get_audio_data_uri(audio_path)
+    
+    bar_heights = [5, 11, 16, 9, 15, 20, 12, 17, 13, 19, 8, 14, 18, 12, 7, 15, 11, 14, 8, 5]
+    bars_html = "".join([f'<span class="w-bar" style="height:{h}px; animation-delay:{(i*0.06):.2f}s;"></span>' for i, h in enumerate(bar_heights)])
+
+    audio_pill_html = ""
     if audio_uri:
-        return (
-            f'<div class="bot-msg-card">'
-            f'<div class="bot-msg-text">{urdu_text}</div>'
-            f'<div class="bot-audio-replay-row">'
-            f'<button type="button" class="bot-audio-replay-btn" onclick="window.playSpeechAudio(this)" data-audiosrc="{audio_uri}">'
-            f'<img src="{ICON_SPEAKER}" class="replay-btn-icon" alt="" />'
-            f'<span class="replay-btn-label">دوبارہ سنیں (Replay Voice)</span>'
-            f'</button>'
-            f'<span class="bot-audio-duration-pill">تبریز صوتی کلام</span>'
-            f'</div>'
-            f'</div>'
-        )
-    return urdu_text
+        audio_pill_html = f"""
+        <div class="bot-audio-player-pill" onclick="window.playSpeechAudio(this)" data-audiosrc="{audio_uri}" title="آواز سنیں (Play Audio)">
+            <button type="button" class="audio-play-circle-btn">
+                <svg class="play-svg" viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                <svg class="pause-svg" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <div class="audio-waveform-bars">
+                {bars_html}
+            </div>
+            <span class="audio-pill-duration">صوتی کلام</span>
+        </div>
+        """
+
+    copy_btn_html = """
+    <div class="msg-action-bar">
+        <button type="button" class="copy-msg-btn" onclick="window.copyMessageText(this)" title="کاپی کریں (Copy)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+    </div>
+    """
+
+    return (
+        f'<div class="bot-msg-card">'
+        f'<div class="bot-msg-text">{urdu_text}</div>'
+        f'{audio_pill_html}'
+        f'{copy_btn_html}'
+        f'</div>'
+    )
+
+def format_user_message(urdu_text: str) -> str:
+    """
+    Renders user message matching the tablet mockup:
+    Urdu Nastaliq text on right with copy button below.
+    """
+    copy_btn_html = """
+    <div class="msg-action-bar user-action-bar">
+        <button type="button" class="copy-msg-btn" onclick="window.copyMessageText(this)" title="کاپی کریں (Copy)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+    </div>
+    """
+    return (
+        f'<div class="user-msg-card">'
+        f'<div class="user-msg-text">{urdu_text}</div>'
+        f'{copy_btn_html}'
+        f'</div>'
+    )
+
 
 client = AdaabClient()
 STUDIO_THEME = gr.themes.Base()
 
 CUSTOM_CSS = """
-
 @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;700&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-    --bg-void: #03060e;
-    --bg-surface: #070c1a;
-    --bg-card: #0c1325;
-    --bg-glass: rgba(12,19,37,0.85);
+    --bg-canvas: #0e1015;
+    --bg-main-card: #171a21;
+    --bg-sidebar: transparent;
+    --bg-user-bubble: #2b303c;
+    --bg-bot-bubble: #20242e;
+    --bg-dock: #1d212a;
+    --accent-cyan: #00d2ff;
     --accent-emerald: #00e5a0;
-    --accent-emerald-dim: #00b07a;
-    --accent-gold: #f7b731;
     --accent-crimson: #ff3b5c;
-    --accent-cyan: #00c8ff;
     --accent-violet: #7c3aed;
-    --bubble-ai: #0f1e3a;
-    --bubble-user-start: #005c38;
-    --bubble-user-end: #007a4a;
-    --text-primary: #e2eaf8;
-    --text-muted: #6a8ab8;
-    --border-glow: rgba(0,229,160,0.15);
-    --border-subtle: rgba(255,255,255,0.07);
+    --text-primary: #f0f3f8;
+    --text-muted: #8e95a5;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-glow: rgba(0, 210, 255, 0.25);
+}
+
+* {
+    box-sizing: border-box;
 }
 
 body, .gradio-container {
-    background: #03060e !important;
-    background-image: 
-        radial-gradient(ellipse 80% 60% at 20% 0%, rgba(0,60,120,0.3) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0,100,80,0.2) 0%, transparent 60%),
-        radial-gradient(ellipse 40% 30% at 50% 50%, rgba(100,0,200,0.08) 0%, transparent 60%) !important;
-    animation: aurora-drift 35s ease-in-out infinite alternate !important;
-    margin: 0; padding: 0;
-    font-family: 'Inter', sans-serif;
-    color: var(--text-primary);
+    background: #0e1015 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    color: var(--text-primary) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+}
+
+.gradio-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+}
+
+/* Tablet / Desktop Frame Layout */
+.adaab-tablet-frame {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    max-width: 1320px !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    margin: 0 auto !important;
+    padding: 18px 22px !important;
+    gap: 18px !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+}
+
+/* Left Sidebar */
+.adaab-sidebar {
+    flex: 0 0 200px !important;
+    width: 200px !important;
+    min-width: 200px !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 8px 4px !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.sidebar-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+}
+
+/* Sidebar Logo with glowing blue mic & sound waves */
+.adaab-sidebar-logo {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    margin-bottom: 22px;
+}
+
+.sidebar-mic-glow-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(0, 210, 255, 0.07);
+    border: 1px solid rgba(0, 210, 255, 0.22);
+    border-radius: 14px;
+    box-shadow: 0 0 16px rgba(0, 210, 255, 0.15);
+}
+
+.sidebar-mic-svg {
+    filter: drop-shadow(0 0 6px #00d2ff);
+    flex-shrink: 0;
+}
+
+.sidebar-soundwaves-left, .sidebar-soundwaves-right {
+    display: flex;
+    align-items: center;
+    gap: 2.5px;
+    height: 16px;
+}
+
+.sw-bar {
+    width: 2px;
+    background: #00d2ff;
+    border-radius: 2px;
+    animation: barPulseAnim 1.2s ease-in-out infinite alternate;
+}
+.sw-bar:nth-child(1) { height: 8px; animation-delay: 0.1s; }
+.sw-bar:nth-child(2) { height: 14px; animation-delay: 0.3s; }
+
+/* Navigation links */
+.sidebar-nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.93rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.nav-item:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-item.active {
+    color: #ffffff;
+    background: #212530;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Sidebar Middle: Large Circular + Button (New Project) */
+.sidebar-project-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: auto 0;
+    padding: 16px 0;
+    gap: 8px;
+}
+
+.sidebar-new-project-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #191c25;
+    border: 1.5px solid rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-new-project-circle:hover {
+    border-color: #00d2ff;
+    background: #212634;
+    color: #00d2ff;
+    transform: scale(1.06);
+    box-shadow: 0 0 16px rgba(0, 210, 255, 0.35);
+}
+
+.sidebar-new-project-circle:active {
+    transform: scale(0.94);
+}
+
+.sidebar-project-label {
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+/* Sidebar Bottom: Help */
+.sidebar-bottom-section {
+    padding: 6px 12px;
+}
+
+.sidebar-help-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #6d7588;
+    font-size: 0.86rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.sidebar-help-btn:hover {
+    color: #9ba4b8;
+}
+
+/* Right Main Card Container */
+.adaab-main-card {
+    flex: 1 1 auto !important;
+    background: #171a21 !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    border-radius: 24px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Chatbot container */
+.messenger-chat {
+    flex: 1 1 auto !important;
+    background: transparent !important;
+    border: none !important;
+    height: calc(100% - 90px) !important;
+    min-height: 250px !important;
+    overflow-y: auto !important;
+    padding: 24px 28px 12px 28px !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+}
+
+/* Gradio Chatbot row overrides */
+.messenger-chat .message-row, 
+.messenger-chat [data-testid="bot"], 
+.messenger-chat [data-testid="user"] {
+    display: flex !important;
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+}
+
+.messenger-chat [data-testid="user"], 
+.messenger-chat .user {
+    flex-direction: row-reverse !important;
+}
+
+/* Avatars */
+.messenger-chat img.avatar-image,
+.messenger-chat .avatar-container img,
+.messenger-chat .avatar img {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Message bubbles */
+.bot-msg-card, .user-msg-card {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.messenger-chat .bot,
+.messenger-chat [data-testid="bot"] .message,
+.messenger-chat .message.bot,
+.messenger-chat div:has(> .bot-msg-card) {
+    background: #20242e !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 18px 18px 18px 4px !important;
+    color: #f0f3f8 !important;
+    padding: 14px 18px !important;
+    max-width: 80% !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
+    animation: fadeSlideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.messenger-chat .user,
+.messenger-chat [data-testid="user"] .message,
+.messenger-chat .message.user,
+.messenger-chat div:has(> .user-msg-card) {
+    background: #2b303c !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 18px 18px 4px 18px !important;
+    color: #ffffff !important;
+    padding: 14px 18px !important;
+    max-width: 80% !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
+    animation: fadeSlideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Urdu Text */
+.bot-msg-text, .user-msg-text, .urdu-text {
+    font-family: 'Noto Nastaliq Urdu', serif !important;
+    font-size: 1.25rem !important;
+    line-height: 2.1 !important;
+    direction: rtl !important;
+    text-align: right !important;
+    letter-spacing: 0 !important;
+}
+
+/* Audio Player Pill */
+.bot-audio-player-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    background: #141720 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 30px !important;
+    padding: 4px 14px 4px 6px !important;
+    margin-top: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    user-select: none !important;
+    width: fit-content !important;
+}
+
+.bot-audio-player-pill:hover {
+    border-color: rgba(0, 210, 255, 0.3) !important;
+    background: #171b26 !important;
+}
+
+.bot-audio-player-pill.playing {
+    border-color: rgba(0, 210, 255, 0.5) !important;
+    box-shadow: 0 0 16px rgba(0, 210, 255, 0.22) !important;
+}
+
+.audio-play-circle-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 50% !important;
+    background: #232835 !important;
+    border: none !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.bot-audio-player-pill.playing .audio-play-circle-btn {
+    background: #00d2ff !important;
+    color: #0b0e14 !important;
+}
+
+.audio-waveform-bars {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2.5px !important;
+    height: 22px !important;
+}
+
+.w-bar {
+    display: inline-block !important;
+    width: 2.5px !important;
+    background: #5b6477 !important;
+    border-radius: 2px !important;
+    transition: background 0.2s ease !important;
+}
+
+.bot-audio-player-pill.playing .w-bar {
+    background: #00d2ff !important;
+    animation: barPulseAnim 0.75s ease-in-out infinite alternate !important;
+}
+
+.audio-pill-duration {
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 0.72rem !important;
+    color: var(--text-muted) !important;
+    margin-left: 4px !important;
+}
+
+/* Copy Button */
+.msg-action-bar {
+    display: flex !important;
+    margin-top: 6px !important;
+}
+.bot-action-bar {
+    justify-content: flex-start !important;
+}
+.user-action-bar {
+    justify-content: flex-end !important;
+}
+
+.copy-msg-btn {
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 7px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    color: #727a8e !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.copy-msg-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Bottom Floating Dock */
+.messenger-dock {
+    background: #1d212a !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 40px !important;
+    margin: 8px 24px 18px 24px !important;
+    padding: 6px 10px 6px 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+}
+
+/* Mic Button */
+#ptt-btn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    border-radius: 50% !important;
+    background: #181b24 !important;
+    border: 1.5px solid rgba(0, 210, 255, 0.35) !important;
+    box-shadow: 0 0 12px rgba(0, 210, 255, 0.2) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    touch-action: manipulation !important;
+}
+
+#ptt-btn:active {
+    transform: scale(0.93) !important;
+}
+
+.ptt-mic-svg {
+    fill: #00d2ff !important;
+    transition: fill 0.2s ease !important;
+}
+
+#ptt-btn.recording {
+    border-color: #ff3b5c !important;
+    box-shadow: 0 0 20px rgba(255, 59, 92, 0.75) !important;
+    animation: crimson-ring-pulse 1.2s infinite !important;
+}
+
+#ptt-btn.recording .ptt-mic-svg {
+    fill: #ff3b5c !important;
+}
+
+/* Message Textbox */
+#message-input, 
+#message-input textarea, 
+#message-input input {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-family: 'Noto Nastaliq Urdu', serif !important;
+    direction: rtl !important;
+    text-align: right !important;
+    line-height: 1.8 !important;
+    padding: 6px 12px !important;
+    outline: none !important;
+}
+
+#message-input textarea::placeholder, 
+#message-input input::placeholder {
+    color: rgba(255, 255, 255, 0.45) !important;
+    font-family: 'Noto Nastaliq Urdu', serif !important;
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+/* Send Button */
+#send-btn {
+    background: #f0f2f5 !important;
+    color: #121418 !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    font-family: 'Inter', sans-serif !important;
+    border-radius: 28px !important;
+    padding: 8px 24px !important;
+    border: none !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+#send-btn:hover {
+    background: #ffffff !important;
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.28) !important;
+    transform: translateY(-1px) scale(1.02) !important;
+}
+
+#send-btn:active {
+    transform: scale(0.96) !important;
 }
 
 /* Animations */
+@keyframes barPulseAnim {
+    0% { transform: scaleY(0.4); opacity: 0.6; }
+    100% { transform: scaleY(1.3); opacity: 1; }
+}
+
 @keyframes fadeSlideInLeft {
-    from { opacity: 0; transform: translateX(-16px) scale(0.97); }
+    from { opacity: 0; transform: translateX(-14px) scale(0.98); }
     to { opacity: 1; transform: translateX(0) scale(1); }
 }
+
 @keyframes fadeSlideInRight {
-    from { opacity: 0; transform: translateX(16px) scale(0.97); }
+    from { opacity: 0; transform: translateX(14px) scale(0.98); }
     to { opacity: 1; transform: translateX(0) scale(1); }
 }
-@keyframes emerald-ring-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,160,0.5), 0 0 14px rgba(0,229,160,0.25); }
-    50% { box-shadow: 0 0 0 6px rgba(0,229,160,0), 0 0 24px rgba(0,229,160,0.5); }
-}
+
 @keyframes crimson-ring-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255,59,92,0.7), 0 0 18px rgba(255,59,92,0.5); }
-    50% { box-shadow: 0 0 0 8px rgba(255,59,92,0), 0 0 32px rgba(255,59,92,0.8); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 59, 92, 0.7), 0 0 16px rgba(255, 59, 92, 0.5); }
+    50% { box-shadow: 0 0 0 7px rgba(255, 59, 92, 0), 0 0 26px rgba(255, 59, 92, 0.8); }
 }
-@keyframes aurora-drift {
-    0% { background-size: 100% 100%, 100% 100%, 100% 100%; background-position: 0% 0%, 100% 100%, 50% 50%; }
-    100% { background-size: 110% 110%, 95% 95%, 105% 105%; background-position: 10% 5%, 90% 95%, 55% 45%; }
-}
-@keyframes bounce-send {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(0.88); }
-}
-@keyframes chat-message-appear {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-@keyframes typing {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-}
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Layout */
-.messenger-wrapper {
-    display: flex; flex-direction: column;
-    height: 100vh;
-    max-width: 100%; margin: 0 auto;
-}
-
-/* Header */
-.messenger-header {
-    background: var(--bg-glass);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border-glow);
-    padding: 10px 16px;
-    display: flex; flex-direction: row; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 100;
-}
-.messenger-contact-info {
-    display: flex; align-items: center; gap: 12px;
-}
-.header-refresh-btn {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border-subtle);
-    border-radius: 50%;
-    width: 38px; height: 38px; min-width: 38px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    touch-action: manipulation;
-}
-.header-refresh-btn:hover {
-    border-color: var(--accent-emerald);
-    background: rgba(0,229,160,0.12);
-}
-.header-refresh-btn:active {
-    transform: scale(0.92);
-}
-.messenger-avatar {
-    position: relative;
-    width: 48px; height: 48px;
-    border-radius: 50%;
-    border: 2px solid var(--accent-emerald);
-    box-shadow: 0 0 10px var(--border-glow);
-}
-.messenger-avatar-img {
-    width: 100%; height: 100%;
-    border-radius: 50%; object-fit: cover;
-}
-.online-dot {
-    position: absolute; bottom: 0; right: 0;
-    width: 12px; height: 12px;
-    background: var(--accent-emerald);
-    border: 2px solid var(--bg-card);
-    border-radius: 50%;
-}
-.messenger-name {
-    font-size: 1.1rem; font-weight: 600; margin: 0;
-}
-.messenger-status {
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--accent-emerald);
-    font-size: 0.85rem; margin: 0;
-    display: flex; align-items: center; gap: 6px;
-}
-.status-pulse-dot {
-    width: 6px; height: 6px;
-    background: var(--accent-emerald);
-    border-radius: 50%;
-    animation: emerald-ring-pulse 2s infinite;
-}
-.messenger-controls-row {
-    display: flex; gap: 8px; justify-content: space-between;
-}
-.messenger-tabs {
-    display: flex; gap: 8px; overflow-x: auto;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-}
-.messenger-tabs::-webkit-scrollbar { display: none; }
-.messenger-tabs button {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border-subtle);
-    border-radius: 20px;
-    padding: 6px 14px;
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    white-space: nowrap; cursor: pointer;
-    transition: all 0.2s;
-}
-.messenger-tabs button.active {
-    background: var(--accent-emerald);
-    color: var(--bg-void);
-    border-color: var(--accent-emerald);
-}
-
-/* Chat Area */
-.messenger-chat {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    display: flex; flex-direction: column; gap: 16px;
-    background: var(--bg-card);
-}
-.messenger-chat .bot, .messenger-chat .user {
-    max-width: 85%;
-    border-radius: 16px;
-    padding: 12px 16px;
-    line-height: 1.5;
-}
-.messenger-chat .bot {
-    align-self: flex-start;
-    background: var(--bubble-ai);
-    border-left: 3px solid var(--accent-emerald);
-    border-bottom-left-radius: 4px;
-    animation: fadeSlideInLeft 0.35s cubic-bezier(0.16,1,0.3,1);
-}
-.messenger-chat .user {
-    align-self: flex-end;
-    background: linear-gradient(135deg, var(--bubble-user-start), var(--bubble-user-end));
-    color: #fff;
-    border-right: 3px solid var(--accent-emerald-dim);
-    border-bottom-right-radius: 4px;
-    animation: fadeSlideInRight 0.3s cubic-bezier(0.16,1,0.3,1);
-}
-.bot-msg-card, .mobile-access-card { display: flex; flex-direction: column; gap: 8px; }
-.bot-msg-text { font-size: 1rem; }
-.urdu-text {
-    font-family: 'Noto Nastaliq Urdu', serif;
-    font-size: 1.3rem; line-height: 2;
-    direction: rtl; text-align: right;
-}
-
-/* Audio & Buttons */
-.bot-audio-replay-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-.bot-audio-replay-btn, .autoplay-welcome-pill {
-    background: rgba(0,229,160,0.1);
-    border: 1px solid var(--accent-emerald);
-    color: var(--accent-emerald);
-    border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 0.85rem;
-    display: inline-flex; align-items: center; gap: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.bot-audio-replay-btn:hover, .autoplay-welcome-pill:hover {
-    background: rgba(0,229,160,0.2);
-}
-.bot-audio-replay-btn.playing {
-    border-color: var(--accent-violet);
-    color: var(--accent-violet);
-    box-shadow: 0 0 10px rgba(124,58,237,0.4);
-}
-.bot-audio-duration-pill { font-size: 0.75rem; color: var(--text-muted); }
-.pulse-sound-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: currentColor;
-}
-.replay-btn-icon, .ptt-icon-img, .hint-icon-img, .send-icon-img, .btn-icon-img {
-    width: 16px; height: 16px; object-fit: contain; filter: invert(1);
-}
-
-/* Wave Card */
-.messenger-wave-card {
-    background: var(--bg-glass);
-    border: 1px solid var(--border-glow);
-    border-radius: 16px;
-    padding: 12px;
-    margin-bottom: 12px;
-    position: relative;
-    display: flex; flex-direction: column; align-items: center;
-}
-#neonWaveCanvas {
-    width: 100%; height: 68px; border-radius: 8px;
-}
-.waveform-state-badge {
-    position: absolute; top: 8px; right: 8px;
-    background: rgba(0,0,0,0.6);
-    border-radius: 12px; padding: 4px 8px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.7rem; color: #fff;
-    display: flex; align-items: center; gap: 4px;
-}
-.waveform-state-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; }
-#waveform-state-text { font-size: 0.7rem; }
-
-/* Action Strip */
-.messenger-action-strip {
-    display: flex; gap: 8px; justify-content: space-around;
-    padding: 8px 0;
-}
-.messenger-action-strip button {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border-subtle);
-    border-radius: 20px;
-    padding: 8px 16px; color: var(--text-primary);
-    font-size: 0.85rem; cursor: pointer;
-    transition: all 0.2s;
-}
-.messenger-action-strip button:hover {
-    border-color: var(--accent-emerald);
-}
-
-/* Dock */
-.messenger-dock {
-    background: var(--bg-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border-glow);
-    padding: 12px 16px;
-    display: flex; align-items: center; gap: 12px;
-    position: sticky; bottom: 0;
-}
-#ptt-btn {
-    width: 52px; height: 52px; min-width: 52px;
-    border-radius: 50%;
-    background: var(--bg-card);
-    border: 2px solid var(--accent-emerald);
-    display: flex; justify-content: center; align-items: center;
-    cursor: pointer;
-    animation: emerald-ring-pulse 3s infinite;
-    transition: all 0.2s; touch-action: manipulation;
-}
-#ptt-btn:active { transform: scale(0.95); }
-.ptt-icon-img { width: 24px; height: 24px; filter: invert(0) sepia(1) saturate(100) hue-rotate(130deg); }
-#ptt-btn.recording {
-    border-color: var(--accent-crimson);
-    animation: crimson-ring-pulse 1.2s infinite;
-}
-.ptt-icon-spinning { animation: spin 1s linear infinite; }
-#message-input {
-    flex: 1; background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border-subtle);
-    border-radius: 24px; padding: 12px 16px;
-    color: #fff; font-size: 16px; outline: none;
-}
-#message-input:focus { border-color: var(--accent-emerald); }
-#send-btn {
-    width: 44px; height: 44px; min-width: 44px;
-    border-radius: 50%;
-    background: var(--accent-emerald);
-    border: none; cursor: pointer;
-    display: flex; justify-content: center; align-items: center;
-}
-#send-btn:active { animation: bounce-send 0.3s; }
-#ptt-status-hint { position: absolute; top: -30px; left: 16px; font-size: 0.8rem; color: var(--text-muted); }
 
 /* Hidden elements */
-.hidden-control, #voice_reply_player, #ptt_raw_input, #ptt_trigger_btn, #ptt_status_box, .compact-audio-player { display: none !important; }
-
-/* Typing indicator */
-.adaab-typing-indicator { display: flex; gap: 4px; padding: 8px; }
-.adaab-typing-indicator .dot { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; animation: typing 1.4s infinite; }
-.adaab-typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
-.adaab-typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
-
-/* Mobile Responsive & Antigravity Clean Layout */
-.messenger-wrapper {
-    display: flex !important;
-    flex-direction: column !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    max-width: 860px !important;
-    margin: 0 auto !important;
-    overflow: hidden !important;
+.hidden-control, #voice_reply_player, #ptt_raw_input, #ptt_trigger_btn, #ptt_status_box, .compact-audio-player { 
+    display: none !important; 
 }
-.messenger-chat {
-    flex: 1 1 auto !important;
-    height: calc(100dvh - 130px) !important;
-    min-height: 250px !important;
-    overflow-y: auto !important;
-    padding: 14px 16px !important;
-    -webkit-overflow-scrolling: touch !important;
-}
+
+/* Mobile Responsive */
 @media (max-width: 768px) {
-    .messenger-chat { height: calc(100dvh - 120px) !important; padding: 12px 14px !important; }
+    .adaab-tablet-frame {
+        flex-direction: column !important;
+        padding: 0 !important;
+        gap: 0 !important;
+    }
+    .adaab-sidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+        height: 56px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 8px 14px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: #13161d !important;
+    }
+    .sidebar-inner {
+        flex-direction: row !important;
+        width: 100% !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+    .adaab-sidebar-logo {
+        margin-bottom: 0 !important;
+        padding: 0 !important;
+    }
+    .sidebar-nav-menu, .sidebar-bottom-section, .sidebar-project-label {
+        display: none !important;
+    }
+    .sidebar-project-section {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .sidebar-new-project-circle {
+        width: 38px !important;
+        height: 38px !important;
+    }
+    .adaab-main-card {
+        border-radius: 0 !important;
+        border: none !important;
+        height: calc(100dvh - 56px) !important;
+        max-height: calc(100dvh - 56px) !important;
+    }
+    .messenger-chat {
+        padding: 12px 14px 6px 14px !important;
+        height: calc(100% - 75px) !important;
+    }
+    .messenger-dock {
+        margin: 4px 10px 8px 10px !important;
+    }
 }
-@media (max-width: 430px) {
-    .messenger-chat { height: calc(100dvh - 115px) !important; padding: 10px 12px !important; }
-    .messenger-dock { padding: 8px 10px !important; }
-}
-@media (min-width: 1200px) {
-    .messenger-wrapper { max-width: 920px !important; }
-}
+
 @supports (padding: env(safe-area-inset-bottom)) {
     .messenger-dock {
-        padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+        padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
     }
-    body { padding-bottom: env(safe-area-inset-bottom) !important; }
 }
-
 """
 
 HEAD_JS = """
@@ -1112,6 +1400,12 @@ window.playSpeechAudio = function(btn, audioSrc, isAutoplay) {
         }
 
         window.__adaabSpeechAudio.addEventListener('play', () => {
+            if (currentPlayingBtn) {
+                const playSvg = currentPlayingBtn.querySelector('.play-svg');
+                const pauseSvg = currentPlayingBtn.querySelector('.pause-svg');
+                if (playSvg) playSvg.style.display = 'none';
+                if (pauseSvg) pauseSvg.style.display = 'block';
+            }
             isAiSpeaking = true;
             updateWaveBadge('TABRAIZ SPEAKING • EQ', '#10b981');
             const pttIcon = document.getElementById('ptt-btn-icon');
@@ -1135,6 +1429,10 @@ window.playSpeechAudio = function(btn, audioSrc, isAutoplay) {
             isAiSpeaking = false;
             if (currentPlayingBtn) {
                 currentPlayingBtn.classList.remove('playing');
+                const playSvg = currentPlayingBtn.querySelector('.play-svg');
+                const pauseSvg = currentPlayingBtn.querySelector('.pause-svg');
+                if (playSvg) playSvg.style.display = 'block';
+                if (pauseSvg) pauseSvg.style.display = 'none';
                 const lbl = currentPlayingBtn.querySelector('.replay-btn-label');
                 if (lbl) lbl.textContent = 'دوبارہ سنیں (Replay Voice)';
                 currentPlayingBtn = null;
@@ -1149,6 +1447,10 @@ window.playSpeechAudio = function(btn, audioSrc, isAutoplay) {
             isAiSpeaking = false;
             if (currentPlayingBtn) {
                 currentPlayingBtn.classList.remove('playing');
+                const playSvg = currentPlayingBtn.querySelector('.play-svg');
+                const pauseSvg = currentPlayingBtn.querySelector('.pause-svg');
+                if (playSvg) playSvg.style.display = 'block';
+                if (pauseSvg) pauseSvg.style.display = 'none';
                 const lbl = currentPlayingBtn.querySelector('.replay-btn-label');
                 if (lbl) lbl.textContent = 'دوبارہ سنیں (Replay Voice)';
                 currentPlayingBtn = null;
@@ -1200,7 +1502,7 @@ function setupChatObserver() {
             });
         } catch(e) {}
 
-        const replayBtns = chatContainer.querySelectorAll('.bot-audio-replay-btn');
+        const replayBtns = chatContainer.querySelectorAll('.bot-audio-player-pill, .bot-audio-replay-btn');
         if (replayBtns.length > 0) {
             const latestBtn = replayBtns[replayBtns.length - 1];
             const audioSrc = latestBtn.getAttribute('data-audiosrc');
@@ -1413,8 +1715,8 @@ def text_chat_fn(message, history, style_choice, voice_choice="male", profile_st
     history = list(history or [])
     profile_state = profile_state or SESSION_STATE.get("active_profile") or {}
 
-    # Append user message first; typing indicator appears immediately
-    history.append({"role": "user", "content": message})
+    # Append formatted user message matching tablet mockup
+    history.append({"role": "user", "content": format_user_message(message)})
 
     bot_reply, updated_profile = handle_conversation_turn(
         user_message=message,
@@ -1484,7 +1786,7 @@ def ptt_voice_fn(base64_audio_data, history, style_choice, voice_choice="male", 
     print(f"[Adaab PTT] User transcript: '{user_transcript}'", flush=True)
     print(f"[Adaab PTT] Dispatching to Modal GPU Backend (Persona: {persona})...", flush=True)
 
-    history.append({"role": "user", "content": user_transcript})
+    history.append({"role": "user", "content": format_user_message(user_transcript)})
 
     bot_reply, updated_profile = handle_conversation_turn(
         user_message=user_transcript,
@@ -1528,78 +1830,116 @@ def ptt_voice_fn(base64_audio_data, history, style_choice, voice_choice="male", 
 
 def build_app(active_port: int = 7865, public_url: str = None):
     with gr.Blocks(title="آداب — تبریز | Adaab Voice AI") as demo:
-        with gr.Column(elem_classes=["messenger-wrapper"]):
-            # Minimalist Antigravity Top Header Bar
-            header_html = gr.HTML(
-                f"""
-                <div class="messenger-header">
-                    <div class="messenger-contact-info">
-                        <div class="messenger-avatar">
-                            <img src="{ICON_AVATAR}" class="messenger-avatar-img" alt="Tabraiz" />
-                            <span class="online-dot"></span>
+        with gr.Row(elem_classes=["adaab-tablet-frame"]):
+            # Left Navigation Sidebar (Exact match to Mockup)
+            with gr.Column(elem_classes=["adaab-sidebar"], scale=1, min_width=190):
+                sidebar_html = gr.HTML(
+                    f"""
+                    <div class="sidebar-inner">
+                        <div class="adaab-sidebar-logo">
+                            <div class="sidebar-mic-glow-wrap" title="آداب صوتی اسٹوڈیو">
+                                <div class="sidebar-soundwaves-left">
+                                    <span class="sw-bar"></span><span class="sw-bar"></span>
+                                </div>
+                                <svg class="sidebar-mic-svg" viewBox="0 0 24 24" width="24" height="24" fill="#00d2ff">
+                                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                                </svg>
+                                <div class="sidebar-soundwaves-right">
+                                    <span class="sw-bar"></span><span class="sw-bar"></span>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="messenger-name" id="header-name">تبریز (Tabraiz)</div>
-                            <div class="messenger-status"><span class="status-pulse-dot"></span>آن لائن • باادب اردو صوتی معاون</div>
+
+                        <nav class="sidebar-nav-menu">
+                            <a href="javascript:void(0)" class="nav-item active" title="ہوم (Home)">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                                <span>Home</span>
+                            </a>
+                            <a href="javascript:void(0)" class="nav-item" title="سابقہ گفتگو (History)">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <span>History</span>
+                            </a>
+                            <a href="javascript:void(0)" class="nav-item" title="کتب خانہ (Library)">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                                <span>Library</span>
+                            </a>
+                            <a href="javascript:void(0)" class="nav-item" title="ترتیبات (Settings)">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                <span>Settings</span>
+                            </a>
+                        </nav>
+
+                        <div class="sidebar-project-section">
+                            <button type="button" class="sidebar-new-project-circle" onclick="document.getElementById('hidden_clear_btn').click()" title="نئی گفتگو شروع کریں (New Project / Start New Chat)">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+                            <span class="sidebar-project-label">New Project</span>
+                        </div>
+
+                        <div class="sidebar-bottom-section">
+                            <a href="javascript:void(0)" class="sidebar-help-btn" onclick="alert('آداب اسٹوڈیو: اردو صوتی اور متنی معاون۔ مائیک بٹن دبا کر بولیں یا پیغام تحریر کریں۔')" title="معاونت (Help)">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                <span>Help</span>
+                            </a>
                         </div>
                     </div>
-                    <button type="button" class="header-refresh-btn" onclick="document.getElementById('hidden_clear_btn').click()" title="نئی گفتگو (New Chat)">
-                        <img src="{ICON_REFRESH}" class="btn-icon-img" alt="Reset" />
-                    </button>
-                </div>
-                """
-            )
-
-            chat_style = gr.State(value="standard")
-            chat_voice = gr.State(value="male")
-            profile_state = gr.State(value={})
-
-            # Single Unified Full-Screen Conversation Chatbot
-            chatbot = gr.Chatbot(
-                value=[{"role": "assistant", "content": format_assistant_message(TABRAIZ_INITIAL_GREETING, TABRAIZ_OPENING_AUDIO)}],
-                elem_classes=["messenger-chat"],
-                label="گفتگو",
-                show_label=False,
-                sanitize_html=False
-            )
-
-            # Hidden Gradio Audio bridge (CSS-hidden, needed for Gradio state transport)
-            voice_reply_player = gr.Audio(
-                value=None,
-                autoplay=False,
-                elem_id="voice_reply_player",
-                elem_classes=["compact-audio-player"],
-                visible=False
-            )
-
-            # Sticky Messenger Bottom Dock (Only Conversation Box, Mic, Text Input, Send)
-            with gr.Row(elem_classes=["messenger-dock"]):
-                ptt_btn_html = gr.HTML(
-                    f"""
-                    <button id="ptt-btn" 
-                            type="button"
-                            title="بولنے کے لیے ٹیپ کریں (Tap to speak / Tap again to send)"
-                            onclick="handleMicToggle(event)">
-                        <img id="ptt-btn-icon" src="{ICON_MIC}" class="ptt-icon-img" alt="Mic" />
-                    </button>
                     """
                 )
-                text_msg = gr.Textbox(
-                    placeholder="پیغام تحریر فرمائیں... (Type a message...)", 
-                    elem_id="message-input",
-                    show_label=False,
-                    container=False,
-                    scale=8,
-                    lines=1,
-                    max_lines=3
-                )
-                send_btn = gr.Button("", icon=get_icon_path("send.png"), elem_id="send-btn", scale=1, variant="primary")
 
-            # Hidden bridge controls for PTT JavaScript trigger & clean reset
-            ptt_raw_input = gr.Textbox(elem_id="ptt_raw_input", elem_classes=["hidden-control"])
-            ptt_trigger_btn = gr.Button("TRIGGER_PTT", elem_id="ptt_trigger_btn", elem_classes=["hidden-control"])
-            ptt_status_box = gr.Textbox(elem_id="ptt_status_box", elem_classes=["hidden-control"])
-            hidden_clear_btn = gr.Button("CLEAR", elem_id="hidden_clear_btn", elem_classes=["hidden-control"])
+            # Main Encapsulated Rounded Chat Card
+            with gr.Column(elem_classes=["adaab-main-card"], scale=6):
+                chat_style = gr.State(value="standard")
+                chat_voice = gr.State(value="male")
+                profile_state = gr.State(value={})
+
+                chatbot = gr.Chatbot(
+                    value=[{"role": "assistant", "content": format_assistant_message(TABRAIZ_INITIAL_GREETING, TABRAIZ_OPENING_AUDIO)}],
+                    avatar_images=(PATH_USER_AVATAR, PATH_BOT_AVATAR),
+                    elem_classes=["messenger-chat"],
+                    label="گفتگو",
+                    show_label=False,
+                    sanitize_html=False
+                )
+
+                voice_reply_player = gr.Audio(
+                    value=None,
+                    autoplay=False,
+                    elem_id="voice_reply_player",
+                    elem_classes=["compact-audio-player"],
+                    visible=False
+                )
+
+                with gr.Row(elem_classes=["messenger-dock"]):
+                    ptt_btn_html = gr.HTML(
+                        f"""
+                        <button id="ptt-btn" 
+                                type="button"
+                                title="بولنے کے لیے ٹیپ کریں (Tap to speak / Tap again to send)"
+                                onclick="handleMicToggle(event)">
+                            <svg id="ptt-mic-svg" class="ptt-mic-svg" viewBox="0 0 24 24" width="22" height="22" fill="#00d2ff">
+                                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                            </svg>
+                        </button>
+                        """
+                    )
+                    text_msg = gr.Textbox(
+                        placeholder="...اپنا پیغام یہاں لکھیں", 
+                        elem_id="message-input",
+                        show_label=False,
+                        container=False,
+                        scale=8,
+                        lines=1,
+                        max_lines=3
+                    )
+                    send_btn = gr.Button("Send", elem_id="send-btn", scale=1, variant="primary")
+
+                # Hidden bridge controls for PTT JavaScript trigger & clean reset
+                ptt_raw_input = gr.Textbox(elem_id="ptt_raw_input", elem_classes=["hidden-control"])
+                ptt_trigger_btn = gr.Button("TRIGGER_PTT", elem_id="ptt_trigger_btn", elem_classes=["hidden-control"])
+                ptt_status_box = gr.Textbox(elem_id="ptt_status_box", elem_classes=["hidden-control"])
+                hidden_clear_btn = gr.Button("CLEAR", elem_id="hidden_clear_btn", elem_classes=["hidden-control"])
 
         # Event connections
         ptt_trigger_btn.click(
