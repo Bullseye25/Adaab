@@ -84,12 +84,18 @@ def build_master_dataset() -> str:
     for fpath in files:
         records = load_dataset_records(fpath)
         for r in records:
-            # Extract user query
+            # Extract user query and assistant response
             user_msg = ""
+            assistant_msg = ""
             for m in r.get("messages", []):
                 if m.get("role") == "user":
                     user_msg = m.get("content", "").strip().lower()
-                    break
+                elif m.get("role") == "assistant":
+                    assistant_msg = m.get("content", "").strip()
+
+            # Reject records with missing answers or generic fallback text
+            if not assistant_msg or "سمجھ لیا ہے" in assistant_msg or "کیا مزید مدد یا رہنمائی" in assistant_msg:
+                continue
 
             if user_msg and user_msg not in seen_queries:
                 seen_queries.add(user_msg)

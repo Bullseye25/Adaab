@@ -97,23 +97,28 @@ class AdaabClient:
     def chat_completion(
         self,
         messages: list[dict],
-        temperature: float = 0.35,
+        temperature: float = 0.65,
         top_p: float = 0.9,
         max_tokens: int = 800,
-        repetition_penalty: float = 1.18,
+        repetition_penalty: float = 1.20,
+        presence_penalty: float = 0.5,
+        frequency_penalty: float = 0.5,
         max_retries: int = 3,
         retry_delay: float = 5.0
     ) -> dict:
         """
         Sends an inference request to the serverless Modal Qwen 2.5 7B backend.
-        Includes cold-start container spin-up retry handling and anti-repetition penalty.
+        Includes cold-start container spin-up retry handling, presence/frequency penalties,
+        and anti-repetition penalty for natural Urdu conversational flow.
         """
         payload = {
             "messages": messages,
             "temperature": temperature,
             "top_p": top_p,
             "max_tokens": max_tokens,
-            "repetition_penalty": repetition_penalty
+            "repetition_penalty": repetition_penalty,
+            "presence_penalty": presence_penalty,
+            "frequency_penalty": frequency_penalty
         }
         data_bytes = json.dumps(payload).encode("utf-8")
         last_error = None

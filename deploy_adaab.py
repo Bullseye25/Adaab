@@ -156,12 +156,12 @@ class AdaabAgentModel:
     def generate(
         self,
         messages: list[dict],
-        temperature: float = 0.35,
+        temperature: float = 0.65,
         top_p: float = 0.9,
         max_tokens: int = 512,
-        repetition_penalty: float = 1.18,
-        presence_penalty: float = 0.1,
-        frequency_penalty: float = 0.1,
+        repetition_penalty: float = 1.20,
+        presence_penalty: float = 0.5,
+        frequency_penalty: float = 0.5,
     ) -> dict:
         """Executes an Urdu inference request with repetition penalty and loop prevention."""
         from vllm import SamplingParams
@@ -211,12 +211,12 @@ class AdaabAgentModel:
             }
 
         messages = request.get("messages", [])
-        temperature = float(request.get("temperature", 0.35))
+        temperature = float(request.get("temperature", 0.65))
         top_p = float(request.get("top_p", 0.9))
         max_tokens = int(request.get("max_tokens", 800))
-        repetition_penalty = float(request.get("repetition_penalty", 1.18))
-        presence_penalty = float(request.get("presence_penalty", 0.1))
-        frequency_penalty = float(request.get("frequency_penalty", 0.1))
+        repetition_penalty = float(request.get("repetition_penalty", 1.20))
+        presence_penalty = float(request.get("presence_penalty", 0.5))
+        frequency_penalty = float(request.get("frequency_penalty", 0.5))
 
         result = self.generate.local(
             messages=messages,

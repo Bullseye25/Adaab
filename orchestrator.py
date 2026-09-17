@@ -63,6 +63,13 @@ TABRAIZ_ORCHESTRATOR_SYSTEM = """
 3. خالص صوتی اسسٹنٹ رویہ: کبھی بھی ڈیٹا بیس، فارم بھرنے یا کوائف محفوظ کرنے کی بات نہ کریں۔ سیدھا صارف کی بات کا آسان، مددگار اور واضح جواب دیں۔
 4. صوتی ساخت: جواب واضح، جامع اور بولنے میں آسان ہو (2 سے 3 جملے)، جو سننے والے کو بالکل قدرتی لگے۔
 5. کوئی ایموجی مت لگائیں اور مارک ڈاؤن یا بلٹ پوائنٹس مت بنائیں تاکہ آڈیو روانی سے ادا ہو سکے۔
+
+گفتگو کے مثالی نمونے (Few-Shot Conversational Examples):
+صارف: پاکستان میں مشہور کھانے کون سے ہیں؟
+تبریز: پاکستان کے روایتی کھانوں میں کراچی کی بریانی، لاہور کی نہاری، پشاور کے چپلی کباب اور بلوچستان کی سجی بے حد مقبول ہیں۔ ہر علاقے کا اپنا ایک خاص ذائقہ ہے جو دسترخوان کی رونق بڑھاتا ہے۔ بتائیے، آپ کو ان میں سے کون سا پکوان سب سے زیادہ پسند ہے؟
+
+صارف: آج کا دن کیسا گزر رہا ہے؟
+تبریز: جی الحمدللہ، سب خیریت ہے۔ آپ کا دن کیسا گزر رہا ہے؟ بتائیے، آج میں آپ کی کیا مدد کر سکتا ہوں؟
 """.strip()
 
 
@@ -140,9 +147,81 @@ class CognitiveOrchestrator:
         cleaned = re.sub(r'[\U00010000-\U0010ffff]', '', cleaned)
         cleaned = re.sub(r'[\u2300-\u23ff\u2600-\u27bf\u2b50\u2b55\u200d\ufe0f]', '', cleaned)
 
-
         # 6. Normalize whitespace
-        return re.sub(r'\s+', ' ', cleaned).strip()
+        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+
+        # 7. Detect and prune severe n-gram loops and duplicate sentences
+        return self.detect_and_prune_loops(cleaned)
+
+    def detect_and_prune_loops(self, text: str) -> str:
+        """
+        Detects severe repetitive n-gram loops, repeated sentences, cross-clause
+        overlaps, and trailing numbers, returning clean, coherent conversational Urdu.
+        """
+        if not text:
+            return ""
+
+        # 1. Strip trailing standalone numbers, list indices, or bullets (e.g. ' 1.', ' 1. 2.', ' 1')
+        text = re.sub(r'(?:\s*\d+[\.\:\-]?\s*)+$', '', text).strip()
+
+        # 2. Split by Urdu and standard sentence terminators
+        sentences = re.split(r'([۔؟!.\n])', text)
+        seen_clauses = []
+        clean_units = []
+
+        for i in range(0, len(sentences) - 1, 2):
+            clause = sentences[i].strip()
+            punct = sentences[i + 1]
+            if not clause:
+                continue
+
+            # Normalize clause for comparison
+            norm_clause = re.sub(r'\s+', ' ', clause)
+            words = norm_clause.split()
+
+            # A. Check exact sentence repetition
+            if norm_clause in seen_clauses:
+                break
+
+            # B. Check cross-clause 5-gram phrase overlap (catching repeating run-on loops)
+            is_repetitive = False
+            if len(words) >= 5:
+                for idx in range(len(words) - 4):
+                    ngram = " ".join(words[idx:idx + 5])
+                    for prev in seen_clauses:
+                        if ngram in prev:
+                            is_repetitive = True
+                            break
+                    if is_repetitive:
+                        break
+
+            # C. Check intra-clause phrase repetition (e.g. "میز کی میز کی میز")
+            if not is_repetitive and len(words) >= 6:
+                for w_len in range(3, min(8, len(words) // 2 + 1)):
+                    for idx in range(len(words) - w_len * 2 + 1):
+                        sub1 = " ".join(words[idx:idx + w_len])
+                        sub2 = " ".join(words[idx + w_len:idx + w_len * 2])
+                        if sub1 == sub2:
+                            words = words[:idx + w_len]
+                            clause = " ".join(words)
+                            is_repetitive = True
+                            break
+                    if is_repetitive:
+                        break
+
+            if is_repetitive:
+                break
+
+            seen_clauses.append(norm_clause)
+            clean_units.append(clause + punct)
+
+        if len(sentences) % 2 != 0 and sentences[-1].strip():
+            last_seg = sentences[-1].strip()
+            if last_seg not in seen_clauses and not re.match(r'^\d+[\.\:]?$', last_seg):
+                clean_units.append(last_seg)
+
+        result = " ".join(clean_units).strip()
+        return result or text
 
     def classify_intent(self, user_text: str) -> str:
         """Classifies the user's intent into discrete operational categories."""
@@ -246,7 +325,9 @@ class CognitiveOrchestrator:
                         best_score = overlap
                         for m in data.get("messages", []):
                             if m["role"] == "assistant":
-                                best_match = m["content"]
+                                cand = m["content"].strip()
+                                if cand and "سمجھ لیا ہے" not in cand and "کیا مزید مدد" not in cand:
+                                    best_match = cand
             return best_match
         except Exception as ex:
             print(f"[Orchestrator] Local knowledge retrieval notice: {ex}")
@@ -463,9 +544,11 @@ class CognitiveOrchestrator:
                     ]
                     resp = self.backend_client.chat_completion(
                         messages,
-                        temperature=0.35,
+                        temperature=0.65,
                         max_tokens=800,
-                        repetition_penalty=1.18
+                        repetition_penalty=1.20,
+                        presence_penalty=0.5,
+                        frequency_penalty=0.5
                     )
                     bot_text = resp.get("content", "").strip()
                     if bot_text:
@@ -513,40 +596,50 @@ class CognitiveOrchestrator:
         # Add current user turn
         messages.append({"role": "user", "content": effective_input})
 
-        # Generate Response: Try Modal backend first for conversational roleplay, or Gemini Oracle
+        # Generate Response: Prioritize Gemini Oracle for fluent native conversational Urdu,
+        # falling back gracefully to Modal L4 GPU or ChatGPT Web Oracle
         final_reply = None
 
-        if self.backend_client:
+        topic_str = f"سابقہ موضوع: {active_topic}\n" if active_topic else ""
+        conv_prompt = f"{topic_str}صارف کا پیغام: {effective_input}\nروزمرہ بول چال کی قدرتی اور آسان اردو میں باادب اور مکمل جواب دیں۔ مخاطب کے لیے ہمیشہ 'آپ' کا احترام رکھیں، 'تم' مت کہیں۔ کوئی جملہ بار بار مت دہرائیں۔"
+
+        if self.oracle.is_available():
+            final_reply = self.oracle.query(
+                prompt=conv_prompt,
+                system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                timeout=14
+            )
+
+        if not final_reply and self.backend_client:
             try:
-                resp = self.backend_client.chat_completion(messages, temperature=0.35, max_tokens=800)
-                final_reply = self.clean_voice_text(resp.get("content", ""))
+                resp = self.backend_client.chat_completion(
+                    messages, 
+                    temperature=0.65, 
+                    max_tokens=800,
+                    repetition_penalty=1.20,
+                    presence_penalty=0.5,
+                    frequency_penalty=0.5
+                )
+                final_reply = resp.get("content", "")
             except Exception as e:
                 print(f"[Orchestrator] Backend completion notice: {e}")
 
-        # If Modal offline or unavailable, try Gemini Oracle or ChatGPT Web Oracle as backup
+        # If still no reply, try ChatGPT Web Oracle fallback
         if not final_reply:
-            topic_str = f"سابقہ موضوع: {active_topic}\n" if active_topic else ""
-            conv_prompt = f"{topic_str}صارف کا پیغام: {effective_input}\nروزمرہ بول چال کی قدرتی اور آسان اردو میں مکمل جواب دیں۔ مخاطب کے لیے ہمیشہ 'آپ' کا احترام رکھیں، 'تم' مت کہیں۔"
-            if self.oracle.is_available():
-                final_reply = self.oracle.query(
-                    prompt=conv_prompt,
-                    system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                    timeout=14
-                )
-            else:
-                try:
-                    from chatgpt_browser_oracle import get_chatgpt_oracle
-                    chatgpt = get_chatgpt_oracle()
-                    if chatgpt.is_available():
-                        final_reply = chatgpt.query(
-                            prompt=conv_prompt,
-                            system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                            timeout=35
-                        )
-                except Exception:
-                    pass
-            if final_reply:
-                final_reply = self.clean_voice_text(final_reply)
+            try:
+                from chatgpt_browser_oracle import get_chatgpt_oracle
+                chatgpt = get_chatgpt_oracle()
+                if chatgpt.is_available():
+                    final_reply = chatgpt.query(
+                        prompt=conv_prompt,
+                        system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                        timeout=35
+                    )
+            except Exception:
+                pass
+
+        if final_reply:
+            final_reply = self.clean_voice_text(final_reply)
 
         # Intelligent Fallback if both cloud endpoints are unavailable
         if not final_reply:

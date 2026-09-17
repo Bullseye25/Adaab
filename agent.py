@@ -100,7 +100,14 @@ def clean_llm_response(text: str, is_identity_query: bool = False) -> str:
         text = re.sub(r'تبریز\s+آپ\s+کی\s+خدمت\s+میں\s+حاضر\s+ہے[۔،!\s]*', 'میں آپ کی خدمت میں حاضر ہوں۔ ', text)
 
     # Normalize whitespace
-    return re.sub(r'\s+', ' ', text).strip()
+    cleaned = re.sub(r'\s+', ' ', text).strip()
+    try:
+        from orchestrator import get_orchestrator
+        orch = get_orchestrator()
+        cleaned = orch.detect_and_prune_loops(cleaned)
+    except Exception:
+        pass
+    return cleaned
 
 def is_tehzeeb_invoked(text: str) -> bool:
     """Checks if the user explicitly asked about Tehzeeb's identity or called her as wake/greeting."""

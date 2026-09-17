@@ -34,12 +34,13 @@ from voice_reader import (
     VOICE_MALE_URDU
 )
 from time_context import get_local_time_context
+from orchestrator import CognitiveOrchestrator, TABRAIZ_ORCHESTRATOR_SYSTEM
 
 class TestRunner:
     def __init__(self):
         self.passed = 0
         self.failed = 0
-        self.total = 11
+        self.total = 12
 
     def log_result(self, test_name: str, success: bool, msg: str = ""):
         if success:
@@ -51,7 +52,7 @@ class TestRunner:
 
 def run_all_tests():
     print("=" * 68)
-    print(" Adaab AI Agent - 11-Point Conversational Voice AI Suite ".center(68, "="))
+    print(" Adaab AI Agent - 12-Point Conversational Voice AI Suite ".center(68, "="))
     print("=" * 68)
 
     runner = TestRunner()
@@ -184,6 +185,25 @@ def run_all_tests():
         runner.log_result("TEST-11: Tehzeeb Wake Identity and Female Voice", True, f"Verified female voice '{DEFAULT_VOICE}'")
     except Exception as e:
         runner.log_result("TEST-11: Tehzeeb Wake Identity and Female Voice", False, str(e))
+
+    # ── TEST 12: Anti-Looping Decoding & Urdu Conversational Fluency ──────────
+    try:
+        orch = CognitiveOrchestrator()
+        loop_sample = (
+            "پاکستان میں کئی مشہور کھانے ہیں۔ یہ کھانے پاکستان کے مختلف علاقے میں پرچم پر پڑھا جاتا ہے اور "
+            "ایک ایسی تجربہ کا اہم عہدہ ہے جس میں میز کی میز کے ساتھ کھانے کا ایک مشرقی طرز پر تجربہ کیا جاتا ہے۔ "
+            "یہ کھانے کی میز کی میز کے ساتھ کھانے کا ایک مشرقی طرز پر تجربہ کیا جاتا ہے۔ "
+            "یہ کھانے کی میز کی میز کے ساتھ کھانے کا ایک مشرقی طرز پر تجربہ کیا جاتا ہے۔ 1."
+        )
+        pruned = orch.detect_and_prune_loops(loop_sample)
+        assert not pruned.endswith("1."), "Must strip trailing numbers"
+        assert pruned.count("کھانے کا ایک مشرقی طرز پر تجربہ کیا جاتا ہے") <= 1, "Must prune duplicated clauses"
+        cleaned_markdown = orch.clean_voice_text("**Text:** سلام، میں آپ کی کیا مدد کر سکتا ہوں؟ 🍲")
+        assert "**" not in cleaned_markdown and "text:" not in cleaned_markdown.lower()
+        assert "🍲" not in cleaned_markdown, "Emojis must be stripped"
+        runner.log_result("TEST-12: Anti-Looping Decoding & Urdu Fluency", True, "Verified n-gram loop pruning, trailing number removal, and emoji stripping")
+    except Exception as e:
+        runner.log_result("TEST-12: Anti-Looping Decoding & Urdu Fluency", False, str(e))
 
     print("\n" + "=" * 68)
     print(f" Test Results: {runner.passed}/{runner.total} Passed ({int(runner.passed/runner.total*100)}% Success Rate)")

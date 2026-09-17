@@ -203,12 +203,29 @@ body, .gradio-container {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-glow);
-    padding: 16px;
-    display: flex; flex-direction: column; gap: 12px;
+    padding: 10px 16px;
+    display: flex; flex-direction: row; align-items: center; justify-content: space-between;
     position: sticky; top: 0; z-index: 100;
 }
 .messenger-contact-info {
     display: flex; align-items: center; gap: 12px;
+}
+.header-refresh-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border-subtle);
+    border-radius: 50%;
+    width: 38px; height: 38px; min-width: 38px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    touch-action: manipulation;
+}
+.header-refresh-btn:hover {
+    border-color: var(--accent-emerald);
+    background: rgba(0,229,160,0.12);
+}
+.header-refresh-btn:active {
+    transform: scale(0.92);
 }
 .messenger-avatar {
     position: relative;
@@ -429,14 +446,30 @@ body, .gradio-container {
 .adaab-typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
 .adaab-typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
 
-/* Mobile Responsive */
+/* Mobile Responsive & Antigravity Clean Layout */
+.messenger-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-width: 860px !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
+}
+.messenger-chat {
+    flex: 1 1 auto !important;
+    height: calc(100dvh - 130px) !important;
+    min-height: 250px !important;
+    overflow-y: auto !important;
+    padding: 14px 16px !important;
+    -webkit-overflow-scrolling: touch !important;
+}
 @media (max-width: 768px) {
-    #neonWaveCanvas { height: 56px; }
-    .messenger-chat { height: calc(100dvh - 260px); }
+    .messenger-chat { height: calc(100dvh - 120px) !important; padding: 12px 14px !important; }
 }
 @media (max-width: 430px) {
-    .messenger-chat { padding: 12px; }
-    .messenger-dock { padding: 8px 12px; }
+    .messenger-chat { height: calc(100dvh - 115px) !important; padding: 10px 12px !important; }
+    .messenger-dock { padding: 8px 10px !important; }
 }
 @media (min-width: 1200px) {
     .messenger-wrapper { max-width: 920px !important; }
@@ -1496,7 +1529,7 @@ def ptt_voice_fn(base64_audio_data, history, style_choice, voice_choice="male", 
 def build_app(active_port: int = 7865, public_url: str = None):
     with gr.Blocks(title="آداب — تبریز | Adaab Voice AI") as demo:
         with gr.Column(elem_classes=["messenger-wrapper"]):
-            # Top Header Card (Contact Bar)
+            # Minimalist Antigravity Top Header Bar
             header_html = gr.HTML(
                 f"""
                 <div class="messenger-header">
@@ -1510,279 +1543,95 @@ def build_app(active_port: int = 7865, public_url: str = None):
                             <div class="messenger-status"><span class="status-pulse-dot"></span>آن لائن • باادب اردو صوتی معاون</div>
                         </div>
                     </div>
+                    <button type="button" class="header-refresh-btn" onclick="document.getElementById('hidden_clear_btn').click()" title="نئی گفتگو (New Chat)">
+                        <img src="{ICON_REFRESH}" class="btn-icon-img" alt="Reset" />
+                    </button>
                 </div>
                 """
             )
 
-            with gr.Tabs(elem_classes=["messenger-tabs"]):
-                # ── TAB 1: Chat Messenger ──
-                with gr.Tab("گفتگو (Chat)", elem_id="tab-chat"):
-                    chat_style = gr.State(value="standard")
-                    chat_voice = gr.State(value="male")
+            chat_style = gr.State(value="standard")
+            chat_voice = gr.State(value="male")
+            profile_state = gr.State(value={})
 
-                    # Single Unified Messenger Chatbot
-                    chatbot = gr.Chatbot(
-                        value=[{"role": "assistant", "content": format_assistant_message(TABRAIZ_INITIAL_GREETING, TABRAIZ_OPENING_AUDIO)}],
-                        elem_classes=["messenger-chat"],
-                        label="چیٹ (Chat)",
-                        show_label=False,
-                        sanitize_html=False
-                    )
+            # Single Unified Full-Screen Conversation Chatbot
+            chatbot = gr.Chatbot(
+                value=[{"role": "assistant", "content": format_assistant_message(TABRAIZ_INITIAL_GREETING, TABRAIZ_OPENING_AUDIO)}],
+                elem_classes=["messenger-chat"],
+                label="گفتگو",
+                show_label=False,
+                sanitize_html=False
+            )
 
-                    # Compact Audio Waveform Ribbon
-                    gr.HTML(
-                        f"""
-                        <div class="messenger-wave-card">
-                            <div class="waveform-state-badge">
-                                <span class="waveform-state-dot"></span>
-                                <span id="waveform-state-text">IDLE</span>
-                            </div>
-                            <canvas id="neonWaveCanvas"></canvas>
-                            <div id="ptt-status-hint" class="messenger-status-hint">
-                                <img src="{ICON_MIC}" class="hint-icon-img" alt="" /> بولنے کے لیے مائیک دبائیں • Tap mic to speak
-                            </div>
-                        </div>
-                        """
-                    )
+            # Hidden Gradio Audio bridge (CSS-hidden, needed for Gradio state transport)
+            voice_reply_player = gr.Audio(
+                value=None,
+                autoplay=False,
+                elem_id="voice_reply_player",
+                elem_classes=["compact-audio-player"],
+                visible=False
+            )
 
-                    # Hidden Gradio Audio bridge (CSS-hidden, still needed for Gradio state transport)
-                    voice_reply_player = gr.Audio(
-                        value=None,
-                        autoplay=False,
-                        elem_id="voice_reply_player",
-                        elem_classes=["compact-audio-player"],
-                        visible=False
-                    )
-
-                    # Per-session profile state (A8: isolates users from each other)
-                    profile_state = gr.State(value={})
-
-                    # Sticky Messenger Bottom Dock
-                    with gr.Row(elem_classes=["messenger-dock"]):
-                        ptt_btn_html = gr.HTML(
-                            f"""
-                            <button id="ptt-btn" 
-                                    type="button"
-                                    title="بولنے کے لیے ٹیپ کریں (Tap to speak / Tap again to send)"
-                                    onclick="handleMicToggle(event)">
-                                <img id="ptt-btn-icon" src="{ICON_MIC}" class="ptt-icon-img" alt="Mic" />
-                            </button>
-                            """
-                        )
-                        text_msg = gr.Textbox(
-                            placeholder="پیغام تحریر فرمائیں... (Type a message...)", 
-                            elem_id="message-input",
-                            show_label=False,
-                            container=False,
-                            scale=8,
-                            lines=1,
-                            max_lines=3
-                        )
-                        send_btn = gr.Button("", icon=get_icon_path("send.png"), elem_id="send-btn", scale=1, variant="primary")
-
-                    # Hidden bridge controls for PTT JavaScript trigger
-                    ptt_raw_input = gr.Textbox(elem_id="ptt_raw_input", elem_classes=["hidden-control"])
-                    ptt_trigger_btn = gr.Button("TRIGGER_PTT", elem_id="ptt_trigger_btn", elem_classes=["hidden-control"])
-                    ptt_status_box = gr.Textbox(elem_id="ptt_status_box", elem_classes=["hidden-control"])
-
-                    # Action strip: Listen welcome audio + Clear chat + Clear memory
-                    with gr.Row(elem_classes=["messenger-action-strip"]):
-                        welcome_listen_btn = gr.Button("تعارفی پیغام سنیں (Hear Welcome)", icon=get_icon_path("speaker.png"), size="sm")
-                        clear_btn = gr.Button("نئی گفتگو (New Chat)", icon=get_icon_path("refresh.png"), size="sm")
-                        clear_mem_action_btn = gr.Button("یادداشت صاف کریں (Clear Memory)", icon=get_icon_path("trash.png"), size="sm")
-
-                # Connect PTT trigger (A8: include profile_state in/out)
-                ptt_trigger_btn.click(
-                    fn=ptt_voice_fn,
-                    inputs=[ptt_raw_input, chatbot, chat_style, chat_voice, profile_state],
-                    outputs=[chatbot, ptt_status_box, voice_reply_player, profile_state],
-                    js="""(raw_audio, chatbot, style, voice, profile) => {
-                        const audio = window.__latestRecordedAudioB64 || raw_audio || '';
-                        console.log('[Adaab PTT JS Event] Sending audio to server, length:', audio.length);
-                        return [audio, chatbot, style, voice, profile];
-                    }"""
-                )
-
-                # Connect Text send button and enter submit (A8: profile_state in/out)
-                send_btn.click(
-                    fn=text_chat_fn,
-                    inputs=[text_msg, chatbot, chat_style, chat_voice, profile_state],
-                    outputs=[chatbot, text_msg, voice_reply_player, profile_state]
-                )
-                text_msg.submit(
-                    fn=text_chat_fn,
-                    inputs=[text_msg, chatbot, chat_style, chat_voice, profile_state],
-                    outputs=[chatbot, text_msg, voice_reply_player, profile_state]
-                )
-
-                # B3: Welcome button is JS-only (no server round-trip needed)
-                welcome_listen_btn.click(
-                    fn=None,
-                    inputs=None,
-                    outputs=None,
-                    js="() => { greetingAutoplayDone = false; greetingAttemptInProgress = false; startWelcomeAudioNow(); return []; }"
-                )
-
-                # Clear chat: reset to greeting, reset profile state
-                clear_btn.click(
-                    fn=lambda: ([{"role": "assistant", "content": format_assistant_message(TABRAIZ_INITIAL_GREETING, TABRAIZ_OPENING_AUDIO)}], "", {}),
-                    inputs=None,
-                    outputs=[chatbot, text_msg, profile_state]
-                )
-
-            # ── TAB 2: Memory ──
-            with gr.Tab("یادداشت (Memory)", elem_id="tab-memory"):
-                gr.Markdown("### <center style='color:#10b981; font-family:Noto Nastaliq Urdu,serif;'>محفوظ احباب اور کوائف (Known Profiles & Memory)</center>")
-                with gr.Row():
-                    refresh_memory_btn = gr.Button("تازہ کریں (Refresh)", icon=get_icon_path("refresh.png"), variant="secondary")
-                    clear_memory_btn = gr.Button("تمام یادداشت صاف کریں (Clear Memory)", icon=get_icon_path("trash.png"), variant="stop")
-                memory_markdown_box = gr.Markdown(value=format_who_did_you_talk_to_response("Tabraiz"), elem_classes="urdu-text")
-                refresh_memory_btn.click(lambda: format_who_did_you_talk_to_response("Tabraiz"), None, memory_markdown_box)
-
-                def handle_clear_memory():
-                    clear_user_memory()
-                    SESSION_STATE["active_profile"] = {}
-                    return format_who_did_you_talk_to_response("Tabraiz")
-
-                clear_memory_btn.click(handle_clear_memory, None, memory_markdown_box)
-
-                def handle_chat_and_memory_wipe():
-                    clear_user_memory()
-                    SESSION_STATE["active_profile"] = {}
-                    wiped_msg = "تمام محفوظ شدہ یادداشت اور سابقہ کوائف صاف کر دیے گئے ہیں۔ (All memory wiped successfully)."
-                    initial_msg = format_assistant_message(f"{wiped_msg}\n\n{TABRAIZ_INITIAL_GREETING}", TABRAIZ_OPENING_AUDIO)
-                    return (
-                        [{"role": "assistant", "content": initial_msg}],
-                        "",
-                        {},
-                        format_who_did_you_talk_to_response("Tabraiz")
-                    )
-
-                clear_mem_action_btn.click(
-                    fn=handle_chat_and_memory_wipe,
-                    inputs=None,
-                    outputs=[chatbot, text_msg, profile_state, memory_markdown_box]
-                )
-
-            # ── TAB 3: Mobile Access & QR ──
-            with gr.Tab("موبائل (Mobile QR)", elem_id="tab-mobile"):
-                local_ip = get_local_lan_ip()
-                local_mobile_url = f"https://{local_ip}:{active_port}"
-                local_qr_b64 = generate_qr_code_base64(local_mobile_url)
-
-                if public_url:
-                    public_qr_b64 = generate_qr_code_base64(public_url)
-                    tab3_html = f"""
-                    <div style="display:flex; flex-direction:column; gap:16px; margin-top:14px;">
-                        <!-- Cloudflare Public Tunnel Card -->
-                        <div class="mobile-access-card" style="border:1px solid rgba(16,185,129,0.35); background:linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(15,23,42,0.85) 100%);">
-                            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px;">
-                                <div style="flex:1; min-width:240px;">
-                                    <div style="display:flex; align-items:center; gap:8px;">
-                                        <span class="status-pulse-dot" style="background:#10b981;"></span>
-                                        <div style="font-family:'Share Tech Mono',monospace; color:#10b981; font-size:0.95rem; font-weight:700; letter-spacing:1px;">
-                                            CLOUDFLARE SECURE TUNNEL (GLOBAL ACCESS)
-                                        </div>
-                                    </div>
-                                    <code style="display:block; margin-top:10px; background:rgba(0,0,0,0.4); padding:8px 12px; border:1px solid rgba(16,185,129,0.3); color:#34d399; font-family:monospace; font-size:0.92rem; border-radius:6px; word-break:break-all;">{public_url}</code>
-                                    <div style="font-size:0.8rem; color:#94a3b8; margin-top:8px; line-height:1.5;">
-                                        موبائل ڈیٹا (4G/5G) یا کسی بھی نیٹ ورک پر مکمل کام کرتا ہے۔ باقاعدہ تصدیق شدہ SSL سرٹیفکیٹ اور مائیکروفون فعال۔
-                                    </div>
-                                    <div style="font-size:0.75rem; color:#64748b; margin-top:4px; font-family:'Share Tech Mono',monospace;">
-                                        Cloudflare Verified SSL • Zero Browser Warnings • Full Audio & Mic
-                                    </div>
-                                </div>
-                                <div style="text-align:center; flex-shrink:0;">
-                                    <div style="background:#ffffff; padding:10px; border-radius:10px; display:inline-block; box-shadow:0 4px 14px rgba(0,0,0,0.35);">
-                                        <img src="{public_qr_b64}" alt="Cloudflare QR" style="width:130px; height:130px; display:block; aspect-ratio:1/1; object-fit:contain;" />
-                                    </div>
-                                    <div style="font-size:0.7rem; color:#10b981; font-weight:bold; margin-top:6px; font-family:'Share Tech Mono',monospace;">SCAN FOR GLOBAL ACCESS</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Local Wi-Fi Card -->
-                        <div class="mobile-access-card" style="border:1px solid rgba(56,189,248,0.25); background:linear-gradient(135deg, rgba(56,189,248,0.04) 0%, rgba(15,23,42,0.85) 100%);">
-                            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px;">
-                                <div style="flex:1; min-width:240px;">
-                                    <div style="display:flex; align-items:center; gap:8px;">
-                                        <span class="status-pulse-dot" style="background:#38bdf8;"></span>
-                                        <div style="font-family:'Share Tech Mono',monospace; color:#38bdf8; font-size:0.92rem; font-weight:700; letter-spacing:1px;">
-                                            LOCAL WI-FI ACCESS (SAME NETWORK)
-                                        </div>
-                                    </div>
-                                    <code style="display:block; margin-top:10px; background:rgba(0,0,0,0.4); padding:8px 12px; border:1px solid rgba(56,189,248,0.3); color:#38bdf8; font-family:monospace; font-size:0.92rem; border-radius:6px; word-break:break-all;">{local_mobile_url}</code>
-                                    <div style="font-size:0.8rem; color:#94a3b8; margin-top:8px; line-height:1.5;">
-                                        اگر آپ کا فون اسی وائی فائی (Wi-Fi) راؤٹر سے منسلک ہے تو براہِ راست رابطہ کے لیے بہترین ہے۔
-                                    </div>
-                                    <div style="font-size:0.75rem; color:#64748b; margin-top:4px; font-family:'Share Tech Mono',monospace;">
-                                        Safari: Show Details → Visit Website | Chrome: Advanced → Proceed
-                                    </div>
-                                </div>
-                                <div style="text-align:center; flex-shrink:0;">
-                                    <div style="background:#ffffff; padding:10px; border-radius:10px; display:inline-block; box-shadow:0 4px 14px rgba(0,0,0,0.35);">
-                                        <img src="{local_qr_b64}" alt="Local Wi-Fi QR" style="width:130px; height:130px; display:block; aspect-ratio:1/1; object-fit:contain;" />
-                                    </div>
-                                    <div style="font-size:0.7rem; color:#38bdf8; font-weight:bold; margin-top:6px; font-family:'Share Tech Mono',monospace;">SCAN FOR LOCAL WI-FI</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            # Sticky Messenger Bottom Dock (Only Conversation Box, Mic, Text Input, Send)
+            with gr.Row(elem_classes=["messenger-dock"]):
+                ptt_btn_html = gr.HTML(
+                    f"""
+                    <button id="ptt-btn" 
+                            type="button"
+                            title="بولنے کے لیے ٹیپ کریں (Tap to speak / Tap again to send)"
+                            onclick="handleMicToggle(event)">
+                        <img id="ptt-btn-icon" src="{ICON_MIC}" class="ptt-icon-img" alt="Mic" />
+                    </button>
                     """
-                else:
-                    tab3_html = f"""
-                    <div style="display:flex; flex-direction:column; gap:16px; margin-top:14px;">
-                        <!-- Local Wi-Fi Access Card -->
-                        <div class="mobile-access-card" style="border:1px solid rgba(16,185,129,0.35); background:linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(15,23,42,0.85) 100%);">
-                            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px;">
-                                <div style="flex:1; min-width:240px;">
-                                    <div style="display:flex; align-items:center; gap:8px;">
-                                        <span class="status-pulse-dot" style="background:#10b981;"></span>
-                                        <div style="font-family:'Share Tech Mono',monospace; color:#10b981; font-size:0.95rem; font-weight:700; letter-spacing:1px;">
-                                            MOBILE LOCAL WI-FI ACCESS
-                                        </div>
-                                    </div>
-                                    <code style="display:block; margin-top:10px; background:rgba(0,0,0,0.4); padding:8px 12px; border:1px solid rgba(16,185,129,0.3); color:#34d399; font-family:monospace; font-size:0.92rem; border-radius:6px; word-break:break-all;">{local_mobile_url}</code>
-                                    <div style="font-size:0.8rem; color:#94a3b8; margin-top:8px; line-height:1.5;">
-                                        موبائل فون کو اسی وائی فائی سے جوڑ کر کیو آر کوڈ اسکین فرمائیں۔
-                                    </div>
-                                    <div style="font-size:0.75rem; color:#64748b; margin-top:4px; font-family:'Share Tech Mono',monospace;">
-                                        Safari: Show Details → Visit Website | Chrome: Advanced → Proceed
-                                    </div>
-                                </div>
-                                <div style="text-align:center; flex-shrink:0;">
-                                    <div style="background:#ffffff; padding:10px; border-radius:10px; display:inline-block; box-shadow:0 4px 14px rgba(0,0,0,0.35);">
-                                        <img src="{local_qr_b64}" alt="Mobile QR" style="width:130px; height:130px; display:block; aspect-ratio:1/1; object-fit:contain;" />
-                                    </div>
-                                    <div style="font-size:0.7rem; color:#10b981; font-weight:bold; margin-top:6px; font-family:'Share Tech Mono',monospace;">SCAN WITH PHONE</div>
-                                </div>
-                            </div>
-                        </div>
+                )
+                text_msg = gr.Textbox(
+                    placeholder="پیغام تحریر فرمائیں... (Type a message...)", 
+                    elem_id="message-input",
+                    show_label=False,
+                    container=False,
+                    scale=8,
+                    lines=1,
+                    max_lines=3
+                )
+                send_btn = gr.Button("", icon=get_icon_path("send.png"), elem_id="send-btn", scale=1, variant="primary")
 
-                        <!-- Cloudflare Tunnel Tip Card -->
-                        <div style="background:rgba(30,41,59,0.5); border:1px dashed rgba(148,163,184,0.3); border-radius:10px; padding:14px 18px; color:#cbd5e1; font-size:0.85rem;">
-                            <div style="font-family:'Share Tech Mono',monospace; color:#38bdf8; font-weight:bold; margin-bottom:4px;">
-                                PUBLIC INTERNET ACCESS VIA CLOUDFLARE
-                            </div>
-                            <div style="line-height:1.6;">
-                                اگر آپ موبائل فون سے 4G/5G یا کسی دوسرے انٹرنیٹ کنکشن کے ذریعے بغیر کسی انتباہ (Zero Warnings) کے رابطہ کرنا چاہتے ہیں تو سرور کو اس طرح چلائیں:
-                                <br/>
-                                <code style="display:inline-block; margin-top:6px; background:#0f172a; padding:4px 10px; border-radius:4px; color:#10b981; font-family:monospace;">python start.py</code> (Option 4 منتخب فرمائیں) یا <code style="display:inline-block; background:#0f172a; padding:4px 10px; border-radius:4px; color:#10b981; font-family:monospace;">python app.py --tunnel</code>
-                            </div>
-                        </div>
-                    </div>
-                    """
+            # Hidden bridge controls for PTT JavaScript trigger & clean reset
+            ptt_raw_input = gr.Textbox(elem_id="ptt_raw_input", elem_classes=["hidden-control"])
+            ptt_trigger_btn = gr.Button("TRIGGER_PTT", elem_id="ptt_trigger_btn", elem_classes=["hidden-control"])
+            ptt_status_box = gr.Textbox(elem_id="ptt_status_box", elem_classes=["hidden-control"])
+            hidden_clear_btn = gr.Button("CLEAR", elem_id="hidden_clear_btn", elem_classes=["hidden-control"])
 
-                gr.HTML(tab3_html)
+        # Event connections
+        ptt_trigger_btn.click(
+            fn=ptt_voice_fn,
+            inputs=[ptt_raw_input, chatbot, chat_style, chat_voice, profile_state],
+            outputs=[chatbot, ptt_status_box, voice_reply_player, profile_state],
+            js="""(raw_audio, chatbot, style, voice, profile) => {
+                const audio = window.__latestRecordedAudioB64 || raw_audio || '';
+                console.log('[Adaab PTT JS Event] Sending audio to server, length:', audio.length);
+                return [audio, chatbot, style, voice, profile];
+            }"""
+        )
 
-            # ── TAB 4: Diagnostics ──
-            with gr.Tab("نظام (Diagnostics)", elem_id="tab-diag"):
-                diag_refresh = gr.Button("REFRESH DIAGNOSTICS", icon=get_icon_path("refresh.png"))
-                gpu_telemetry_box = gr.JSON(value=get_gpu_telemetry(), label="GPU Telemetry")
-                log_box = gr.Textbox(value=get_latest_crash_report(), label="System / Crash Log", lines=10)
-                diag_refresh.click(lambda: (get_gpu_telemetry(), get_latest_crash_report()), None, [gpu_telemetry_box, log_box])
+        send_btn.click(
+            fn=text_chat_fn,
+            inputs=[text_msg, chatbot, chat_style, chat_voice, profile_state],
+            outputs=[chatbot, text_msg, voice_reply_player, profile_state]
+        )
+        text_msg.submit(
+            fn=text_chat_fn,
+            inputs=[text_msg, chatbot, chat_style, chat_voice, profile_state],
+            outputs=[chatbot, text_msg, voice_reply_player, profile_state]
+        )
+
+        hidden_clear_btn.click(
+            fn=lambda: ([{"role": "assistant", "content": format_assistant_message(TABRAIZ_INITIAL_GREETING, TABRAIZ_OPENING_AUDIO)}], "", {}),
+            inputs=None,
+            outputs=[chatbot, text_msg, profile_state]
+        )
 
     return demo
+
 
 if __name__ == "__main__":
     import argparse
