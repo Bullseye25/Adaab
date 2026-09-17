@@ -147,11 +147,17 @@ if modal_available:
         model = get_peft_model(model, lora_config)
         model.print_trainable_parameters()
 
-        training_args = TrainingArguments(
+        try:
+            from trl import SFTConfig
+            ConfigClass = SFTConfig
+        except ImportError:
+            ConfigClass = TrainingArguments
+
+        training_args = ConfigClass(
             output_dir="/root/weights/qwen_lora_checkpoints",
             per_device_train_batch_size=2,
             gradient_accumulation_steps=4,
-            warmup_ratio=0.1,
+            warmup_steps=10,
             num_train_epochs=3,
             learning_rate=2e-4,
             fp16=False,
@@ -170,15 +176,20 @@ if modal_available:
 
         dataset = dataset.map(format_chatml, batched=True)
 
-        trainer = SFTTrainer(
-            model=model,
-            train_dataset=dataset,
-            peft_config=lora_config,
-            dataset_text_field="text",
-            max_seq_length=1024,
-            tokenizer=tokenizer,
-            args=training_args
-        )
+        trainer_kwargs = {
+            "model": model,
+            "train_dataset": dataset,
+            "peft_config": lora_config,
+            "args": training_args,
+        }
+        if hasattr(training_args, "dataset_text_field"):
+            training_args.dataset_text_field = "text"
+            training_args.max_seq_length = 1024
+        else:
+            trainer_kwargs["dataset_text_field"] = "text"
+            trainer_kwargs["max_seq_length"] = 1024
+
+        trainer = SFTTrainer(**trainer_kwargs)
 
         print("[Modal GPU] Starting training...")
         trainer.train()
