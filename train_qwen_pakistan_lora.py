@@ -17,6 +17,14 @@ Supports two execution modes:
 
 import os
 import sys
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+os.environ["PYTHONIOENCODING"] = "utf-8"
+os.environ["PYTHONUTF8"] = "1"
+
 import json
 import argparse
 
@@ -39,6 +47,27 @@ except ImportError:
 if modal_available:
     app = modal.App("adaab-qwen-finetuner")
 
+    def get_credentials():
+        token = os.environ.get("HF_TOKEN")
+        try:
+            creds_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "credentials.txt")
+            if os.path.exists(creds_path):
+                with open(creds_path, "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("HF_TOKEN="):
+                            token = line.split("=", 1)[1].strip()
+                        elif line.startswith("hf_"):
+                            token = line.strip()
+        except Exception:
+            pass
+        return token
+
+    hf_token_local = get_credentials()
+    modal_secrets = []
+    if hf_token_local:
+        modal_secrets.append(modal.Secret.from_dict({"HF_TOKEN": hf_token_local}))
+
     train_image = (
         modal.Image.debian_slim(python_version="3.11")
         .pip_install(
@@ -56,11 +85,13 @@ if modal_available:
 
     @app.function(
         image=train_image,
-        gpu=modal.gpu.L4(),
+        gpu="L4",
         timeout=3600,
-        volumes={"/root/cache": volume}
+        volumes={"/root/cache": volume},
+        secrets=modal_secrets
     )
     def train_qwen_modal(dataset_jsonl_content: str):
+        import os
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainingArguments
         from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
@@ -82,11 +113,21 @@ if modal_available:
             bnb_4bit_use_double_quant=True
         )
 
-        tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_NAME, trust_remote_code=True)
+        HF_CACHE = "/root/cache/huggingface"
+        hf_token = os.environ.get("HF_TOKEN")
+
+        tokenizer = AutoTokenizer.from_pretrained(
+            BASE_MODEL_NAME,
+            cache_dir=HF_CACHE,
+            token=hf_token,
+            trust_remote_code=True
+        )
         tokenizer.pad_token = tokenizer.eos_token
 
         model = AutoModelForCausalLM.from_pretrained(
             BASE_MODEL_NAME,
+            cache_dir=HF_CACHE,
+            token=hf_token,
             quantization_config=bnb_config,
             device_map="auto",
             trust_remote_code=True
@@ -120,19 +161,20 @@ if modal_available:
             optim="paged_adamw_8bit"
         )
 
-        def formatting_prompts_func(example):
-            texts = []
+        def format_chatml(example):
+            formatted_texts = []
             for msg_list in example["messages"]:
                 formatted = tokenizer.apply_chat_template(msg_list, tokenize=False, add_generation_prompt=False)
-                texts.append(formatted)
-            return texts
+                formatted_texts.append(formatted)
+            return {"text": formatted_texts}
+
+        dataset = dataset.map(format_chatml, batched=True)
 
         trainer = SFTTrainer(
             model=model,
             train_dataset=dataset,
             peft_config=lora_config,
-            dataset_text_field="messages",
-            formatting_func=formatting_prompts_func,
+            dataset_text_field="text",
             max_seq_length=1024,
             tokenizer=tokenizer,
             args=training_args
@@ -162,9 +204,9 @@ if modal_available:
             return
         with open(target_file, "r", encoding="utf-8") as f:
             content = f.read()
-        print(f"Submitting QLoRA fine-tuning job to Modal Cloud (NVIDIA L4) using {target_file}...")
+        print("Submitting QLoRA fine-tuning job to Modal Cloud (NVIDIA L4) using " + str(target_file) + "...")
         train_qwen_modal.remote(content)
-        print("✓ Training completed successfully and adapter committed to Modal Volume 'adaab-cache'!")
+        print("[SUCCESS] Training completed successfully and adapter committed to Modal Volume 'adaab-cache'!")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
