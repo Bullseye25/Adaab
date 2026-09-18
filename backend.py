@@ -9,7 +9,7 @@ import urllib.error
 def resolve_modal_endpoint() -> str:
     """
     Dynamically discovers the web endpoint URL for AdaabAgentModel
-    from the currently active Modal profile/app, falling back to ridaraza2499.
+    from the currently active Modal profile/app.
     """
     env_url = os.environ.get("ADAAB_ENDPOINT_URL")
     if env_url:
@@ -27,18 +27,42 @@ def resolve_modal_endpoint() -> str:
     except Exception:
         pass
 
-    # Default to current active profile: ridaraza2499
     return "https://ridaraza2499--adaab-agent-backend-adaabagentmodel-chat-c-40745c.modal.run"
 
+def resolve_modal_image_endpoint() -> str:
+    """
+    Dynamically discovers the web endpoint URL for ZImageTurboModel
+    from the active Modal app (adaab-z-image-turbo).
+    """
+    env_url = os.environ.get("ADAAB_IMAGE_ENDPOINT_URL")
+    if env_url:
+        return env_url
+
+    try:
+        import modal
+        cls = modal.Cls.from_name("adaab-z-image-turbo", "ZImageTurboModel")
+        obj = cls()
+        web_url_fn = getattr(obj.generate_endpoint, "get_web_url", None)
+        if callable(web_url_fn):
+            resolved = web_url_fn()
+            if resolved:
+                return resolved
+    except Exception:
+        pass
+
+    return "https://ridaraza2499--adaab-z-image-turbo-zimageturbomodel-gener-4fbafd.modal.run"
+
 ENDPOINT_URL = resolve_modal_endpoint()
+IMAGE_ENDPOINT_URL = resolve_modal_image_endpoint()
 
 def get_modal_client():
     """Returns local helper interface to Modal backend."""
     return AdaabClient()
 
 class AdaabClient:
-    def __init__(self, endpoint_url: str = None):
+    def __init__(self, endpoint_url: str = None, image_endpoint_url: str = None):
         self.endpoint_url = endpoint_url or resolve_modal_endpoint()
+        self.image_endpoint_url = image_endpoint_url or resolve_modal_image_endpoint()
         self._heartbeat_thread = None
         self._stop_heartbeat_event = threading.Event()
         self._last_heartbeat_time = 0.0
@@ -173,6 +197,75 @@ class AdaabClient:
                 time.sleep(retry_delay)
 
         raise RuntimeError(f"[AdaabClient] Cloud request failed after {max_retries + 1} attempts: {last_error}")
+
+    def generate_image(
+        self,
+        prompt: str,
+        height: int = 1024,
+        width: int = 1024,
+        num_inference_steps: int = 9,
+        seed: int = None,
+        max_retries: int = 2,
+        retry_delay: float = 5.0
+    ) -> dict:
+        """
+        Dispatches an image generation request to the serverless Modal Z-Image-Turbo backend.
+        Supports both direct Modal SDK invocation and HTTP endpoint fallback.
+        Returns generated image base64, filename, and modal persistent storage path.
+        """
+        # 1. Attempt direct Modal SDK invocation if available
+        try:
+            import modal
+            cls = modal.Cls.from_name("adaab-z-image-turbo", "ZImageTurboModel")
+            obj = cls()
+            print(f"[AdaabClient] Invoking ZImageTurboModel via Modal SDK...")
+            res = obj.generate.remote(
+                prompt=prompt,
+                height=height,
+                width=width,
+                num_inference_steps=num_inference_steps,
+                seed=seed
+            )
+            if res and res.get("status") == "success":
+                return res
+        except Exception as sdk_err:
+            print(f"[AdaabClient] Modal SDK invocation notice ({sdk_err}). Falling back to HTTP endpoint...")
+
+        # 2. HTTP Endpoint fallback
+        payload = {
+            "prompt": prompt,
+            "height": height,
+            "width": width,
+            "num_inference_steps": num_inference_steps,
+            "seed": seed
+        }
+        data_bytes = json.dumps(payload).encode("utf-8")
+        last_error = None
+
+        for attempt in range(max_retries + 1):
+            try:
+                req = urllib.request.Request(
+                    self.image_endpoint_url,
+                    data=data_bytes,
+                    headers={"Content-Type": "application/json"},
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=180) as response:
+                    resp_data = json.loads(response.read().decode("utf-8"))
+                    if resp_data.get("status") == "success":
+                        return resp_data
+                    raise RuntimeError(resp_data.get("message") or "Unknown image generation failure")
+            except urllib.error.HTTPError as e:
+                err_body = e.read().decode("utf-8", errors="ignore")
+                last_error = f"HTTP {e.code}: {err_body}"
+                print(f"[AdaabClient] Image attempt {attempt + 1} HTTP error: {last_error}. Retrying in {retry_delay}s...")
+                time.sleep(retry_delay)
+            except Exception as e:
+                last_error = str(e)
+                print(f"[AdaabClient] Image attempt {attempt + 1} notice: Container spin-up ({last_error}). Retrying in {retry_delay}s...")
+                time.sleep(retry_delay)
+
+        raise RuntimeError(f"[AdaabClient] Image generation failed after {max_retries + 1} attempts: {last_error}")
 
 if __name__ == "__main__":
     print(f"Testing Adaab Client connection to: {ENDPOINT_URL}")

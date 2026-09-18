@@ -152,11 +152,55 @@ def format_assistant_message(urdu_text: str, audio_path: str | None = None, preb
             f'<pre class="code-artifact-body"><code class="language-{lang.lower()}">{safe_code}</code></pre>'
             f'</div>'
         )
-        artifact_cards.append(card)
+    # Extract any image cards: [IMAGE_CARD:{"b64": "...", "prompt": "...", "filename": "...", ...}]
+    image_cards = []
+    def _extract_image_card(m):
+        try:
+            card_data = json.loads(m.group(1))
+            b64_src = card_data.get("b64", "")
+            img_prompt = html.escape(card_data.get("prompt", ""))
+            fname = html.escape(card_data.get("filename", "adaab_image.png"))
+            cat = html.escape(card_data.get("category", "Z-Image-Turbo"))
+
+            img_card = (
+                f'<div class="image-artifact-card">'
+                f'<div class="image-artifact-header">'
+                f'<div class="image-artifact-meta">'
+                f'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#f59e0b" stroke-width="2">'
+                f'<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>'
+                f'<circle cx="8.5" cy="8.5" r="1.5"></circle>'
+                f'<polyline points="21 15 16 10 5 21"></polyline>'
+                f'</svg>'
+                f'<span class="image-artifact-title">Z-Image-Turbo (Modal GPU)</span>'
+                f'<span class="image-category-pill">{cat}</span>'
+                f'</div>'
+                f'<a href="{b64_src}" download="{fname}" class="download-image-btn" title="ڈاؤنلوڈ تصویر (Download Image)">'
+                f'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">'
+                f'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>'
+                f'<polyline points="7 10 12 15 17 10"></polyline>'
+                f'<line x1="12" y1="15" x2="12" y2="3"></line>'
+                f'</svg>'
+                f'<span>Download Image</span>'
+                f'</a>'
+                f'</div>'
+                f'<div class="image-artifact-preview">'
+                f'<img src="{b64_src}" alt="{img_prompt}" class="generated-chat-image" loading="lazy" />'
+                f'</div>'
+                f'<div class="image-artifact-caption">'
+                f'<span class="image-prompt-badge">Refined Prompt:</span> '
+                f'<span class="image-prompt-val">{img_prompt}</span>'
+                f'</div>'
+                f'</div>'
+            )
+            image_cards.append(img_card)
+        except Exception as e:
+            print(f"[App] Image card extraction notice: {e}")
         return ""
 
-    conversational_text = re.sub(r'```([a-zA-Z0-9_\-#+]*)\n?([\s\S]*?)```', _extract_artifact, urdu_text or "").strip()
+    conversational_text = re.sub(r'\[IMAGE_CARD:([\s\S]*?)\]', _extract_image_card, urdu_text or "").strip()
+    conversational_text = re.sub(r'```([a-zA-Z0-9_\-#+]*)\n?([\s\S]*?)```', _extract_artifact, conversational_text).strip()
     artifact_cards_html = "".join(artifact_cards)
+    image_cards_html = "".join(image_cards)
 
     audio_pill_html = ""
     if audio_uri:
@@ -187,6 +231,7 @@ def format_assistant_message(urdu_text: str, audio_path: str | None = None, preb
     return (
         f'<div class="bot-msg-card">'
         f'{content_html}'
+        f'{image_cards_html}'
         f'{artifact_cards_html}'
         f'{audio_pill_html}'
         f'{copy_btn_html}'
@@ -891,19 +936,21 @@ body, .gradio-container {
     border-color: rgba(255, 255, 255, 0.16) !important;
 }
 
-/* Bottom Floating Dock: In-Flow Flex Pinned at the Bottom */
+/* Bottom Floating Dock: Responsive across PC Monitors, Laptops, and Mobile */
 .messenger-dock, .row.messenger-dock {
     flex: 0 0 60px !important;
     height: 60px !important;
     min-height: 60px !important;
     max-height: 60px !important;
-    margin: 6px 18px 14px 18px !important;
-    padding: 0 16px !important;
+    margin: 6px auto 14px auto !important;
+    width: calc(100% - 28px) !important;
+    max-width: 860px !important;
+    padding: 0 14px !important;
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 10px !important;
     background: #1d212a !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 34px !important;
@@ -913,7 +960,7 @@ body, .gradio-container {
     position: relative !important;
     z-index: 999 !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
+    overflow: visible !important;
 }
 
 /* Clean up Gradio container wrappers inside dock */
@@ -1127,6 +1174,224 @@ body, .gradio-container {
     50% { box-shadow: 0 0 0 7px rgba(255, 59, 92, 0), 0 0 26px rgba(255, 59, 92, 0.8); }
 }
 
+/* Suppress Gradio default progress timer and ETA (3.2s ETA etc.) */
+.progress-level, 
+.progress-text, 
+.eta-bar, 
+div[data-testid="progress"] .meta,
+.meta-text,
+.progress-level-inner,
+div[class*="progress"] .meta,
+div[class*="progress"] span {
+    display: none !important;
+}
+
+/* Urdu Smooth Image Generation Waiting Animation */
+.adaab-image-loading-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 22px 18px !important;
+    margin: 8px 0 !important;
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.85) 0%, rgba(31, 41, 55, 0.6) 100%) !important;
+    border: 1px solid rgba(0, 210, 255, 0.25) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(0, 210, 255, 0.05) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.adaab-image-loading-card::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -50% !important;
+    left: -50% !important;
+    width: 200% !important;
+    height: 200% !important;
+    background: radial-gradient(circle, rgba(0, 210, 255, 0.12) 0%, transparent 65%) !important;
+    animation: auroraGlow 4s ease-in-out infinite alternate !important;
+    pointer-events: none !important;
+}
+
+@keyframes auroraGlow {
+    0% { transform: translate(-10%, -10%) scale(0.9); opacity: 0.5; }
+    50% { transform: translate(10%, 10%) scale(1.1); opacity: 0.9; }
+    100% { transform: translate(-5%, 5%) scale(1.0); opacity: 0.6; }
+}
+
+.adaab-loading-shimmer-ring {
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important;
+    border: 3px solid rgba(0, 210, 255, 0.15) !important;
+    border-top: 3px solid #00d2ff !important;
+    border-right: 3px solid #f59e0b !important;
+    animation: ringSpin 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+    box-shadow: 0 0 24px rgba(0, 210, 255, 0.35) !important;
+    margin-bottom: 14px !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+@keyframes ringSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.adaab-loading-urdu-title {
+    font-family: 'Noto Nastaliq Urdu', serif !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    direction: rtl !important;
+    text-align: center !important;
+    margin-bottom: 6px !important;
+    text-shadow: 0 2px 10px rgba(0, 210, 255, 0.3) !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+.adaab-loading-urdu-subtitle {
+    font-family: 'Noto Nastaliq Urdu', serif !important;
+    font-size: 0.92rem !important;
+    color: #94a3b8 !important;
+    direction: rtl !important;
+    text-align: center !important;
+    position: relative !important;
+    z-index: 2 !important;
+    animation: gentlePulse 2.4s ease-in-out infinite !important;
+}
+
+@keyframes gentlePulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; color: #38bdf8; }
+}
+
+/* Generated Image Card in Chat */
+.image-artifact-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    background: linear-gradient(180deg, #161b26 0%, #11141c 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 18px !important;
+    padding: 12px !important;
+    margin: 10px 0 !important;
+    max-width: 520px !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5) !important;
+    overflow: hidden !important;
+    transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+.image-artifact-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 16px 42px rgba(0, 210, 255, 0.2) !important;
+    border-color: rgba(0, 210, 255, 0.35) !important;
+}
+
+.image-artifact-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 8px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-sizing: border-box !important;
+}
+
+.image-artifact-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.image-artifact-title {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    color: #e2e8f0 !important;
+}
+
+.image-category-pill {
+    font-size: 0.70rem !important;
+    color: #f59e0b !important;
+    background: rgba(245, 158, 11, 0.12) !important;
+    border: 1px solid rgba(245, 158, 11, 0.25) !important;
+    padding: 2px 8px !important;
+    border-radius: 10px !important;
+}
+
+.download-image-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    background: linear-gradient(135deg, #00d2ff 0%, #0070f3 100%) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    font-size: 0.80rem !important;
+    font-weight: 700 !important;
+    font-family: 'Inter', sans-serif !important;
+    padding: 5px 12px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 10px rgba(0, 210, 255, 0.3) !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+}
+
+.download-image-btn:hover {
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%) !important;
+    box-shadow: 0 4px 16px rgba(0, 210, 255, 0.5) !important;
+    transform: translateY(-1px) !important;
+    color: #ffffff !important;
+}
+
+.image-artifact-preview {
+    width: 100% !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    background: #0d1117 !important;
+}
+
+.generated-chat-image {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 480px !important;
+    object-fit: cover !important;
+    border-radius: 12px !important;
+    display: block !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+.image-artifact-caption {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+    padding: 4px 2px !important;
+    font-size: 0.78rem !important;
+    line-height: 1.5 !important;
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+.image-prompt-badge {
+    color: #f59e0b !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+
+.image-prompt-val {
+    color: #94a3b8 !important;
+    font-style: italic !important;
+    word-break: break-word !important;
+}
+
 /* Hidden elements */
 .adaab-hidden-bridge,
 .row.adaab-hidden-bridge,
@@ -1210,13 +1475,13 @@ body, .gradio-container {
         height: 54px !important;
         min-height: 54px !important;
         max-height: 54px !important;
-        margin: 4px 8px 8px 8px !important;
+        margin: 4px auto 8px auto !important;
+        width: calc(100% - 16px) !important;
+        max-width: 100% !important;
         padding: 0 12px !important;
         gap: 8px !important;
-        position: relative !important;
-        bottom: auto !important;
-        left: auto !important;
-        right: auto !important;
+        border-radius: 28px !important;
+        overflow: visible !important;
     }
     .messenger-dock > .gradio-html,
     .messenger-dock > div:has(#ptt-btn) {
@@ -1239,9 +1504,59 @@ body, .gradio-container {
     }
 }
 
+/* Laptop Viewports (1200px - 1440px) */
+@media (min-width: 769px) and (max-width: 1440px) {
+    .messenger-dock, .row.messenger-dock {
+        max-width: 780px !important;
+        margin: 5px auto 12px auto !important;
+    }
+}
+
+/* Mobile & iPhone Viewports (<= 540px) */
+@media (max-width: 540px) {
+    .messenger-dock, .row.messenger-dock {
+        flex: 0 0 52px !important;
+        height: 52px !important;
+        min-height: 52px !important;
+        max-height: 52px !important;
+        margin: 4px auto 6px auto !important;
+        width: calc(100% - 12px) !important;
+        padding: 0 8px !important;
+        gap: 6px !important;
+        border-radius: 26px !important;
+        overflow: visible !important;
+    }
+    .messenger-dock > .gradio-html,
+    .messenger-dock > div:has(#ptt-btn) {
+        flex: 0 0 36px !important;
+        width: 36px !important;
+        min-width: 36px !important;
+        height: 36px !important;
+    }
+    #ptt-btn {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+    }
+    #send-btn {
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+        padding: 0 12px !important;
+        min-width: 56px !important;
+        font-size: 0.80rem !important;
+        border-radius: 17px !important;
+    }
+    #message-input textarea, 
+    #message-input input {
+        font-size: 13.5px !important;
+        padding: 4px 6px !important;
+    }
+}
+
 @supports (padding: env(safe-area-inset-bottom)) {
     .messenger-dock {
-        padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
+        margin-bottom: max(8px, env(safe-area-inset-bottom)) !important;
     }
 }
 """
@@ -2343,7 +2658,8 @@ TYPING_INDICATOR = '<div class="adaab-typing-indicator"><span class="dot"></span
 
 def text_chat_fn(message, history, style_choice, voice_choice="male", profile_state=None):
     if not message.strip():
-        return history, "", None, profile_state or {}
+        yield history, "", None, profile_state or {}
+        return
 
     voice_choice = voice_choice or "male"
     persona = "Tabraiz"
@@ -2352,6 +2668,20 @@ def text_chat_fn(message, history, style_choice, voice_choice="male", profile_st
 
     # Append formatted user message matching tablet mockup
     history.append({"role": "user", "content": format_user_message(message)})
+
+    # Detect if user message is an image generation request to show smooth Urdu waiting animation immediately
+    is_img_request = any(w in message.lower() for w in ["تصویر", "فوٹو", "پینٹنگ", "image", "photo", "picture", "tasveer", "tasweer"])
+    if is_img_request:
+        loading_card = (
+            '<div class="adaab-image-loading-card">'
+            '<div class="adaab-loading-shimmer-ring"></div>'
+            '<div class="adaab-loading-urdu-title">براہِ کرم انتظار فرمائیے</div>'
+            '<div class="adaab-loading-urdu-subtitle">آپ کی مطلوبہ تصویر ماڈل کلاؤڈ پر تیار کی جا رہی ہے...</div>'
+            '</div>'
+        )
+        temp_history = list(history)
+        temp_history.append({"role": "assistant", "content": loading_card})
+        yield temp_history, "", None, profile_state
 
     bot_reply, updated_profile = handle_conversation_turn(
         user_message=message,
@@ -2365,10 +2695,11 @@ def text_chat_fn(message, history, style_choice, voice_choice="male", profile_st
         profile_state = updated_profile
         SESSION_STATE["active_profile"] = updated_profile
 
-    # For spoken voice audio: strip any code/article blocks so TTS never recites raw code aloud
-    voice_speech_text = re.sub(r'```[\s\S]*?```', '', bot_reply).strip()
+    # For spoken voice audio: strip any image cards and code/article blocks so TTS never recites raw JSON/code aloud
+    voice_speech_text = re.sub(r'\[IMAGE_CARD:[\s\S]*?\]', '', bot_reply).strip()
+    voice_speech_text = re.sub(r'```[\s\S]*?```', '', voice_speech_text).strip()
     if not voice_speech_text:
-        voice_speech_text = "یہ رہا آپ کا مطلوبہ کوڈ اور مواد۔"
+        voice_speech_text = "یہ رہی آپ کی مطلوبہ تصویر اور مواد۔"
 
     # Generate spoken voice audio for the reply
     audio_out = None
@@ -2393,7 +2724,8 @@ def text_chat_fn(message, history, style_choice, voice_choice="male", profile_st
     bot_formatted = format_assistant_message(bot_reply, None, prebuilt_uri=audio_uri_encoded)
     history.append({"role": "assistant", "content": bot_formatted})
 
-    return history, "", None, profile_state
+    yield history, "", None, profile_state
+    return
 
 
 def ptt_voice_fn(base64_audio_data, history, style_choice, voice_choice="male", profile_state=None):
@@ -2410,7 +2742,8 @@ def ptt_voice_fn(base64_audio_data, history, style_choice, voice_choice="male", 
         print("[Adaab PTT] Notice: Empty audio payload received from browser.", flush=True)
         empty_reply = "کوئی آواز موصول نہیں ہوئی۔ براہ کرم مائیک بٹن پر ٹیپ کر کے بولیں اور مکمل ہونے پر دوبارہ ٹیپ فرمائیں۔"
         history.append({"role": "assistant", "content": format_assistant_message(empty_reply)})
-        return history, "Empty audio", None, profile_state
+        yield history, "Empty audio", None, profile_state
+        return
 
     print("[Adaab PTT] Transcribing audio with Google Speech ASR...", flush=True)
     asr_res = transcribe_base64_audio(base64_audio_data)
@@ -2420,13 +2753,28 @@ def ptt_voice_fn(base64_audio_data, history, style_choice, voice_choice="male", 
         error_msg = asr_res.get("error", "آواز واضح نہیں تھی")
         asr_err_reply = f"آواز کی شناخت نہیں ہو سکی ({error_msg})۔ براہ کرم مائیک پر ٹیپ کر کے واضح انداز میں دوبارہ بولیں۔"
         history.append({"role": "assistant", "content": format_assistant_message(asr_err_reply)})
-        return history, f"ASR Error: {error_msg}", None, profile_state
+        yield history, f"ASR Error: {error_msg}", None, profile_state
+        return
 
     user_transcript = asr_res["text"]
     print(f"[Adaab PTT] User transcript: '{user_transcript}'", flush=True)
     print(f"[Adaab PTT] Dispatching to Modal GPU Backend (Persona: {persona})...", flush=True)
 
     history.append({"role": "user", "content": format_user_message(user_transcript)})
+
+    # Detect if spoken message is an image generation request
+    is_img_request = any(w in user_transcript.lower() for w in ["تصویر", "فوٹو", "پینٹنگ", "image", "photo", "picture", "tasveer", "tasweer"])
+    if is_img_request:
+        loading_card = (
+            '<div class="adaab-image-loading-card">'
+            '<div class="adaab-loading-shimmer-ring"></div>'
+            '<div class="adaab-loading-urdu-title">براہِ کرم انتظار فرمائیے</div>'
+            '<div class="adaab-loading-urdu-subtitle">آپ کی مطلوبہ تصویر ماڈل کلاؤڈ پر تیار کی جا رہی ہے...</div>'
+            '</div>'
+        )
+        temp_history = list(history)
+        temp_history.append({"role": "assistant", "content": loading_card})
+        yield temp_history, "تصویر سازی جاری ہے...", None, profile_state
 
     bot_reply, updated_profile = handle_conversation_turn(
         user_message=user_transcript,
@@ -2443,10 +2791,11 @@ def ptt_voice_fn(base64_audio_data, history, style_choice, voice_choice="male", 
     print(f"[Adaab PTT] Bot reply generated: '{bot_reply[:80]}...'", flush=True)
 
     # Synthesize and immediately encode to base64; delete temp file
-    # For spoken voice audio: strip any code/article blocks so TTS never recites raw code aloud
-    voice_speech_text = re.sub(r'```[\s\S]*?```', '', bot_reply).strip()
+    # For spoken voice audio: strip any image cards and code/article blocks so TTS never recites raw JSON/code aloud
+    voice_speech_text = re.sub(r'\[IMAGE_CARD:[\s\S]*?\]', '', bot_reply).strip()
+    voice_speech_text = re.sub(r'```[\s\S]*?```', '', voice_speech_text).strip()
     if not voice_speech_text:
-        voice_speech_text = "یہ رہا آپ کا مطلوبہ کوڈ اور مواد۔"
+        voice_speech_text = "یہ رہی آپ کی مطلوبہ تصویر اور مواد۔"
 
     audio_uri_encoded = None
     try:
@@ -2470,7 +2819,8 @@ def ptt_voice_fn(base64_audio_data, history, style_choice, voice_choice="male", 
     history.append({"role": "assistant", "content": bot_formatted})
 
     status_msg = f"{persona}: {bot_reply}"
-    return history, status_msg, None, profile_state
+    yield history, status_msg, None, profile_state
+    return
 
 
 def build_app(active_port: int = 7865, public_url: str = None):

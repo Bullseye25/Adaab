@@ -248,12 +248,152 @@ class CognitiveOrchestrator:
         result = " ".join(clean_units).strip()
         return result or text
 
+    def is_nsfw_or_inappropriate(self, text: str) -> bool:
+        """Checks for explicit, nudity, adult, or vulgar content in English, Urdu, and Roman Urdu."""
+        if not text:
+            return False
+        lower = text.lower().strip()
+        
+        # English terms
+        english_nsfw = [
+            r"\b(nude|nudity|naked|nsfw|porn[a-z]*|erotic[a-z]*|sex[a-z]*|sexy|boobs?|breasts?|genitals?|genitalia|penis|vagina|vulva|butt|buttocks|bikini|lingerie|underwear|undress[a-z]*|uncensored|lewd)\b"
+        ]
+        if any(re.search(p, lower) for p in english_nsfw):
+            return True
+
+        # Roman Urdu terms
+        roman_nsfw = [
+            r"\b(nanga|nangi|nangey|barhana|fuhash|fuhashi|aryani|jism\s+dikhao|chut|lund|gand|sexy\s+tasveer|nangi\s+tasveer)\b"
+        ]
+        if any(re.search(p, lower) for p in roman_nsfw):
+            return True
+
+        # Urdu Script terms
+        urdu_nsfw = [
+            r"ننگا", r"ننگی", r"برہنہ", r"بے\s*لباس", r"عریانی", r"عریان", r"فحش", r"فحاشی",
+            r"سیکس", r"جسم\s*دکھاؤ", r"شہوت", r"مباشرت", r"پورن"
+        ]
+        if any(re.search(p, text) for p in urdu_nsfw):
+            return True
+
+        return False
+
+    def refine_image_prompt(self, user_text: str) -> tuple[str, str, str]:
+        """
+        Analyzes user image request, translates and enriches it into a vivid 8k English diffusion
+        prompt for Tongyi-MAI/Z-Image-Turbo, and generates Tabraiz's polite Urdu spoken reply.
+        Returns: (refined_english_prompt, spoken_urdu_reply, image_category)
+        """
+        raw = user_text.strip()
+        # Clean trigger phrases
+        core_query = re.sub(
+            r'^(?:برائے\s*مہربانی|مہربانی\s*فرما\s*کر|براہ\s*کرم|please|can\s+you)?\s*',
+            '',
+            raw,
+            flags=re.IGNORECASE
+        )
+        core_query = re.sub(
+            r'(?:ایک\s+)?تصویر\s*(?:بناؤ|بنا\s*کر\s*دو|بنائیے|بنا\s*دیں|دکھاؤ|تخلیق\s*کرو|چاہیے|ڈرا\s*کرو)|'
+            r'(?:ایک\s+)?فوٹو\s*(?:بناؤ|بنائیے|دکھاؤ)|'
+            r'\b(?:generate|create|draw|make|paint)\s+(?:an?\s+)?(?:image|picture|photo)\s+(?:of)?\b|'
+            r'\b(?:tasveer|tasweer|photo|image|picture)\s+(?:banao|bana\s*do|banayein|chahiye)\b',
+            '',
+            core_query,
+            flags=re.IGNORECASE
+        ).strip()
+        if not core_query:
+            core_query = raw
+
+        # Detect thematic category based on query keywords (specific concepts before broad geography)
+        lower = core_query.lower()
+        if any(w in lower or w in raw for w in ["ریکشہ", "سائبر", "cyberpunk", "rickshaw", "futuristic"]):
+            category = "Cyberpunk / Sci-Fi"
+        elif any(w in lower or w in raw for w in ["بریانی", "کھانا", "biryani", "food"]):
+            category = "Culinary Heritage"
+        elif any(w in lower or w in raw for w in ["بادشاہی", "مسجد", "badshahi", "mosque"]):
+            category = "Pakistani Architectural Heritage"
+        elif any(w in lower or w in raw for w in ["قلعہ", "شاہی قلعہ", "lahore fort", "fort"]):
+            category = "Historical Heritage"
+        elif any(w in lower or w in raw for w in ["پہاڑ", "برف", "k2", "mountain", "hunza", "snow", "karakoram"]):
+            category = "Northern Landscapes"
+        elif any(w in lower or w in raw for w in ["حویلی", "haveli", "courtyard"]):
+            category = "Traditional Architecture"
+        elif any(w in lower or w in raw for w in ["کراچی", "ساحل", "سمندر", "karachi", "beach", "clifton"]):
+            category = "Coastal Landscape"
+        else:
+            category = "Creative Art"
+
+        refined_prompt = None
+
+        # 1. Try Oracle / Ollama prompt refinement if available
+        enrichment_query = (
+            f"User image request: {core_query}\n\n"
+            "Task: Convert this into an expert, high-detail English diffusion prompt for Z-Image-Turbo.\n"
+            "Describe the scene with photorealistic visual details, composition, architectural/natural features, "
+            "lighting (golden hour, volumetric, or cinematic), camera angle, and 8k texture quality. "
+            "Do NOT output explanations, prefixes, or quotes. Output ONLY the English prompt."
+        )
+
+        try:
+            from ollama_oracle import get_ollama_oracle
+            ollama = get_ollama_oracle()
+            if ollama.is_available():
+                cand = ollama.query(enrichment_query, timeout=4)
+                if cand and len(cand.strip()) > 20 and not cand.strip().startswith("{"):
+                    refined_prompt = cand.strip().split("\n")[0].strip('"\'')
+        except Exception:
+            pass
+
+        if not refined_prompt and self.oracle and self.oracle.is_available():
+            try:
+                cand = self.oracle.query(enrichment_query, timeout=3)
+                if cand and len(cand.strip()) > 20 and not cand.strip().startswith("{"):
+                    refined_prompt = cand.strip().split("\n")[0].strip('"\'')
+            except Exception:
+                pass
+
+        # 2. Rule-based enrichment fallback
+        if not refined_prompt:
+            if category == "Pakistani Architectural Heritage":
+                refined_prompt = "A breathtaking cinematic 8k photograph of Badshahi Mosque in Lahore at golden hour sunset, glowing red sandstone arches, vast marble courtyards with shimmering water reflections, intricate Mughal geometric carvings, minarets silhouetted against twilight sky, dramatic soft lighting, photorealistic masterpiece"
+            elif category == "Coastal Landscape":
+                refined_prompt = "A stunning cinematic view of Karachi coastline during twilight sunset, Arabian sea waves gently rolling onto sandy beach, warm orange and violet horizon, distant harbor lights, photorealistic 8k award-winning photography"
+            elif category == "Historical Heritage":
+                refined_prompt = "Grand historical view of Lahore Fort Sheesh Mahal courtyard, ancient mirror mosaics reflecting soft lantern glow, Mughal arches, evening ambience, 8k hyper-realistic architectural concept art"
+            elif category == "Northern Landscapes":
+                refined_prompt = "Majestic snow-capped mountain peaks of Karakoram K2, crystal clear alpine lake reflections, crisp morning mountain sunlight, dramatic clouds, breathtaking nature photography 8k resolution"
+            elif category == "Cyberpunk / Sci-Fi":
+                refined_prompt = "A futuristic Pakistani auto-rickshaw in neon-lit cyberpunk Karachi night street, glowing teal and magenta neon trims, wet asphalt reflecting vibrant holographic Urdu signs, cinematic 8k sci-fi concept art"
+            elif category == "Traditional Architecture":
+                refined_prompt = "An elegant vintage Pakistani courtyard haveli with ornate carved wooden jharokha balconies, central fountain with floating flower petals, evening lantern light, warm heritage atmosphere, photorealistic 8k"
+            elif category == "Culinary Heritage":
+                refined_prompt = "A steaming royal clay pot of aromatic Sindhi biryani garnished with saffron rice, caramelized onions, fresh mint, and tender meat, warm festive dining atmosphere, award-winning food photography 8k"
+            else:
+                refined_prompt = f"A high-quality 8k photorealistic depiction of {core_query}, cinematic lighting, detailed textures, depth of field, award-winning composition, masterpiece visual art"
+
+        spoken_reply = "جی بالکل جناب! میں نے آپ کی فرمائش کے مطابق تصویر تخلیق کر دی ہے۔ آپ نیچے کارڈ میں تصویر ملاحظہ اور ڈاؤنلوڈ فرما سکتے ہیں۔"
+        return refined_prompt, spoken_reply, category
+
     def classify_intent(self, user_text: str) -> str:
         """Classifies the user's intent into discrete operational categories."""
         if not user_text:
             return "GENERAL"
         
         lower = user_text.lower().strip()
+
+        # 0. Image Generation Request
+        image_patterns = [
+            r"تصویر\s*(?:بناؤ|بنا\s*کر\s*دو|بنائیے|بنا\s*دیں|دکھاؤ|تخلیق\s*کرو|چاہیے|ڈرا\s*کرو)",
+            r"فوٹو\s*(?:بناؤ|بنا\s*کر\s*دو|بنائیے|دکھاؤ|کھینچو)",
+            r"پینٹنگ\s*(?:بناؤ|بنائیے|چاہیے)",
+            r"(?:ایک\s+)?تصویر\s+(?:کی|کا|کے)",
+            r"\b(?:tasveer|tasweer|image|photo|picture)\s+(?:banao|bana\s*do|banayein|dikhao|chahiye|generate\s*karo)\b",
+            r"\b(?:banao|banayein)\s+(?:ek\s+)?(?:tasveer|tasweer|photo|image|picture)\b",
+            r"\b(?:generate|create|draw|make|paint)\s+(?:an?\s+)?(?:image|picture|photo|illustration|painting|artwork)\b",
+            r"\b(?:image|picture|photo)\s+of\b",
+        ]
+        if any(re.search(p, lower, re.IGNORECASE) for p in image_patterns) or any(re.search(p, user_text) for p in image_patterns):
+            return "IMAGE_GENERATION"
 
         # 1. Identity & Reflexive
         identity_patterns = [
@@ -544,6 +684,63 @@ class CognitiveOrchestrator:
             cleaned_reply = self.clean_voice_text(time_reply)
             self._memory_executor.submit(self._persist_dialogue_silently, clean_input, cleaned_reply, "وقت اور تاریخ", session_id)
             return cleaned_reply, updated_profile
+
+        # C.2 Image Generation with Z-Image-Turbo on Modal GPU & Anti-Nudity Guardrails
+        if intent == "IMAGE_GENERATION":
+            # 1. Anti-Nudity & Safety Guardrail Check
+            if self.is_nsfw_or_inappropriate(clean_input):
+                print(f"[Orchestrator] Anti-Nudity Guardrail tripped for user input: '{clean_input}'")
+                refusal_reply = "معذرت خواہ ہوں جناب! اخلاقی اور تہذیبی اصولوں کے تحت ایسی تصاویر کی تخلیق ممکن نہیں ہے۔ اگر آپ کوئی قدرتی مناظر، تاریخی عمارات یا فنکارانہ موضوع تجویز فرمائیں تو مجھے خوشی ہوگی۔"
+                cleaned_refusal = self.clean_voice_text(refusal_reply)
+                self._memory_executor.submit(self._persist_dialogue_silently, clean_input, cleaned_refusal, "تصویری درخواست (ممنوعہ مواد)", session_id)
+                return cleaned_refusal, updated_profile
+
+            # 2. Refine Prompt into 8k English Diffusion Prompt + Polite Spoken Urdu Reply
+            refined_prompt, spoken_reply, img_cat = self.refine_image_prompt(effective_input)
+            print(f"[Orchestrator] Image generation requested: '{clean_input}'")
+            print(f"[Orchestrator] Refined Prompt ({img_cat}): '{refined_prompt}'")
+
+            img_res = None
+            # 3. Call Modal.com Z-Image-Turbo GPU Backend
+            if self.backend_client and hasattr(self.backend_client, "generate_image"):
+                try:
+                    print(f"[Orchestrator] Dispatching to Modal.com Z-Image-Turbo GPU...")
+                    img_res = self.backend_client.generate_image(refined_prompt)
+                except Exception as img_err:
+                    print(f"[Orchestrator] Modal Z-Image-Turbo invocation notice: {img_err}")
+
+            if img_res and img_res.get("status") == "success":
+                b64_data = img_res.get("image_base64", "")
+                fname = img_res.get("filename", f"adaab_img_{int(time.time())}.png")
+                cloud_path = img_res.get("modal_storage_path", "")
+
+                # Mirror a local copy to H:/Adaab/output/images/ if possible
+                try:
+                    local_out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", "images")
+                    os.makedirs(local_out_dir, exist_ok=True)
+                    local_file = os.path.join(local_out_dir, fname)
+                    if b64_data.startswith("data:image"):
+                        raw_bytes = base64.b64decode(b64_data.split(",", 1)[1])
+                        with open(local_file, "wb") as f_img:
+                            f_img.write(raw_bytes)
+                except Exception as save_err:
+                    print(f"[Orchestrator] Local image mirror notice: {save_err}")
+
+                card_payload = {
+                    "b64": b64_data,
+                    "prompt": refined_prompt,
+                    "filename": fname,
+                    "modal_path": cloud_path,
+                    "category": img_cat
+                }
+                full_reply = f"{spoken_reply}\n\n[IMAGE_CARD:{json.dumps(card_payload)}]"
+                self._memory_executor.submit(self._persist_dialogue_silently, clean_input, f"تصویر تیار کی گئی: {fname}", "تصویر سازی", session_id)
+                return full_reply, updated_profile
+            else:
+                # If backend is cold or unavailable
+                offline_reply = "معذرت جناب! تصویر بنانے کا کلاؤڈ سرور اس وقت شروع ہو رہا ہے یا مصروف ہے۔ براہ کرم چند لمحوں بعد دوبارہ فرمائیے۔"
+                cleaned_offline = self.clean_voice_text(offline_reply)
+                return cleaned_offline, updated_profile
 
         # D. Programming Code or Long Article / Essay Generation
         if intent == "CODE_OR_ARTICLE":
