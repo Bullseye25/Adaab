@@ -63,8 +63,8 @@ class GeminiSearchOracle:
                 print(f"[GeminiOracle] Notice reading credentials: {e}")
         return None
 
-    def is_available(self) -> bool:
-        """Checks if the Gemini API is configured, healthy, and not rate-limited."""
+    def is_gemini_healthy(self) -> bool:
+        """Checks if Gemini specifically is configured, healthy, and not rate-limited."""
         if not self.api_key:
             return False
 
@@ -75,17 +75,26 @@ class GeminiSearchOracle:
             elapsed = now - self._circuit_tripped_time
             if elapsed > self.cooldown_seconds:
                 # Enter Half-Open state (allow 1 trial request)
-                print("[GeminiOracle] Cooldown period elapsed. Entering half-open trial state.")
+                print("[GeminiOracle] Cooldown period elapsed. Entering half-open trial state for Gemini.")
                 return True
             return False
 
         # Check Sliding RPM window
         self._request_timestamps = [t for t in self._request_timestamps if now - t < 60.0]
         if len(self._request_timestamps) >= self.max_rpm:
-            print(f"[GeminiOracle] Sliding RPM limit ({self.max_rpm}/min) reached. Pausing Gemini calls.")
             return False
 
         return True
+
+    def is_available(self) -> bool:
+        """Returns True if either Gemini is healthy or ChatGPT fallback is available."""
+        if self.is_gemini_healthy():
+            return True
+        try:
+            from chatgpt_browser_oracle import get_chatgpt_oracle
+            return get_chatgpt_oracle().is_available()
+        except Exception:
+            return False
 
     def trip_circuit(self, reason: str):
         """Trips the circuit breaker to cease all Gemini calls immediately."""
@@ -93,7 +102,7 @@ class GeminiSearchOracle:
         self._circuit_tripped_time = time.time()
         self._circuit_reason = reason
         print(f"[GeminiOracle] CIRCUIT BREAKER TRIPPED! Reason: {reason}.")
-        print(f"[GeminiOracle] As requested, ceasing all Gemini calls for {self.cooldown_seconds}s. Falling back to Modal GPU.")
+        print(f"[GeminiOracle] Ceasing Gemini calls for {self.cooldown_seconds}s. Routing all queries directly to ChatGPT.")
 
     def reset_circuit(self):
         """Resets the circuit breaker to closed (normal operation)."""
@@ -141,19 +150,56 @@ class GeminiSearchOracle:
             print(f"[GeminiOracle] Web search notice: {e}")
             return []
 
+    def _query_chatgpt_fallback(
+        self,
+        prompt: str,
+        search_context: Optional[str] = None,
+        system_instruction: Optional[str] = None,
+        timeout: int = 25
+    ) -> Optional[str]:
+        """Seamlessly queries ChatGPT when Gemini is unavailable, rate-limited, or slow."""
+        try:
+            from chatgpt_browser_oracle import get_chatgpt_oracle
+            chatgpt = get_chatgpt_oracle()
+            if chatgpt.is_available():
+                print("[GeminiOracle] Instantly switching to ChatGPT Oracle...")
+                t0 = time.time()
+                reply = chatgpt.query(
+                    prompt=prompt,
+                    search_context=search_context,
+                    system_instruction=system_instruction,
+                    timeout=timeout
+                )
+                if reply:
+                    elapsed = round(time.time() - t0, 1)
+                    print(f"[GeminiOracle] Successfully retrieved response via ChatGPT in {elapsed}s!")
+                    return reply
+                else:
+                    print("[GeminiOracle] ChatGPT returned empty response.")
+            else:
+                print("[GeminiOracle] ChatGPT is not available.")
+        except Exception as fb_err:
+            print(f"[GeminiOracle] ChatGPT fallback notice: {fb_err}")
+        return None
+
     def query(
         self,
         prompt: str,
         search_context: Optional[str] = None,
         system_instruction: Optional[str] = None,
-        timeout: int = 12
+        timeout: int = 5
     ) -> Optional[str]:
         """
-        Queries Gemini with rate-limit protection and circuit breaker handling.
-        Returns the text response or None if rate-limited, quota exceeded, or timed out.
+        Queries Gemini with fast 5s timeout and auto-failover to ChatGPT.
+        If Gemini is cooling down, rate-limited (429), overloaded (503), or times out,
+        it immediately and seamlessly routes the query to ChatGPT.
         """
-        if not self.is_available():
-            return None
+        # If Gemini is currently cooling down or rate-limited, skip Gemini and go straight to ChatGPT
+        if not self.is_gemini_healthy():
+            status = self.get_circuit_status()
+            rem = status.get("seconds_remaining_in_cooldown", 0)
+            print(f"[GeminiOracle] Gemini cooling down ({rem}s remaining) or rate-limited. Quickly routing to ChatGPT...")
+            return self._query_chatgpt_fallback(prompt, search_context, system_instruction, timeout=25)
 
         now = time.time()
         self._request_timestamps.append(now)
@@ -176,76 +222,52 @@ class GeminiSearchOracle:
         if system_instruction:
             payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
 
+        # Try Primary Gemini model with strict fast conversational timeout
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{PRIMARY_MODEL}:generateContent?key={self.api_key}"
+        try:
+            resp = requests.post(url, json=payload, timeout=timeout)
 
-        models_to_try = [PRIMARY_MODEL, FALLBACK_MODEL, TERTIARY_MODEL]
+            # Check 429 Quota / Rate-limit: DO NOT retry other Gemini models on same exhausted key!
+            if resp.status_code == 429:
+                print(f"[GeminiOracle] Model {PRIMARY_MODEL} quota/rate-limited (HTTP 429). Quickly switching to ChatGPT...")
+                self.trip_circuit("Gemini quota/rate-limit (HTTP 429)")
+                return self._query_chatgpt_fallback(prompt, search_context, system_instruction, timeout=25)
 
-        for model_id in models_to_try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={self.api_key}"
-            try:
-                resp = requests.post(url, json=payload, timeout=timeout)
+            # Check 503 High Demand / Server Spikes: immediately switch to ChatGPT!
+            if resp.status_code == 503:
+                print(f"[GeminiOracle] Model {PRIMARY_MODEL} high demand (503). Quickly switching to ChatGPT...")
+                self.trip_circuit("Gemini high demand (503)")
+                return self._query_chatgpt_fallback(prompt, search_context, system_instruction, timeout=25)
 
-                # Check 429 Quota / Rate-limit
-                if resp.status_code == 429:
-                    print(f"[GeminiOracle] Model {model_id} quota/rate-limited (HTTP 429). Trying fallback model...")
-                    continue
+            if resp.status_code != 200:
+                err_msg = resp.text[:120]
+                print(f"[GeminiOracle] API Error {resp.status_code} on {PRIMARY_MODEL}: {err_msg}. Quickly switching to ChatGPT...")
+                return self._query_chatgpt_fallback(prompt, search_context, system_instruction, timeout=25)
 
-                # Check 503 High Demand / Spikes
-                if resp.status_code == 503:
-                    print(f"[GeminiOracle] Model {model_id} high demand (503). Trying fallback...")
-                    continue
-
-                if resp.status_code != 200:
-                    err_msg = resp.text[:200]
-                    print(f"[GeminiOracle] API Error {resp.status_code} on {model_id}: {err_msg}")
-                    continue
-
-                # 200 OK -> parse candidate
-                data = resp.json()
-                candidates = data.get("candidates", [])
-                if not candidates:
-                    continue
-
+            # 200 OK -> parse candidate
+            data = resp.json()
+            candidates = data.get("candidates", [])
+            if candidates:
                 parts = candidates[0].get("content", {}).get("parts", [])
                 texts = [p.get("text", "") for p in parts if "text" in p]
                 reply = "\n".join(texts).strip()
-
                 if reply:
-                    # Successful response: reset circuit if was half-open
                     if self._circuit_open:
                         self.reset_circuit()
                     return reply
 
-            except requests.exceptions.Timeout:
-                print(f"[GeminiOracle] Request timed out on {model_id} after {timeout}s.")
-                continue
-            except requests.exceptions.RequestException as req_err:
-                print(f"[GeminiOracle] Network error on {model_id}: {req_err}")
-                continue
-            except Exception as ex:
-                print(f"[GeminiOracle] Unexpected error on {model_id}: {ex}")
-                continue
+        except requests.exceptions.Timeout:
+            print(f"[GeminiOracle] Request timed out on {PRIMARY_MODEL} after {timeout}s. Quickly switching to ChatGPT...")
+            return self._query_chatgpt_fallback(prompt, search_context, system_instruction, timeout=25)
+        except requests.exceptions.RequestException as req_err:
+            print(f"[GeminiOracle] Network error on {PRIMARY_MODEL}: {req_err}. Quickly switching to ChatGPT...")
+            return self._query_chatgpt_fallback(prompt, search_context, system_instruction, timeout=25)
+        except Exception as ex:
+            print(f"[GeminiOracle] Unexpected error on {PRIMARY_MODEL}: {ex}. Quickly switching to ChatGPT...")
+            return self._query_chatgpt_fallback(prompt, search_context, system_instruction, timeout=25)
 
-        # All models failed or exhausted
-        self.trip_circuit("All available Gemini models exhausted or rate-limited")
-
-        # Check if ChatGPT Web Oracle fallback is available
-        try:
-            from chatgpt_browser_oracle import get_chatgpt_oracle
-            chatgpt = get_chatgpt_oracle()
-            if chatgpt.is_available():
-                print("[GeminiOracle] Gemini quota exhausted. Seamlessly switching to ChatGPT Web Oracle fallback...")
-                chatgpt_reply = chatgpt.query(
-                    prompt=prompt,
-                    search_context=search_context,
-                    system_instruction=system_instruction
-                )
-                if chatgpt_reply:
-                    print("[GeminiOracle] Successfully retrieved answer via ChatGPT Web Oracle fallback!")
-                    return chatgpt_reply
-        except Exception as fb_err:
-            print(f"[GeminiOracle] ChatGPT fallback notice: {fb_err}")
-
-        return None
+        # If Gemini returned empty response or reached here, switch to ChatGPT
+        return self._query_chatgpt_fallback(prompt, search_context, system_instruction, timeout=25)
 
 
 # Global singleton instance

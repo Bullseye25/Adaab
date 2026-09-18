@@ -551,7 +551,7 @@ class CognitiveOrchestrator:
                 oracle_reply = self.oracle.query(
                     prompt=prompt,
                     system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                    timeout=20
+                    timeout=6
                 )
 
             if not oracle_reply:
@@ -562,7 +562,7 @@ class CognitiveOrchestrator:
                         oracle_reply = chatgpt.query(
                             prompt=prompt,
                             system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                            timeout=35,
+                            timeout=25,
                             visible=False
                         )
                 except Exception as c_err:
@@ -616,25 +616,25 @@ class CognitiveOrchestrator:
 کوئی ایموجی مت لگائیں اور مارک ڈاؤن یا بلٹ پوائنٹس استعمال نہ کریں۔
 """.strip()
 
-            # 1. Primary Headless Retrieval: Google Gemini Oracle
+            # 1. Primary Retrieval: Oracle (Gemini with fast 5s timeout & auto-failover to ChatGPT)
             if self.oracle.is_available():
                 oracle_reply = self.oracle.query(
                     prompt=prompt,
                     system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                    timeout=14
+                    timeout=5
                 )
 
-            # 2. Secondary Headless Retrieval: ChatGPT Web Oracle
+            # 2. Secondary Retrieval: Direct ChatGPT Web Oracle (if not already handled)
             if not oracle_reply:
                 try:
                     from chatgpt_browser_oracle import get_chatgpt_oracle
                     chatgpt = get_chatgpt_oracle()
                     if chatgpt.is_available():
-                        print("[Orchestrator] Gemini unavailable. Using headless ChatGPT Web Oracle fallback...")
+                        print("[Orchestrator] Gemini unavailable. Quickly switching to ChatGPT...")
                         oracle_reply = chatgpt.query(
                             prompt=prompt,
                             system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                            timeout=35,
+                            timeout=20,
                             visible=False
                         )
                 except Exception as c_err:
@@ -725,9 +725,26 @@ class CognitiveOrchestrator:
             final_reply = self.oracle.query(
                 prompt=conv_prompt,
                 system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                timeout=14
+                timeout=5
             )
 
+        # If Gemini did not answer, quickly switch to ChatGPT
+        if not final_reply:
+            try:
+                from chatgpt_browser_oracle import get_chatgpt_oracle
+                chatgpt = get_chatgpt_oracle()
+                if chatgpt.is_available():
+                    print("[Orchestrator] Gemini unavailable. Quickly switching to ChatGPT...")
+                    final_reply = chatgpt.query(
+                        prompt=conv_prompt,
+                        system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                        timeout=20,
+                        visible=False
+                    )
+            except Exception as c_err:
+                print(f"[Orchestrator] General turn ChatGPT fallback notice: {c_err}")
+
+        # If still no reply, fall back to Modal GPU
         if not final_reply and self.backend_client:
             try:
                 resp = self.backend_client.chat_completion(
@@ -741,21 +758,6 @@ class CognitiveOrchestrator:
                 final_reply = resp.get("content", "")
             except Exception as e:
                 print(f"[Orchestrator] Backend completion notice: {e}")
-
-        # If still no reply, try ChatGPT Web Oracle fallback
-        if not final_reply:
-            try:
-                from chatgpt_browser_oracle import get_chatgpt_oracle
-                chatgpt = get_chatgpt_oracle()
-                if chatgpt.is_available():
-                    final_reply = chatgpt.query(
-                        prompt=conv_prompt,
-                        system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                        timeout=35,
-                        visible=False
-                    )
-            except Exception:
-                pass
 
         if final_reply:
             final_reply = self.clean_voice_text(final_reply)

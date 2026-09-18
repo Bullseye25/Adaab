@@ -55,21 +55,81 @@ class ChatGPTBrowserOracle:
         self,
         profile_dir: str = PROFILE_DIR,
         cookies_file: str = COOKIES_FILE,
+        credentials_file: str = os.path.join(BASE_DIR, "credentials.txt"),
         cdp_port: int = CDP_PORT
     ):
         self.profile_dir = profile_dir
         self.cookies_file = cookies_file
+        self.credentials_file = credentials_file
         self.cdp_port = cdp_port
         self.browser_path = find_browser_executable()
+        self.openai_api_key: Optional[str] = self._load_openai_api_key()
         self._browser_process: Optional[subprocess.Popen] = None
 
+    def _load_openai_api_key(self) -> Optional[str]:
+        """Loads OPENAI_API_KEY from environment or credentials.txt."""
+        key = os.environ.get("OPENAI_API_KEY")
+        if key:
+            return key.strip()
+        if os.path.exists(self.credentials_file):
+            try:
+                with open(self.credentials_file, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("OPENAI_API_KEY="):
+                            return line.split("=", 1)[1].strip()
+            except Exception:
+                pass
+        return None
+
     def is_configured(self) -> bool:
-        """Returns True if user profile directory or cookies exist."""
-        return os.path.exists(self.profile_dir) or os.path.exists(self.cookies_file)
+        """Returns True if user profile directory, cookies, or OpenAI API key exist."""
+        return bool(self.openai_api_key) or os.path.exists(self.profile_dir) or os.path.exists(self.cookies_file)
 
     def is_available(self) -> bool:
-        """Checks if browser executable and configured profile are present."""
-        return bool(self.browser_path) and self.is_configured()
+        """Checks if OpenAI API key or supported Chromium browser is available."""
+        return bool(self.openai_api_key) or bool(self.browser_path)
+
+    def _query_api(
+        self,
+        prompt: str,
+        search_context: Optional[str] = None,
+        system_instruction: Optional[str] = None,
+        timeout: int = 8
+    ) -> Optional[str]:
+        """Direct, fast OpenAI API completion if OPENAI_API_KEY is configured."""
+        if not self.openai_api_key:
+            return None
+        url = "https://api.openai.com/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.openai_api_key}",
+            "Content-Type": "application/json"
+        }
+        messages = []
+        if system_instruction:
+            messages.append({"role": "system", "content": system_instruction})
+        user_content = prompt
+        if search_context:
+            user_content = f"Search Context:\n{search_context}\n\nTask/Question:\n{prompt}"
+        messages.append({"role": "user", "content": user_content})
+        payload = {
+            "model": "gpt-4o-mini",
+            "messages": messages,
+            "temperature": 0.35,
+            "max_tokens": 600
+        }
+        try:
+            resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
+            if resp.status_code == 200:
+                data = resp.json()
+                choices = data.get("choices", [])
+                if choices:
+                    return choices[0].get("message", {}).get("content", "").strip()
+            else:
+                print(f"[ChatGPT-API] Notice: HTTP {resp.status_code} - {resp.text[:120]}")
+        except Exception as e:
+            print(f"[ChatGPT-API] Notice: {e}")
+        return None
 
     def is_browser_running(self) -> bool:
         """Checks if Chrome is currently running with remote debugging enabled."""
@@ -237,14 +297,28 @@ class ChatGPTBrowserOracle:
         prompt: str,
         search_context: Optional[str] = None,
         system_instruction: Optional[str] = None,
-        timeout: int = 45,
+        timeout: int = 30,
         visible: bool = False
     ) -> Optional[str]:
         """
-        Executes a prompt against ChatGPT via authentic browser automation.
-        Types prompt using CDP Input.insertText, clicks send, waits for streaming
-        to complete, and extracts the response text. Supports headless execution.
+        Executes a prompt against ChatGPT via direct OpenAI API (if configured)
+        or authentic browser automation (via Chrome DevTools Protocol).
         """
+        # 1. Try Direct OpenAI API First if key is present
+        if self.openai_api_key:
+            t0 = time.time()
+            api_reply = self._query_api(
+                prompt=prompt,
+                search_context=search_context,
+                system_instruction=system_instruction,
+                timeout=min(timeout, 8)
+            )
+            if api_reply:
+                elapsed = round(time.time() - t0, 1)
+                print(f"[ChatGPT-Oracle] Retrieved response via OpenAI API (gpt-4o-mini) in {elapsed}s.")
+                return api_reply
+
+        # 2. Fall back to Authentic Web Browser Session via CDP
         if not self.ensure_browser_running(visible=visible):
             return None
 
@@ -261,7 +335,6 @@ class ChatGPTBrowserOracle:
         if system_instruction:
             full_query = f"Instruction: {system_instruction}\n\n{full_query}"
 
-        # Clean string for injection
         escaped_query = full_query.strip()
 
         async def _run_interaction():
@@ -278,80 +351,89 @@ class ChatGPTBrowserOracle:
                         await ws.send_str(json.dumps(payload))
                         return cur_id
 
-                    # 1. Bring page to front and focus
+                    # A. Bring page to front
                     await send_cmd("Page.bringToFront")
-                    await asyncio.sleep(0.5)
-
-                    # 2. Check and focus prompt textarea
-                    focus_js = """
-                    (function() {
-                        let ta = document.querySelector('#prompt-textarea p') ||
-                                 document.querySelector('#prompt-textarea') ||
-                                 document.querySelector('div[contenteditable="true"]') ||
-                                 document.querySelector('textarea');
-                        if (ta) {
-                            ta.focus();
-                            return true;
-                        }
-                        return false;
-                    })()
-                    """
-                    f_id = await send_cmd("Runtime.evaluate", {"expression": focus_js, "returnByValue": True})
                     await asyncio.sleep(0.3)
 
-                    # 3. Clear existing text in textarea
+                    # B. Get bounding rect of prompt-textarea and dispatch mouse click to focus ProseMirror
+                    get_rect_js = """
+                    (function() {
+                        let el = document.getElementById('prompt-textarea');
+                        if (!el) return null;
+                        el.focus();
+                        let r = el.getBoundingClientRect();
+                        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+                    })()
+                    """
+                    r_rect = await send_cmd("Runtime.evaluate", {"expression": get_rect_js, "returnByValue": True})
+                    # Await response
+                    async for m in ws:
+                        d = json.loads(m.data)
+                        if d.get("id") == r_rect:
+                            coord = d.get("result", {}).get("result", {}).get("value")
+                            if coord:
+                                await send_cmd("Input.dispatchMouseEvent", {"type": "mousePressed", "x": coord["x"], "y": coord["y"], "button": "left", "clickCount": 1})
+                                await send_cmd("Input.dispatchMouseEvent", {"type": "mouseReleased", "x": coord["x"], "y": coord["y"], "button": "left", "clickCount": 1})
+                            break
+                    await asyncio.sleep(0.2)
+
+                    # C. Clear existing text in textarea
                     clear_js = """
                     (function() {
-                        let ta = document.querySelector('#prompt-textarea p') ||
-                                 document.querySelector('#prompt-textarea') ||
-                                 document.querySelector('div[contenteditable="true"]');
-                        if (ta) {
-                            ta.innerText = '';
-                            ta.dispatchEvent(new Event('input', { bubbles: true }));
+                        let el = document.getElementById('prompt-textarea');
+                        if (el) {
+                            let p = el.querySelector('p');
+                            if (p) p.textContent = '';
+                            el.dispatchEvent(new Event('input', { bubbles: true }));
                             return true;
                         }
                         return false;
                     })()
                     """
                     await send_cmd("Runtime.evaluate", {"expression": clear_js, "returnByValue": True})
-                    await asyncio.sleep(0.2)
+                    await asyncio.sleep(0.1)
 
-                    # 4. Insert text via native CDP input
+                    # D. Insert text via native CDP input
                     await send_cmd("Input.insertText", {"text": escaped_query})
                     await asyncio.sleep(0.4)
 
-                    # 5. Click Send Button or dispatch Enter key
+                    # E. Click Send Button or dispatch Enter key
                     click_send_js = """
                     (function() {
-                        let btn = document.querySelector('button[data-testid="send-button"]') ||
-                                  document.querySelector('button[aria-label="Send prompt"]') ||
-                                  document.querySelector('button[data-testid="fruitjuice-send-button"]');
-                        if (btn && !btn.disabled) {
-                            btn.click();
+                        let sendBtn = document.querySelector('button[data-testid="send-button"]') ||
+                                      document.querySelector('button[aria-label="Send prompt"]') ||
+                                      document.querySelector('button[data-testid="fruitjuice-send-button"]');
+                        if (sendBtn && !sendBtn.disabled) {
+                            sendBtn.click();
                             return true;
                         }
                         return false;
                     })()
                     """
                     c_id = await send_cmd("Runtime.evaluate", {"expression": click_send_js, "returnByValue": True})
-                    await asyncio.sleep(0.3)
+                    clicked = False
+                    async for m in ws:
+                        d = json.loads(m.data)
+                        if d.get("id") == c_id:
+                            clicked = d.get("result", {}).get("result", {}).get("value", False)
+                            break
 
-                    # If button not clickable, dispatch Enter key
-                    await send_cmd("Input.dispatchKeyEvent", {
-                        "type": "keyDown",
-                        "windowsVirtualKeyCode": 13,
-                        "key": "Enter",
-                        "code": "Enter",
-                        "text": "\r"
-                    })
-                    await send_cmd("Input.dispatchKeyEvent", {
-                        "type": "keyUp",
-                        "windowsVirtualKeyCode": 13,
-                        "key": "Enter",
-                        "code": "Enter"
-                    })
+                    if not clicked:
+                        # Dispatch Enter key
+                        await send_cmd("Input.dispatchKeyEvent", {
+                            "type": "rawKeyDown",
+                            "windowsVirtualKeyCode": 13,
+                            "unmodifiedText": "\r",
+                            "text": "\r"
+                        })
+                        await send_cmd("Input.dispatchKeyEvent", {
+                            "type": "keyUp",
+                            "windowsVirtualKeyCode": 13,
+                            "unmodifiedText": "\r",
+                            "text": "\r"
+                        })
 
-                    # 6. Wait for response generation to complete
+                    # F. Poll for response streaming completion
                     start_time = time.time()
                     last_text = ""
                     stable_count = 0
@@ -378,7 +460,6 @@ class ChatGPTBrowserOracle:
                         await asyncio.sleep(0.8)
                         poll_id = await send_cmd("Runtime.evaluate", {"expression": poll_js, "returnByValue": True})
                         
-                        # Read responses from WS
                         try:
                             msg = await asyncio.wait_for(ws.receive_str(), timeout=2.0)
                             data = json.loads(msg)
@@ -393,7 +474,6 @@ class ChatGPTBrowserOracle:
                                         if current_text == last_text:
                                             stable_count += 1
                                             if stable_count >= 2:
-                                                # Completed and stable
                                                 return current_text
                                         else:
                                             stable_count = 0
