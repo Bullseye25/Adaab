@@ -97,6 +97,13 @@ def get_audio_data_uri(file_path: str | None) -> str:
 PATH_BOT_AVATAR = get_icon_path("bot_robot_avatar.png")
 PATH_USER_AVATAR = get_icon_path("user_avatar.png")
 
+def _clean_html(raw: str) -> str:
+    """Collapses multiline HTML and strips leading indentation so Markdown parsers never treat it as indented code."""
+    if not raw:
+        return ""
+    lines = [line.strip() for line in raw.strip().splitlines() if line.strip()]
+    return "".join(lines)
+
 def format_assistant_message(urdu_text: str, audio_path: str | None = None, prebuilt_uri: str | None = None) -> str:
     """
     Renders assistant response matching the tablet mockup:
@@ -114,63 +121,68 @@ def format_assistant_message(urdu_text: str, audio_path: str | None = None, preb
     def _extract_artifact(m):
         lang = (m.group(1) or "code").strip()
         raw_code = m.group(2).strip()
-        escaped_code = html.escape(raw_code)
+        # Preserve quotation marks in code blocks without converting them to &quot;
+        escaped_code = html.escape(raw_code, quote=False)
+        # Prevent CommonMark from breaking out of Type 6 HTML blocks on blank lines by populating empty lines with invisible zero-width space
+        safe_code = "\n".join([line if line.strip() else "&#8203;" for line in escaped_code.splitlines()])
         lang_display = lang.upper()
         is_article = lang_display in ["ARTICLE", "ESSAY", "مضمون", "تحریر"]
         btn_label = "Copy Article" if is_article else f"Copy {lang_display}"
         btn_title = "مضمون کاپی کریں (Copy Article)" if is_article else f"{lang_display} کوڈ کاپی کریں (Copy Code)"
 
-        card = f"""
-        <div class="code-artifact-card {'article-artifact-card' if is_article else ''}">
-            <div class="code-artifact-header">
-                <div class="code-artifact-meta">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#00d2ff" stroke-width="2">
-                        <polyline points="16 18 22 12 16 6"></polyline>
-                        <polyline points="8 6 2 12 8 18"></polyline>
-                    </svg>
-                    <span class="code-artifact-lang">{lang_display}</span>
-                </div>
-                <button type="button" class="copy-artifact-btn" onclick="window.copyArtifact(this)" title="{btn_title}">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                    <span>{btn_label}</span>
-                </button>
-            </div>
-            <pre class="code-artifact-body"><code>{escaped_code}</code></pre>
-        </div>
-        """
+        card_cls = "code-artifact-card article-artifact-card" if is_article else "code-artifact-card"
+        card = (
+            f'<div class="{card_cls}">'
+            f'<div class="code-artifact-header">'
+            f'<div class="code-artifact-meta">'
+            f'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#00d2ff" stroke-width="2">'
+            f'<polyline points="16 18 22 12 16 6"></polyline>'
+            f'<polyline points="8 6 2 12 8 18"></polyline>'
+            f'</svg>'
+            f'<span class="code-artifact-lang">{lang_display}</span>'
+            f'</div>'
+            f'<button type="button" class="copy-artifact-btn" onclick="window.copyArtifact(this)" title="{btn_title}">'
+            f'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">'
+            f'<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>'
+            f'<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>'
+            f'</svg>'
+            f'<span>{btn_label}</span>'
+            f'</button>'
+            f'</div>'
+            f'<pre class="code-artifact-body"><code class="language-{lang.lower()}">{safe_code}</code></pre>'
+            f'</div>'
+        )
         artifact_cards.append(card)
         return ""
 
-    conversational_text = re.sub(r'```(\w+)?\n?([\s\S]*?)```', _extract_artifact, urdu_text or "").strip()
+    conversational_text = re.sub(r'```([a-zA-Z0-9_\-#+]*)\n?([\s\S]*?)```', _extract_artifact, urdu_text or "").strip()
     artifact_cards_html = "".join(artifact_cards)
 
     audio_pill_html = ""
     if audio_uri:
-        audio_pill_html = f"""
-        <div class="bot-audio-player-pill" onclick="window.playSpeechAudio(this)" data-audiosrc="{audio_uri}" title="آواز سنیں (Play Audio)">
-            <button type="button" class="audio-play-circle-btn">
-                <svg class="play-svg" viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                <svg class="pause-svg" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-            </button>
-            <div class="audio-waveform-bars">
-                {bars_html}
-            </div>
-            <span class="audio-pill-duration">صوتی کلام</span>
-        </div>
-        """
+        audio_pill_html = (
+            f'<div class="bot-audio-player-pill" onclick="window.playSpeechAudio(this)" data-audiosrc="{audio_uri}" title="آواز سنیں (Play Audio)">'
+            f'<button type="button" class="audio-play-circle-btn">'
+            f'<svg class="play-svg" viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'
+            f'<svg class="pause-svg" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'
+            f'</button>'
+            f'<div class="audio-waveform-bars">'
+            f'{bars_html}'
+            f'</div>'
+            f'<span class="audio-pill-duration">صوتی کلام</span>'
+            f'</div>'
+        )
 
-    copy_btn_html = """
-    <div class="msg-action-bar">
-        <button type="button" class="copy-msg-btn" onclick="window.copyMessageText(this)" title="کاپی کریں (Copy)">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-        </button>
-    </div>
-    """
+    copy_btn_html = (
+        f'<div class="msg-action-bar">'
+        f'<button type="button" class="copy-msg-btn" onclick="window.copyMessageText(this)" title="کاپی کریں (Copy)">'
+        f'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>'
+        f'</button>'
+        f'</div>'
+    )
 
-    content_html = f'<div class="bot-msg-text">{conversational_text}</div>' if conversational_text else ""
+    safe_conv = "\n".join([line if line.strip() else "&#8203;" for line in conversational_text.splitlines()]) if conversational_text else ""
+    content_html = f'<div class="bot-msg-text">{safe_conv}</div>' if safe_conv else ""
 
     return (
         f'<div class="bot-msg-card">'
@@ -186,16 +198,17 @@ def format_user_message(urdu_text: str) -> str:
     Renders user message matching the tablet mockup:
     Urdu Nastaliq text on right with copy button below.
     """
-    copy_btn_html = """
-    <div class="msg-action-bar user-action-bar">
-        <button type="button" class="copy-msg-btn" onclick="window.copyMessageText(this)" title="کاپی کریں (Copy)">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-        </button>
-    </div>
-    """
+    safe_text = "\n".join([line if line.strip() else "&#8203;" for line in (urdu_text or "").strip().splitlines()])
+    copy_btn_html = (
+        f'<div class="msg-action-bar user-action-bar">'
+        f'<button type="button" class="copy-msg-btn" onclick="window.copyMessageText(this)" title="کاپی کریں (Copy)">'
+        f'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>'
+        f'</button>'
+        f'</div>'
+    )
     return (
         f'<div class="user-msg-card">'
-        f'<div class="user-msg-text">{urdu_text}</div>'
+        f'<div class="user-msg-text">{safe_text}</div>'
         f'{copy_btn_html}'
         f'</div>'
     )
@@ -633,6 +646,14 @@ body, .gradio-container {
     animation: fadeSlideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+/* Allow bot messages containing code cards to expand gracefully */
+.messenger-chat .bot:has(.code-artifact-card),
+.messenger-chat [data-testid="bot"]:has(.code-artifact-card) .message,
+.messenger-chat div:has(> .bot-msg-card:has(.code-artifact-card)) {
+    max-width: 90% !important;
+    width: 90% !important;
+}
+
 .messenger-chat .user,
 .messenger-chat [data-testid="user"] .message,
 .messenger-chat .message.user,
@@ -660,22 +681,24 @@ body, .gradio-container {
 /* Code and Article Artifact Cards */
 .code-artifact-card {
     margin: 12px 0 10px 0 !important;
-    background: #0f131a !important;
-    border: 1px solid rgba(0, 210, 255, 0.22) !important;
-    border-radius: 14px !important;
+    background: #0b0f17 !important;
+    border: 1px solid rgba(0, 210, 255, 0.25) !important;
+    border-radius: 12px !important;
     overflow: hidden !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
     direction: ltr !important;
     text-align: left !important;
     width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .code-artifact-header {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    background: #171c26 !important;
-    padding: 7px 14px !important;
+    background: #141923 !important;
+    padding: 8px 14px !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -704,7 +727,7 @@ body, .gradio-container {
     font-size: 0.74rem !important;
     font-family: 'Inter', sans-serif !important;
     font-weight: 600 !important;
-    padding: 3px 10px !important;
+    padding: 4px 10px !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
 }
@@ -724,16 +747,32 @@ body, .gradio-container {
 .code-artifact-body {
     margin: 0 !important;
     padding: 14px 16px !important;
-    background: #0a0d13 !important;
+    background: #07090e !important;
     overflow-x: auto !important;
-    font-family: 'Share Tech Mono', 'Consolas', monospace !important;
-    font-size: 0.86rem !important;
+    font-family: 'Share Tech Mono', 'Consolas', 'Courier New', monospace !important;
+    font-size: 0.88rem !important;
     line-height: 1.65 !important;
     color: #e2e8f0 !important;
-    white-space: pre-wrap !important;
-    word-break: break-word !important;
+    white-space: pre !important;
     direction: ltr !important;
     text-align: left !important;
+    box-sizing: border-box !important;
+}
+
+.code-artifact-body code {
+    font-family: 'Share Tech Mono', 'Consolas', 'Courier New', monospace !important;
+    white-space: pre !important;
+    direction: ltr !important;
+    unicode-bidi: plaintext !important;
+    display: block !important;
+}
+
+.code-artifact-body::-webkit-scrollbar {
+    height: 6px !important;
+}
+.code-artifact-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 3px !important;
 }
 
 .article-artifact-card .code-artifact-body {
@@ -743,6 +782,8 @@ body, .gradio-container {
     color: #f1f5f9 !important;
     direction: auto !important;
     text-align: right !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
 }
 
 /* Audio Player Pill */
@@ -852,23 +893,27 @@ body, .gradio-container {
 
 /* Bottom Floating Dock: In-Flow Flex Pinned at the Bottom */
 .messenger-dock, .row.messenger-dock {
-    flex: 0 0 56px !important;
-    height: 56px !important;
+    flex: 0 0 60px !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    max-height: 60px !important;
     margin: 6px 18px 14px 18px !important;
-    padding: 6px 10px 6px 10px !important;
+    padding: 0 16px !important;
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 12px !important;
     background: #1d212a !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 40px !important;
+    border-radius: 34px !important;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
     position: relative !important;
     z-index: 999 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
 }
 
 /* Clean up Gradio container wrappers inside dock */
@@ -879,14 +924,20 @@ body, .gradio-container {
     border: none !important;
     padding: 0 !important;
     margin: 0 !important;
+    align-self: center !important;
 }
 
 .messenger-dock > .gradio-html,
 .messenger-dock > div:has(#ptt-btn) {
-    flex: 0 0 44px !important;
-    width: 44px !important;
-    min-width: 44px !important;
-    height: 44px !important;
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .messenger-dock > .gradio-textbox,
@@ -894,29 +945,42 @@ body, .gradio-container {
     flex: 1 1 auto !important;
     width: 100% !important;
     min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .messenger-dock > .gradio-button,
-.messenger-dock > button#send-btn {
+.messenger-dock > button#send-btn,
+.messenger-dock > div:has(#send-btn) {
     flex: 0 0 auto !important;
     width: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* Mic Button */
 #ptt-btn {
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
     border-radius: 50% !important;
     background: #181b24 !important;
     border: 1.5px solid rgba(0, 210, 255, 0.35) !important;
-    box-shadow: 0 0 12px rgba(0, 210, 255, 0.2) !important;
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.18) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     cursor: pointer !important;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     touch-action: manipulation !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
 }
 
 #ptt-btn:active {
@@ -926,6 +990,7 @@ body, .gradio-container {
 .ptt-mic-svg {
     fill: #00d2ff !important;
     transition: fill 0.2s ease !important;
+    display: block !important;
 }
 
 #ptt-btn.recording {
@@ -958,14 +1023,16 @@ body, .gradio-container {
     border: none !important;
     box-shadow: none !important;
     color: #ffffff !important;
-    font-size: 16px !important;
+    font-size: 15px !important;
     font-family: 'Noto Nastaliq Urdu', serif !important;
     direction: rtl !important;
     text-align: right !important;
     line-height: 1.8 !important;
-    padding: 6px 12px !important;
+    padding: 6px 10px !important;
     outline: none !important;
     resize: none !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
 }
 
 #message-input textarea::placeholder, 
@@ -982,14 +1049,15 @@ body, .gradio-container {
     background: #f0f2f5 !important;
     color: #121418 !important;
     font-weight: 700 !important;
-    font-size: 0.95rem !important;
+    font-size: 0.90rem !important;
     font-family: 'Inter', sans-serif !important;
-    border-radius: 28px !important;
-    padding: 8px 24px !important;
+    border-radius: 20px !important;
+    padding: 0 20px !important;
     border: none !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    min-width: 76px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    min-width: 72px !important;
     cursor: pointer !important;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
@@ -997,6 +1065,8 @@ body, .gradio-container {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
 }
 
 #send-btn:hover {
@@ -1136,13 +1206,36 @@ body, .gradio-container {
         padding: 12px 14px 16px 14px !important;
     }
     .messenger-dock, .row.messenger-dock {
-        flex: 0 0 52px !important;
-        height: 52px !important;
+        flex: 0 0 54px !important;
+        height: 54px !important;
+        min-height: 54px !important;
+        max-height: 54px !important;
         margin: 4px 8px 8px 8px !important;
+        padding: 0 12px !important;
+        gap: 8px !important;
         position: relative !important;
         bottom: auto !important;
         left: auto !important;
         right: auto !important;
+    }
+    .messenger-dock > .gradio-html,
+    .messenger-dock > div:has(#ptt-btn) {
+        flex: 0 0 38px !important;
+        width: 38px !important;
+        min-width: 38px !important;
+        height: 38px !important;
+    }
+    #ptt-btn {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+    }
+    #send-btn {
+        height: 36px !important;
+        min-height: 36px !important;
+        max-height: 36px !important;
+        padding: 0 16px !important;
+        font-size: 0.85rem !important;
     }
 }
 
@@ -2193,16 +2286,18 @@ setTimeout(setupChatObserver, 300);
 // hookAudioPlayer: attach once when the audio element mounts
 setTimeout(hookAudioPlayer, 600);
 
-window.copyArtifact = function(btn) {
+window.copyArtifact = window.copyArtifactCode = function(btn) {
     try {
         const card = btn.closest('.code-artifact-card');
         const code = card ? card.querySelector('.code-artifact-body code') : null;
         if (!code) return;
-        const textToCopy = code.innerText || code.textContent;
+        let textToCopy = code.innerText || code.textContent;
+        // Strip invisible zero-width spaces so clipboard receives pure clean source code
+        textToCopy = textToCopy.replace(/\u200B/g, '');
         navigator.clipboard.writeText(textToCopy).then(() => {
             const span = btn.querySelector('span');
             const orig = span ? span.innerText : 'Copy';
-            if (span) span.innerText = '✓ Copied!';
+            if (span) span.innerText = '✓ کاپی ہو گیا!';
             btn.classList.add('copied');
             setTimeout(() => {
                 if (span) span.innerText = orig;
