@@ -1,0 +1,5 @@
+{
+  "tier1": "modal",
+  "tier2": "ollama",
+  "tier3": "gemini"
+}

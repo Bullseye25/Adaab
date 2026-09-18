@@ -154,10 +154,125 @@ TABRAIZ_ORCHESTRATOR_SYSTEM = get_tabraiz_system_prompt("CASUAL_VOICE")
 
 class CognitiveOrchestrator:
     def __init__(self, backend_client=None):
+        if backend_client is None:
+            try:
+                from backend import AdaabClient
+                backend_client = AdaabClient()
+            except Exception:
+                backend_client = None
         self.backend_client = backend_client
         self.oracle = get_gemini_oracle()
+        try:
+            from tier_config import load_tier_config
+            self.tier_config = load_tier_config()
+        except Exception:
+            self.tier_config = {"tier1": "modal", "tier2": "ollama", "tier3": "gemini"}
         # Non-blocking background worker pool for silent memory persistence
         self._memory_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="adaab_silent_mem")
+
+    def get_active_tiers(self) -> list:
+        try:
+            from tier_config import get_active_tiers
+            return get_active_tiers(self.tier_config)
+        except Exception:
+            return ["modal", "ollama", "gemini"]
+
+    def set_tiers(self, tier1: str, tier2: str, tier3: str):
+        try:
+            from tier_config import save_tier_config
+            self.tier_config = save_tier_config(tier1, tier2, tier3)
+            print(f"[Orchestrator] AI Brain Tiers updated: {self.format_tiers()}")
+        except Exception as ex:
+            print(f"[Orchestrator] Notice updating tiers: {ex}")
+
+    def format_tiers(self) -> str:
+        try:
+            from tier_config import format_tier_summary
+            return format_tier_summary(self.tier_config)
+        except Exception:
+            return f"Tier 1: {self.tier_config.get('tier1', 'modal')} -> Tier 2: {self.tier_config.get('tier2', 'ollama')} -> Tier 3: {self.tier_config.get('tier3', 'gemini')}"
+
+    def dispatch_tiered_llm(
+        self,
+        prompt: str,
+        system_prompt: str,
+        max_tokens: int = 400,
+        temperature: float = 0.65,
+        mode_label: str = "Turn",
+        messages: list = None,
+        search_context: str = None,
+        timeout: float = 15.0,
+    ) -> Optional[str]:
+        """
+        Dispatches inference request dynamically across configured AI Brain tiers
+        (e.g. Tier 1: Modal GPU, Tier 2: Ollama Cloud, Tier 3: Gemini).
+        Cascades to next tier if an engine is unavailable, times out, or fails.
+        """
+        active_tiers = self.get_active_tiers()
+        for rank, engine in enumerate(active_tiers, start=1):
+            # 1. Modal Cloud GPU (Qwen 2.5 7B / LoRA on NVIDIA L4)
+            if engine == "modal":
+                if not self.backend_client:
+                    try:
+                        from backend import AdaabClient
+                        self.backend_client = AdaabClient()
+                    except Exception:
+                        pass
+                if self.backend_client:
+                    try:
+                        modal_msgs = messages if messages else [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": prompt}
+                        ]
+                        resp = self.backend_client.chat_completion(
+                            modal_msgs,
+                            temperature=temperature,
+                            max_tokens=max_tokens,
+                            repetition_penalty=1.05,
+                            presence_penalty=0.0,
+                            frequency_penalty=0.0
+                        )
+                        content = resp.get("content", "").strip()
+                        if content:
+                            print(f"[Orchestrator] {mode_label} generated via Tier {rank} Modal Qwen 2.5 GPU.")
+                            return content
+                    except Exception as m_err:
+                        print(f"[Orchestrator] Tier {rank} Modal GPU notice: {m_err}")
+
+            # 2. Ollama Cloud Oracle (gemma4:31b)
+            elif engine == "ollama":
+                try:
+                    from ollama_oracle import get_ollama_oracle
+                    ollama = get_ollama_oracle()
+                    if ollama.is_available():
+                        ans = ollama.query(
+                            prompt=prompt,
+                            search_context=search_context or "",
+                            system_instruction=system_prompt,
+                            timeout=timeout
+                        )
+                        if ans:
+                            print(f"[Orchestrator] {mode_label} generated via Tier {rank} Ollama Cloud Oracle (gemma4:31b).")
+                            return ans
+                except Exception as o_err:
+                    print(f"[Orchestrator] Tier {rank} Ollama Cloud notice: {o_err}")
+
+            # 3. Google Gemini Free Tier Oracle
+            elif engine == "gemini":
+                try:
+                    if self.oracle and self.oracle.is_available():
+                        ans = self.oracle.query(
+                            prompt=prompt,
+                            system_instruction=system_prompt,
+                            timeout=min(timeout, 8.0)
+                        )
+                        if ans:
+                            print(f"[Orchestrator] {mode_label} generated via Tier {rank} Google Gemini Oracle.")
+                            return ans
+                except Exception as g_err:
+                    print(f"[Orchestrator] Tier {rank} Gemini notice: {g_err}")
+
+        return None
 
     def clean_voice_text(self, text: Any, is_identity: bool = False) -> str:
         """Removes emojis, prefixes, markdown, and audio artifacts safely across strings, lists, or dicts."""
@@ -616,13 +731,16 @@ class CognitiveOrchestrator:
 
         # 1. Mode: IMAGE_TURBO
         image_patterns = [
-            r"تصویر\s*(?:بناؤ|بنا\s*کر\s*دو|بنائیے|بنا\s*دیں|دکھاؤ|تخلیق\s*کرو|چاہیے|ڈرا\s*کرو)",
-            r"فوٹو\s*(?:بناؤ|بنا\s*کر\s*دو|بنائیے|دکھاؤ|کھینچو)",
-            r"پینٹنگ\s*(?:بناؤ|بنائیے|چاہیے)",
+            r"تصویر\s*(?:بناؤ|بنا\s*کر\s*دو|بنائیے|بنا\s*دیں|دکھاؤ|تخلیق\s*کرو|چاہیے|ڈرا\s*کرو|بنا\s*(?:سکتے|سکتی)\s*ہو)",
+            r"فوٹو\s*(?:بناؤ|بنا\s*کر\s*دو|بنائیے|دکھاؤ|کھینچو|بنا\s*(?:سکتے|سکتی)\s*ہو)",
+            r"پینٹنگ\s*(?:بناؤ|بنائیے|چاہیے|بنا\s*(?:سکتے|سکتی)\s*ہو)",
             r"(?:ایک\s+)?تصویر\s+(?:کی|کا|کے)",
             r"\b(?:tasveer|tasweer|image|photo|picture)\s+(?:banao|bana\s*do|banayein|dikhao|chahiye|generate\s*karo)\b",
             r"\b(?:banao|banayein)\s+(?:ek\s+)?(?:tasveer|tasweer|photo|image|picture)\b",
+            r"\b(?:tasveer|tasweer|image|photo|picture)\b.*?\b(?:bana\s*(?:sakte|sakty|skte|sako|do)|banao|banayein|chahiye)\b",
+            r"\b(?:bana\s*(?:sakte|sakty|skte|sako|do)|banao|banayein)\b.*?\b(?:tasveer|tasweer|photo|image|picture)\b",
             r"\b(?:generate|create|draw|make|paint)\s+(?:an?\s+)?(?:image|picture|photo|illustration|painting|artwork)\b",
+            r"\b(?:can\s+you\s+(?:generate|create|draw|make))\s+(?:an?\s+)?(?:image|picture|photo)\b",
             r"\b(?:image|picture|photo)\s+of\b",
         ]
         if any(re.search(p, lower, re.IGNORECASE) for p in image_patterns) or any(re.search(p, user_text) for p in image_patterns):
@@ -986,53 +1104,14 @@ class CognitiveOrchestrator:
 کسی قسم کے مصنوعی عنوانات جیسے 'پہلا حصہ' یا 'دوسرا حصہ' مت لکھیں۔
 """.strip()
 
-            reply_text = None
-
-            # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) — 31B High-Capacity Brain (~1.2s)
-            try:
-                from ollama_oracle import get_ollama_oracle
-                ollama = get_ollama_oracle()
-                if ollama.is_available():
-                    reply_text = ollama.query(
-                        prompt=prompt,
-                        system_instruction=active_system_prompt,
-                        timeout=15
-                    )
-                    if reply_text:
-                        print("[Orchestrator] Code/Article generated successfully via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
-            except Exception as o_err:
-                print(f"[Orchestrator] Ollama Cloud code generation notice: {o_err}")
-
-            # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle (ChatGPT-level Foundation)
-            if not reply_text and self.oracle.is_available():
-                print("[Orchestrator] Falling back to Tier 2 Gemini Oracle for code/article...")
-                reply_text = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=active_system_prompt,
-                    timeout=8
-                )
-
-            # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5 7B) on NVIDIA L4
-            if not reply_text and self.backend_client:
-                try:
-                    messages = [
-                        {"role": "system", "content": active_system_prompt},
-                        {"role": "user", "content": prompt}
-                    ]
-                    resp = self.backend_client.chat_completion(
-                        messages,
-                        temperature=0.4,
-                        max_tokens=900,
-                        repetition_penalty=1.05,
-                        presence_penalty=0.0,
-                        frequency_penalty=0.0
-                    )
-                    bot_text = resp.get("content", "").strip()
-                    if bot_text:
-                        reply_text = bot_text
-                        print("[Orchestrator] Code/Article generated via Tier 3 Modal Qwen 2.5 GPU.")
-                except Exception as ex:
-                    print(f"[Orchestrator] Modal GPU code generation notice: {ex}")
+            reply_text = self.dispatch_tiered_llm(
+                prompt=prompt,
+                system_prompt=active_system_prompt,
+                max_tokens=900,
+                temperature=0.4,
+                mode_label="Code/Article",
+                timeout=15.0
+            )
 
             if reply_text:
                 # Sanitize any accidental prompt header leaks or foreign characters
@@ -1055,51 +1134,14 @@ class CognitiveOrchestrator:
 اگر کسی معروف شاعر (علامہ اقبال، مرزا غالب، فیض، فراز، جون ایلیا وغیرہ) کا کلام ہے تو شاعر کا نام ضرور واضح کریں۔
 کوئی ایموجی مت لگائیں اور مارک ڈاؤن یا بلٹ پوائنٹس مت بنائیں تاکہ صوتی روانی اور ترنم قائم رہے۔
 """.strip()
-            poetry_reply = None
-            # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) — Literary Urdu verse & rhyme
-            try:
-                from ollama_oracle import get_ollama_oracle
-                ollama = get_ollama_oracle()
-                if ollama.is_available():
-                    poetry_reply = ollama.query(
-                        prompt=prompt,
-                        system_instruction=active_system_prompt,
-                        timeout=12
-                    )
-                    if poetry_reply:
-                        print("[Orchestrator] Poetry generated via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
-            except Exception as o_err:
-                print(f"[Orchestrator] Ollama poetry notice: {o_err}")
-
-            # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle
-            if not poetry_reply and self.oracle.is_available():
-                poetry_reply = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=active_system_prompt,
-                    timeout=6
-                )
-
-            # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5 7B) on NVIDIA L4
-            if not poetry_reply and self.backend_client:
-                try:
-                    messages = [
-                        {"role": "system", "content": active_system_prompt},
-                        {"role": "user", "content": prompt}
-                    ]
-                    resp = self.backend_client.chat_completion(
-                        messages,
-                        temperature=0.75,
-                        max_tokens=400,
-                        repetition_penalty=1.05,
-                        presence_penalty=0.0,
-                        frequency_penalty=0.0
-                    )
-                    cand = resp.get("content", "").strip()
-                    if cand:
-                        poetry_reply = cand
-                        print("[Orchestrator] Poetry generated via Tier 3 Modal Qwen 2.5 GPU.")
-                except Exception as ex:
-                    print(f"[Orchestrator] Modal GPU poetry notice: {ex}")
+            poetry_reply = self.dispatch_tiered_llm(
+                prompt=prompt,
+                system_prompt=active_system_prompt,
+                max_tokens=400,
+                temperature=0.75,
+                mode_label="Poetry",
+                timeout=12.0
+            )
 
             if poetry_reply:
                 cleaned_reply = self.clean_voice_text(poetry_reply)
@@ -1131,51 +1173,14 @@ class CognitiveOrchestrator:
 موضوع کے اہم تصورات، پس منظر، اور اہم نکات کو آسان، شستہ اور فصیح پاکستانی اردو میں ترتیب سے واضح کریں۔
 مخاطب کے لیے ہمیشہ 'آپ' کا باادب صیغہ استعمال کریں۔
 """.strip()
-            deep_reply = None
-            # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) — In-depth conceptual comprehension
-            try:
-                from ollama_oracle import get_ollama_oracle
-                ollama = get_ollama_oracle()
-                if ollama.is_available():
-                    deep_reply = ollama.query(
-                        prompt=prompt,
-                        system_instruction=active_system_prompt,
-                        timeout=15
-                    )
-                    if deep_reply:
-                        print("[Orchestrator] Deep exploration synthesized via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
-            except Exception as o_err:
-                print(f"[Orchestrator] Ollama deep exploration notice: {o_err}")
-
-            # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle (ChatGPT-level Foundation)
-            if not deep_reply and self.oracle.is_available():
-                deep_reply = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=active_system_prompt,
-                    timeout=6
-                )
-
-            # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5 7B) on NVIDIA L4
-            if not deep_reply and self.backend_client:
-                try:
-                    messages = [
-                        {"role": "system", "content": active_system_prompt},
-                        {"role": "user", "content": prompt}
-                    ]
-                    resp = self.backend_client.chat_completion(
-                        messages,
-                        temperature=0.55,
-                        max_tokens=850,
-                        repetition_penalty=1.05,
-                        presence_penalty=0.0,
-                        frequency_penalty=0.0
-                    )
-                    cand = resp.get("content", "").strip()
-                    if cand:
-                        deep_reply = cand
-                        print("[Orchestrator] Deep exploration synthesized via Tier 3 Modal Qwen 2.5 GPU.")
-                except Exception as ex:
-                    print(f"[Orchestrator] Modal GPU deep exploration notice: {ex}")
+            deep_reply = self.dispatch_tiered_llm(
+                prompt=prompt,
+                system_prompt=active_system_prompt,
+                max_tokens=850,
+                temperature=0.55,
+                mode_label="Deep exploration",
+                timeout=15.0
+            )
 
             if deep_reply:
                 cleaned_reply = self.clean_voice_text(deep_reply)
@@ -1198,51 +1203,14 @@ class CognitiveOrchestrator:
 صارف کے سوال کا جواب تازہ ترین صورتحال کی روشنی میں غیر جانبدارانہ اور سچے انداز میں پیش کریں۔
 اہم ترین بات پہلے بیان کریں اور صورتحال کا متوازن، باخبر اور پرمغز خلاصہ (3 سے 4 جامع جملوں میں) پیش کریں۔
 """.strip()
-            affairs_reply = None
-            # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) — Current affairs & news grounding
-            try:
-                from ollama_oracle import get_ollama_oracle
-                ollama = get_ollama_oracle()
-                if ollama.is_available():
-                    affairs_reply = ollama.query(
-                        prompt=prompt,
-                        system_instruction=active_system_prompt,
-                        timeout=12
-                    )
-                    if affairs_reply:
-                        print("[Orchestrator] Current affairs synthesized via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
-            except Exception as o_err:
-                print(f"[Orchestrator] Ollama current affairs notice: {o_err}")
-
-            # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle (ChatGPT-level Foundation)
-            if not affairs_reply and self.oracle.is_available():
-                affairs_reply = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=active_system_prompt,
-                    timeout=6
-                )
-
-            # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5 7B) on NVIDIA L4
-            if not affairs_reply and self.backend_client:
-                try:
-                    messages = [
-                        {"role": "system", "content": active_system_prompt},
-                        {"role": "user", "content": prompt}
-                    ]
-                    resp = self.backend_client.chat_completion(
-                        messages,
-                        temperature=0.50,
-                        max_tokens=400,
-                        repetition_penalty=1.05,
-                        presence_penalty=0.0,
-                        frequency_penalty=0.0
-                    )
-                    cand = resp.get("content", "").strip()
-                    if cand:
-                        affairs_reply = cand
-                        print("[Orchestrator] Current affairs synthesized via Tier 3 Modal Qwen 2.5 GPU.")
-                except Exception as ex:
-                    print(f"[Orchestrator] Modal GPU current affairs notice: {ex}")
+            affairs_reply = self.dispatch_tiered_llm(
+                prompt=prompt,
+                system_prompt=active_system_prompt,
+                max_tokens=400,
+                temperature=0.50,
+                mode_label="Current affairs",
+                timeout=12.0
+            )
 
             if affairs_reply:
                 cleaned_reply = self.clean_voice_text(affairs_reply)
@@ -1274,59 +1242,15 @@ class CognitiveOrchestrator:
 کوئی ایموجی مت لگائیں اور مارک ڈاؤن یا بلٹ پوائنٹس استعمال نہ کریں۔
 """.strip()
 
-            # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) with Search Context Grounding (~1.0s)
-            try:
-                from ollama_oracle import get_ollama_oracle
-                ollama = get_ollama_oracle()
-                if ollama.is_available():
-                    oracle_reply = ollama.query(
-                        prompt=effective_input,
-                        search_context=context_str,
-                        system_instruction=active_system_prompt,
-                        timeout=10
-                    )
-                    if oracle_reply:
-                        print("[Orchestrator] Knowledge query synthesized via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
-            except Exception as o_err:
-                print(f"[Orchestrator] Ollama Cloud knowledge notice: {o_err}")
-
-            # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle (ChatGPT-level Foundation)
-            if not oracle_reply and self.oracle.is_available():
-                print("[Orchestrator] Falling back to Tier 2 Gemini Oracle...")
-                oracle_reply = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=active_system_prompt,
-                    timeout=5
-                )
-
-            # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5) with Search Context Grounding
-            if not oracle_reply and self.backend_client:
-                try:
-                    grounded_prompt = (
-                        f"{topic_header}متعلقہ حقائق و معلومات:\n{context_str}\n\n" if context_str else ""
-                    ) + (
-                        f"صارف کا سوال: {effective_input}\n\n"
-                        f"{active_directive}\n"
-                        f"اگر اوپر معلومات فراہم کی گئی ہیں تو ان کی روشنی میں روزمرہ اور عام فہم اردو میں صرف 2 سے 3 جملوں میں مناسب، باادب اور جامع خلاصہ پیش کریں۔ مخاطب کو ہمیشہ 'آپ' کہیں اور 'تم' سے پرہیز کریں۔ کوئی ایموجی مت لگائیں اور مارک ڈاؤن یا بلٹ پوائنٹس استعمال نہ کریں۔"
-                    )
-                    messages = [
-                        {"role": "system", "content": active_system_prompt},
-                        {"role": "user", "content": grounded_prompt}
-                    ]
-                    resp = self.backend_client.chat_completion(
-                        messages,
-                        temperature=0.55,
-                        max_tokens=250,
-                        repetition_penalty=1.05,
-                        presence_penalty=0.0,
-                        frequency_penalty=0.0
-                    )
-                    bot_text = resp.get("content", "").strip()
-                    if bot_text:
-                        oracle_reply = bot_text
-                        print("[Orchestrator] Knowledge query synthesized via Tier 3 Modal Qwen 2.5 GPU.")
-                except Exception as ex:
-                    print(f"[Orchestrator] Modal GPU knowledge synthesis notice: {ex}")
+            oracle_reply = self.dispatch_tiered_llm(
+                prompt=prompt,
+                system_prompt=active_system_prompt,
+                max_tokens=250,
+                temperature=0.55,
+                mode_label="Knowledge query",
+                search_context=context_str,
+                timeout=10.0
+            )
 
             if oracle_reply:
                 cleaned_reply = self.clean_voice_text(oracle_reply)
@@ -1377,49 +1301,15 @@ class CognitiveOrchestrator:
         )
         messages.append({"role": "user", "content": conv_prompt})
 
-        final_reply = None
-
-        # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) — Fast sub-second high-capacity Urdu (~1.0s)
-        try:
-            from ollama_oracle import get_ollama_oracle
-            ollama = get_ollama_oracle()
-            if ollama.is_available():
-                final_reply = ollama.query(
-                    prompt=conv_prompt,
-                    system_instruction=active_system_prompt,
-                    timeout=10
-                )
-                if final_reply:
-                    print("[Orchestrator] Turn completed via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
-        except Exception as o_err:
-            print(f"[Orchestrator] Ollama Cloud general turn notice: {o_err}")
-
-        # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle (ChatGPT-level Foundation)
-        if not final_reply and self.oracle.is_available():
-            print("[Orchestrator] Falling back to Tier 2 Gemini Oracle...")
-            final_reply = self.oracle.query(
-                prompt=conv_prompt,
-                system_instruction=active_system_prompt,
-                timeout=5
-            )
-
-        # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5-7B) on NVIDIA L4
-        if not final_reply and self.backend_client:
-            try:
-                resp = self.backend_client.chat_completion(
-                    messages,
-                    temperature=0.60,
-                    max_tokens=250,
-                    repetition_penalty=1.05,
-                    presence_penalty=0.0,
-                    frequency_penalty=0.0
-                )
-                content = resp.get("content", "").strip()
-                if content:
-                    final_reply = content
-                    print("[Orchestrator] Turn completed via Tier 3 Modal Qwen 2.5 GPU.")
-            except Exception as e:
-                print(f"[Orchestrator] Modal GPU general turn notice: {e}")
+        final_reply = self.dispatch_tiered_llm(
+            prompt=conv_prompt,
+            system_prompt=active_system_prompt,
+            max_tokens=250,
+            temperature=0.60,
+            mode_label="Turn",
+            messages=messages,
+            timeout=10.0
+        )
 
         if final_reply:
             final_reply = self.clean_voice_text(final_reply)

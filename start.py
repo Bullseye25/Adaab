@@ -27,9 +27,35 @@ def main():
     except Exception:
         active_modal = "ridaraza2499"
 
+    from tier_config import load_tier_config, save_tier_config, format_tier_summary, PRESETS, VALID_ENGINES
+
+    # Parse CLI flags and extract menu choice if provided
+    choice = None
+    skip_next = False
+    for i, arg in enumerate(sys.argv[1:], start=1):
+        if skip_next:
+            skip_next = False
+            continue
+        if arg in ["--tier1", "-t1"] and i + 1 < len(sys.argv):
+            save_tier_config(sys.argv[i+1], load_tier_config().get("tier2"), load_tier_config().get("tier3"))
+            skip_next = True
+        elif arg in ["--tiers", "-t"] and i + 1 < len(sys.argv):
+            parts = [p.strip().lower() for p in sys.argv[i+1].split(",")]
+            if len(parts) >= 1:
+                t1 = parts[0]
+                t2 = parts[1] if len(parts) > 1 else "ollama"
+                t3 = parts[2] if len(parts) > 2 else "gemini"
+                save_tier_config(t1, t2, t3)
+            skip_next = True
+        elif not arg.startswith("-") and choice is None:
+            choice = arg.lower()
+
+    tier_summary = format_tier_summary()
+
     print("=" * 72)
     print(" Adaab — Conversational Voice AI Studio ".center(72, "="))
     print(" Cloud Backend: Modal.com (NVIDIA L4 GPU) ".center(72, " "))
+    print(f" Brain Tiers: {tier_summary}".center(72, " "))
     print(" Policy: 0% Local GPU Used | 0% Google Storage (GCS) Cost ".center(72, " "))
     print("=" * 72)
 
@@ -40,9 +66,11 @@ def main():
     print(" [5] AI Cloud Oracles (Ollama Cloud, Modal GPU & Gemini Status)")
     print(" [6] Memory & Topics Database (View Topics, Reset Memory)")
     print(" [7] System Diagnostics & 12-Point Test Suite")
+    print(f" [8] Configure AI Brain Tiers (Change Tier 1, 2, 3 Routing)")
     print(" [0] Exit")
 
-    choice = sys.argv[1].lower() if len(sys.argv) > 1 else (input("\nEnter choice [0-7] (default 1 for Web Studio): ").strip().lower() or "1")
+    if choice is None:
+        choice = input("\nEnter choice [0-8] (default 1 for Web Studio): ").strip().lower() or "1"
 
     # ── Option 1: Web Studio (Default) ──
     if choice in ["1", "web", "studio", "frontend", "ui"]:
@@ -50,6 +78,7 @@ def main():
         print(" Adaab Voice AI Web Studio ".center(72, "="))
         print(" Mobile Push-to-Talk | Tabraiz Conversational AI | Neon Waveform")
         print("=" * 72)
+        print(f" Active AI Brain Routing: {format_tier_summary()}")
         print("\nLaunching Secure Mobile Tunnel...")
         try:
             from network_helper import terminate_all_stale_app_processes
@@ -351,6 +380,47 @@ def main():
         print("\n---> Running Memory and Profiling Suite...")
         from test_memory_and_profiling import run_all_memory_profiling_tests
         run_all_memory_profiling_tests()
+
+    # ── Module 8: Configure AI Brain Tiers (NEW) ──
+    elif choice in ["8", "tier", "tiers", "routing", "brain", "priority"]:
+        print("\n" + "=" * 72)
+        print(" Configure AI Brain Tiers & Failover Routing ".center(72, "="))
+        print(" Choose which AI model answers first, second, and third ".center(72, " "))
+        print("=" * 72)
+        cfg = load_tier_config()
+        print(f"\n Current Hierarchy:\n  {format_tier_summary(cfg)}\n")
+        print(" Available Presets:")
+        for key, p in PRESETS.items():
+            print(f"  [{key}] {p['title']}")
+        print("  [5] Custom Order (Choose Tier 1, Tier 2, Tier 3 step-by-step)")
+        print("  [6] Test Live Turn with Current Hierarchy")
+        print("  [0] Return to Main Menu")
+
+        t_c = input("\nEnter choice [0-6] (default 1): ").strip() or "1"
+        if t_c in PRESETS:
+            t1, t2, t3 = PRESETS[t_c]["tiers"]
+            save_tier_config(t1, t2, t3)
+            print(f"\n✓ Successfully updated AI Brain Hierarchy to:")
+            print(f"  {format_tier_summary()}")
+        elif t_c == "5":
+            print("\nAvailable engines: modal, ollama, gemini, none")
+            new_t1 = input(f"Enter Tier 1 Primary [modal/ollama/gemini] (current {cfg.get('tier1')}): ").strip().lower() or cfg.get('tier1')
+            new_t2 = input(f"Enter Tier 2 Fallback [modal/ollama/gemini/none] (current {cfg.get('tier2')}): ").strip().lower() or cfg.get('tier2')
+            new_t3 = input(f"Enter Tier 3 Fallback [modal/ollama/gemini/none] (current {cfg.get('tier3')}): ").strip().lower() or cfg.get('tier3')
+            save_tier_config(new_t1, new_t2, new_t3)
+            print(f"\n✓ Custom AI Brain Hierarchy saved:")
+            print(f"  {format_tier_summary()}")
+        elif t_c == "6":
+            print("\n---> Testing live conversational turn with current hierarchy...")
+            from orchestrator import get_orchestrator
+            orch = get_orchestrator()
+            q = input("Enter test question in Urdu or Roman Urdu (default: 'السلام علیکم، آپ کا کیا حال ہے؟'): ").strip() or "السلام علیکم، آپ کا کیا حال ہے؟"
+            t0 = time.time()
+            reply, _ = orch.orchestrate_turn(q, [])
+            el = round(time.time() - t0, 2)
+            print(f"\nResponse ({el}s):\n{reply}")
+        else:
+            print("\nReturning to main menu without changes.")
 
     # ── Option 0: Exit ──
     elif choice in ["0", "exit", "q"]:
