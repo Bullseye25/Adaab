@@ -1,5 +1,7 @@
 import os
 import sys
+import re
+import html
 import json
 import base64
 import tempfile
@@ -98,13 +100,52 @@ PATH_USER_AVATAR = get_icon_path("user_avatar.png")
 def format_assistant_message(urdu_text: str, audio_path: str | None = None, prebuilt_uri: str | None = None) -> str:
     """
     Renders assistant response matching the tablet mockup:
-    Urdu Nastaliq text, sleek dark audio player pill with play/pause and animated waveform bars,
+    Urdu Nastaliq text, sleek code/article artifact cards with one-click copy buttons,
+    dark audio player pill with play/pause and animated waveform bars,
     and a subtle copy button below.
     """
     audio_uri = prebuilt_uri or get_audio_data_uri(audio_path)
     
     bar_heights = [5, 11, 16, 9, 15, 20, 12, 17, 13, 19, 8, 14, 18, 12, 7, 15, 11, 14, 8, 5]
     bars_html = "".join([f'<span class="w-bar" style="height:{h}px; animation-delay:{(i*0.06):.2f}s;"></span>' for i, h in enumerate(bar_heights)])
+
+    # Extract any code or article markdown blocks: ```lang ... ```
+    artifact_cards = []
+    def _extract_artifact(m):
+        lang = (m.group(1) or "code").strip()
+        raw_code = m.group(2).strip()
+        escaped_code = html.escape(raw_code)
+        lang_display = lang.upper()
+        is_article = lang_display in ["ARTICLE", "ESSAY", "مضمون", "تحریر"]
+        btn_label = "Copy Article" if is_article else f"Copy {lang_display}"
+        btn_title = "مضمون کاپی کریں (Copy Article)" if is_article else f"{lang_display} کوڈ کاپی کریں (Copy Code)"
+
+        card = f"""
+        <div class="code-artifact-card {'article-artifact-card' if is_article else ''}">
+            <div class="code-artifact-header">
+                <div class="code-artifact-meta">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#00d2ff" stroke-width="2">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    <span class="code-artifact-lang">{lang_display}</span>
+                </div>
+                <button type="button" class="copy-artifact-btn" onclick="window.copyArtifact(this)" title="{btn_title}">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span>{btn_label}</span>
+                </button>
+            </div>
+            <pre class="code-artifact-body"><code>{escaped_code}</code></pre>
+        </div>
+        """
+        artifact_cards.append(card)
+        return ""
+
+    conversational_text = re.sub(r'```(\w+)?\n?([\s\S]*?)```', _extract_artifact, urdu_text or "").strip()
+    artifact_cards_html = "".join(artifact_cards)
 
     audio_pill_html = ""
     if audio_uri:
@@ -129,9 +170,12 @@ def format_assistant_message(urdu_text: str, audio_path: str | None = None, preb
     </div>
     """
 
+    content_html = f'<div class="bot-msg-text">{conversational_text}</div>' if conversational_text else ""
+
     return (
         f'<div class="bot-msg-card">'
-        f'<div class="bot-msg-text">{urdu_text}</div>'
+        f'{content_html}'
+        f'{artifact_cards_html}'
         f'{audio_pill_html}'
         f'{copy_btn_html}'
         f'</div>'
@@ -606,6 +650,94 @@ body, .gradio-container {
     direction: rtl !important;
     text-align: right !important;
     letter-spacing: 0 !important;
+}
+
+/* Code and Article Artifact Cards */
+.code-artifact-card {
+    margin: 12px 0 10px 0 !important;
+    background: #0f131a !important;
+    border: 1px solid rgba(0, 210, 255, 0.22) !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+    direction: ltr !important;
+    text-align: left !important;
+    width: 100% !important;
+}
+
+.code-artifact-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: #171c26 !important;
+    padding: 7px 14px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.code-artifact-meta {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.code-artifact-lang {
+    font-family: 'Share Tech Mono', monospace !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    color: #00d2ff !important;
+    letter-spacing: 1px !important;
+}
+
+.copy-artifact-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    background: rgba(0, 210, 255, 0.08) !important;
+    border: 1px solid rgba(0, 210, 255, 0.28) !important;
+    border-radius: 6px !important;
+    color: #00d2ff !important;
+    font-size: 0.74rem !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600 !important;
+    padding: 3px 10px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.copy-artifact-btn:hover {
+    background: #00d2ff !important;
+    color: #090d16 !important;
+    box-shadow: 0 0 12px rgba(0, 210, 255, 0.4) !important;
+}
+
+.copy-artifact-btn.copied {
+    background: #00ffaa !important;
+    border-color: #00ffaa !important;
+    color: #090d16 !important;
+}
+
+.code-artifact-body {
+    margin: 0 !important;
+    padding: 14px 16px !important;
+    background: #0a0d13 !important;
+    overflow-x: auto !important;
+    font-family: 'Share Tech Mono', 'Consolas', monospace !important;
+    font-size: 0.86rem !important;
+    line-height: 1.65 !important;
+    color: #e2e8f0 !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+.article-artifact-card .code-artifact-body {
+    font-family: 'Inter', 'Noto Nastaliq Urdu', serif !important;
+    font-size: 0.96rem !important;
+    line-height: 1.9 !important;
+    color: #f1f5f9 !important;
+    direction: auto !important;
+    text-align: right !important;
 }
 
 /* Audio Player Pill */
@@ -2053,6 +2185,46 @@ setTimeout(setupChatObserver, 300);
 // hookAudioPlayer: attach once when the audio element mounts
 setTimeout(hookAudioPlayer, 600);
 
+window.copyArtifact = function(btn) {
+    try {
+        const card = btn.closest('.code-artifact-card');
+        const code = card ? card.querySelector('.code-artifact-body code') : null;
+        if (!code) return;
+        const textToCopy = code.innerText || code.textContent;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const span = btn.querySelector('span');
+            const orig = span ? span.innerText : 'Copy';
+            if (span) span.innerText = '✓ Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                if (span) span.innerText = orig;
+                btn.classList.remove('copied');
+            }, 2000);
+        }).catch(err => {
+            console.error('Clipboard copy error:', err);
+        });
+    } catch(e) {
+        console.error('[Adaab] Copy artifact failed:', e);
+    }
+};
+
+window.copyMessageText = function(btn) {
+    try {
+        const card = btn.closest('.bot-msg-card, .user-msg-card');
+        const textEl = card ? (card.querySelector('.bot-msg-text') || card.querySelector('.user-msg-text')) : null;
+        if (!textEl) return;
+        const textToCopy = (textEl.innerText || textEl.textContent).trim();
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            btn.classList.add('copied');
+            setTimeout(() => { btn.classList.remove('copied'); }, 1800);
+        }).catch(err => {
+            console.error('Clipboard copy error:', err);
+        });
+    } catch(e) {
+        console.error('[Adaab] Copy message failed:', e);
+    }
+};
+
 // hookStatusBox: attach once after DOM settles
 setTimeout(hookStatusBox, 800);
 </script>
@@ -2090,13 +2262,18 @@ def text_chat_fn(message, history, style_choice, voice_choice="male", profile_st
         profile_state = updated_profile
         SESSION_STATE["active_profile"] = updated_profile
 
+    # For spoken voice audio: strip any code/article blocks so TTS never recites raw code aloud
+    voice_speech_text = re.sub(r'```[\s\S]*?```', '', bot_reply).strip()
+    if not voice_speech_text:
+        voice_speech_text = "یہ رہا آپ کا مطلوبہ کوڈ اور مواد۔"
+
     # Generate spoken voice audio for the reply
     audio_out = None
     audio_uri_encoded = None
     try:
         with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tf:
             audio_out = tf.name
-        generate_conversation_speech(bot_reply, audio_out, voice=voice_choice)
+        generate_conversation_speech(voice_speech_text, audio_out, voice=voice_choice)
         audio_uri_encoded = get_audio_data_uri(audio_out)
     except Exception as err:
         print(f"[App] Audio synthesis notice: {err}")
@@ -2163,11 +2340,16 @@ def ptt_voice_fn(base64_audio_data, history, style_choice, voice_choice="male", 
     print(f"[Adaab PTT] Bot reply generated: '{bot_reply[:80]}...'", flush=True)
 
     # Synthesize and immediately encode to base64; delete temp file
+    # For spoken voice audio: strip any code/article blocks so TTS never recites raw code aloud
+    voice_speech_text = re.sub(r'```[\s\S]*?```', '', bot_reply).strip()
+    if not voice_speech_text:
+        voice_speech_text = "یہ رہا آپ کا مطلوبہ کوڈ اور مواد۔"
+
     audio_uri_encoded = None
     try:
         with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tf:
             reply_audio_path = tf.name
-        generate_conversation_speech(bot_reply, reply_audio_path, voice=voice_choice)
+        generate_conversation_speech(voice_speech_text, reply_audio_path, voice=voice_choice)
         print(f"[Adaab PTT] Voice reply audio ready, encoding...", flush=True)
         audio_uri_encoded = get_audio_data_uri(reply_audio_path)
     except Exception as err:

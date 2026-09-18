@@ -272,6 +272,17 @@ class CognitiveOrchestrator:
         if is_time_or_date_query(user_text):
             return "TIME_DATE"
 
+        # 4. Programming Code Generation, Scripts, or Long Article/Essay Writing
+        code_article_patterns = [
+            r"\b(c#|csharp|c\+\+|cpp|python|javascript|typescript|java|golang|rust|php|swift|kotlin|ruby|sql|html|css|react|angular|flutter|vue)\b",
+            r"\b(code|program|script|function|class|algorithm|method|unity\s+script|code\s+for|program\s+for|write\s+code)\b",
+            r"(کوڈ|پروگرام|اسکرپٹ|فنکشن|الگورتھم)",
+            r"\b(write\s+(?:an?\s+)?(?:article|essay|paragraph|blog|story|letter|report|summary)|article\s+on|essay\s+on)\b",
+            r"(مضمون|مضمون\s*لکھ|تحریر|مقالہ|کہانی|خط)"
+        ]
+        if any(re.search(p, lower, re.IGNORECASE) for p in code_article_patterns):
+            return "CODE_OR_ARTICLE"
+
         # 4. Real-time Knowledge / Web Search & Missing Information Retrieval
         # Triggers headless information gathering from Gemini or ChatGPT
         knowledge_patterns = [
@@ -514,7 +525,71 @@ class CognitiveOrchestrator:
             self._memory_executor.submit(self._persist_dialogue_silently, clean_input, cleaned_reply, "وقت اور تاریخ", session_id)
             return cleaned_reply, updated_profile
 
-        # D. Real-Time Knowledge & Search (Headless Retrieval via Gemini or ChatGPT)
+        # D. Programming Code or Long Article / Essay Generation
+        if intent == "CODE_OR_ARTICLE":
+            turn_topic = "کوڈنگ اور تحریر"
+            prompt = f"""
+صارف کی درخواست: {effective_input}
+
+ہدایات (Mandatory Directive for Code / Article Generation):
+آپ تبریز ہیں، آداب اسٹوڈیو کے ذہین اور باادب اردو اسسٹنٹ۔
+صارف نے پروگرامنگ کوڈ (مثلاً C#، Python وغیرہ) یا کوئی تحریر/مضمون لکھنے کی درخواست کی ہے۔
+
+آپ کا جواب لازمی طور پر درج ذیل دو واضح حصوں پر مشتمل ہو:
+
+1. پہلا حصہ (صوتی کلام - Spoken Voice Audio):
+صرف 1 سے 2 انتہائی مختصر، شائستہ اور باادب جملے عام فہم اردو میں جس میں بتائیں کہ ان کا مطلوبہ کوڈ یا تحریر نیچے کارڈ میں تیار کر دیا گیا ہے جسے وہ کاپی کر سکتے ہیں۔ (اس حصے میں کوئی کوڈ، علامات یا ایموجی مت لکھیں تاکہ یہ باآسانی آواز میں بولا جا سکے)۔
+
+2. دوسرا حصہ (کاپی کے لیے کوڈ یا تحریر - Copyable Markdown Block):
+ایک مکمل اور معیاری مارک ڈاؤن کوڈ بلاک میں درست، کارآمد اور مکمل فارمیٹ شدہ کوڈ یا تحریر فراہم کریں:
+- اگر کوڈ ہے تو مناسب لینگویج ٹیگ استعمال کریں (مثلاً ```csharp یا ```python یا ```html)۔ کوڈ صاف، مکمل اور کارآمد ہو۔
+- اگر مضمون ہے تو ```article کے ٹیگ میں باقاعدہ پیراگراف کے ساتھ لکھیں۔
+""".strip()
+
+            oracle_reply = None
+            if self.oracle.is_available():
+                oracle_reply = self.oracle.query(
+                    prompt=prompt,
+                    system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                    timeout=20
+                )
+
+            if not oracle_reply:
+                try:
+                    from chatgpt_browser_oracle import get_chatgpt_oracle
+                    chatgpt = get_chatgpt_oracle()
+                    if chatgpt.is_available():
+                        oracle_reply = chatgpt.query(
+                            prompt=prompt,
+                            system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                            timeout=35,
+                            visible=False
+                        )
+                except Exception as c_err:
+                    print(f"[Orchestrator] Code generation fallback notice: {c_err}")
+
+            if not oracle_reply and self.backend_client:
+                try:
+                    messages = [
+                        {"role": "system", "content": TABRAIZ_ORCHESTRATOR_SYSTEM},
+                        {"role": "user", "content": prompt}
+                    ]
+                    resp = self.backend_client.chat_completion(
+                        messages,
+                        temperature=0.4,
+                        max_tokens=800
+                    )
+                    bot_text = resp.get("content", "").strip()
+                    if bot_text:
+                        oracle_reply = bot_text
+                except Exception as ex:
+                    print(f"[Orchestrator] Modal code generation notice: {ex}")
+
+            if oracle_reply:
+                self._memory_executor.submit(self._persist_dialogue_silently, clean_input, oracle_reply[:150], turn_topic, session_id)
+                return oracle_reply, updated_profile
+
+        # E. Real-Time Knowledge & Search (Headless Retrieval via Gemini or ChatGPT)
         if intent == "KNOWLEDGE_SEARCH":
             local_fact = self.retrieve_local_pakistan_knowledge(effective_input)
             search_snippets = self.oracle.search_web(effective_input, max_results=3)
