@@ -197,17 +197,18 @@ def main():
                 except subprocess.CalledProcessError as e:
                     print(f"\n❌ Fine-tuning run failed: {e}")
 
-    # ── Module 5: AI Knowledge Oracles (Gemini & ChatGPT) ──
-    elif choice in ["5", "oracle", "gemini", "chatgpt", "4_old", "5_old", "6"]:
+    # ── Module 5: AI Knowledge Oracles (Ollama Cloud, Gemini & ChatGPT) ──
+    elif choice in ["5", "oracle", "gemini", "chatgpt", "ollama", "4_old", "5_old", "6"]:
         print("\n" + "=" * 70)
-        print(" AI Knowledge Oracles (Gemini & ChatGPT) ".center(70, "="))
-        print(" Headless Live Fact Retrieval & Fast Failover ")
+        print(" AI Knowledge Oracles (Ollama Cloud, Gemini & ChatGPT) ".center(70, "="))
+        print(" Headless Live Fact Retrieval & Fast Cloud Failover ")
         print("=" * 70)
         print(" 1. Check Google Gemini Oracle Status & Quota Circuit Breaker")
-        print(" 2. Setup ChatGPT Browser Session (Login & Save Session Cookies)")
-        print(" 3. Test ChatGPT Web Oracle Live Inference")
+        print(" 2. Test Ollama Cloud Oracle Live Inference (gemma4:31b - 300ms)")
+        print(" 3. Setup ChatGPT Browser Session (Login & Save Session Cookies)")
+        print(" 4. Test ChatGPT Web Oracle Live Inference")
         print(" 0. Return to Main Menu")
-        o_c = input("\nEnter choice [0-3] (default 1): ").strip() or "1"
+        o_c = input("\nEnter choice [0-4] (default 2): ").strip() or "2"
 
         if o_c == "1":
             from gemini_oracle import get_gemini_oracle
@@ -223,6 +224,10 @@ def main():
             if status['tripped_reason']:
                 print(f" Reason for Trip:         {status['tripped_reason']}")
             
+            from ollama_oracle import get_ollama_oracle
+            ollama = get_ollama_oracle()
+            print(f" Ollama Cloud Configured: {ollama.is_available()}")
+
             from chatgpt_browser_oracle import get_chatgpt_oracle
             cg = get_chatgpt_oracle()
             print(f" ChatGPT Fallback Ready:  {cg.is_available()}")
@@ -240,16 +245,40 @@ def main():
                     print("\nGemini rate-limited or unavailable. Circuit status updated.")
 
         elif o_c == "2":
-            from chatgpt_browser_oracle import get_chatgpt_oracle
-            oracle = get_chatgpt_oracle()
-            oracle.launch_login_session()
+            from ollama_oracle import get_ollama_oracle
+            oracle = get_ollama_oracle()
+            if not oracle.is_available():
+                print("\n⚠️ OLLAMA_API_KEY is not configured in credentials.txt.")
+            else:
+                print("\n" + "=" * 70)
+                print(" Ollama Cloud Oracle — Live Inference Test ".center(70, "="))
+                print(f" Target Model: {oracle.primary_model} (Cloud Hosted)")
+                print("=" * 70)
+                test_prompt = input("Enter test question (press Enter for default): ").strip()
+                if not test_prompt:
+                    test_prompt = "پاکستان کے کون سے کھانے سب سے زیادہ مقبول ہیں؟"
+                print(f"\nQuerying Ollama Cloud API ({oracle.primary_model})...")
+                t0 = time.time()
+                reply = oracle.query(prompt=test_prompt, timeout=15)
+                elapsed = round(time.time() - t0, 2)
+                if reply:
+                    print(f"\n--- Response from Ollama Cloud ({elapsed}s) ---")
+                    print(reply)
+                    print("-" * 50)
+                else:
+                    print("\n❌ Did not receive a response within timeout.")
 
         elif o_c == "3":
             from chatgpt_browser_oracle import get_chatgpt_oracle
             oracle = get_chatgpt_oracle()
+            oracle.launch_login_session()
+
+        elif o_c == "4":
+            from chatgpt_browser_oracle import get_chatgpt_oracle
+            oracle = get_chatgpt_oracle()
             if not oracle.is_available():
                 print("\n⚠️ ChatGPT session is not configured yet.")
-                print("Please select Option 2 first to log into your ChatGPT account.")
+                print("Please select Option 3 first to log into your ChatGPT account.")
             else:
                 print("\n" + "=" * 70)
                 print(" ChatGPT Web Oracle — Live Inference Test ".center(70, "="))

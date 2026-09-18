@@ -19,9 +19,9 @@ import re
 import requests
 from typing import Optional, List, Dict, Any
 
-# Primary and resilient fallback Gemini models
-PRIMARY_MODEL = "gemini-3.6-flash"
-FALLBACK_MODEL = "gemini-3-flash-preview"
+# Primary and resilient fallback Gemini models (active on free tier)
+PRIMARY_MODEL = "gemini-3.5-flash"
+FALLBACK_MODEL = "gemini-flash-lite-latest"
 TERTIARY_MODEL = "gemini-3.1-flash-lite"
 
 
@@ -157,12 +157,30 @@ class GeminiSearchOracle:
         system_instruction: Optional[str] = None,
         timeout: int = 25
     ) -> Optional[str]:
-        """Seamlessly queries ChatGPT when Gemini is unavailable, rate-limited, or slow."""
+        """Seamlessly queries Ollama Cloud (or ChatGPT) when Gemini is unavailable, rate-limited, or slow."""
+        # 1. Primary Cloud Fallback: Ollama Cloud (gemma4:31b) - Sub-second, zero local PC load
+        try:
+            from ollama_oracle import get_ollama_oracle
+            ollama = get_ollama_oracle()
+            if ollama.is_available():
+                print("[GeminiOracle] Seamlessly routing to Ollama Cloud Oracle (gemma4:31b)...")
+                reply = ollama.query(
+                    prompt=prompt,
+                    search_context=search_context,
+                    system_instruction=system_instruction,
+                    timeout=10
+                )
+                if reply:
+                    return reply
+        except Exception as o_err:
+            print(f"[GeminiOracle] Ollama Cloud fallback notice: {o_err}")
+
+        # 2. Secondary Fallback: ChatGPT Browser / API Oracle
         try:
             from chatgpt_browser_oracle import get_chatgpt_oracle
             chatgpt = get_chatgpt_oracle()
             if chatgpt.is_available():
-                print("[GeminiOracle] Instantly switching to ChatGPT Oracle...")
+                print("[GeminiOracle] Switching to ChatGPT Oracle...")
                 t0 = time.time()
                 reply = chatgpt.query(
                     prompt=prompt,

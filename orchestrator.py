@@ -587,7 +587,22 @@ class CognitiveOrchestrator:
                 except Exception as ex:
                     print(f"[Orchestrator] Modal GPU code generation notice: {ex}")
 
-            # 2. Secondary Fallback: Gemini Oracle
+            # 2. Secondary Fallback: Ollama Cloud Oracle (gemma4:31b) — Fast & free 31B code generation
+            if not reply_text:
+                try:
+                    from ollama_oracle import get_ollama_oracle
+                    ollama = get_ollama_oracle()
+                    if ollama.is_available():
+                        print("[Orchestrator] Falling back to Ollama Cloud Oracle for code/article...")
+                        reply_text = ollama.query(
+                            prompt=prompt,
+                            system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                            timeout=15
+                        )
+                except Exception as o_err:
+                    print(f"[Orchestrator] Ollama Cloud code fallback notice: {o_err}")
+
+            # 3. Tertiary Fallback: Gemini Oracle
             if not reply_text and self.oracle.is_available():
                 print("[Orchestrator] Falling back to Gemini Oracle for code/article...")
                 reply_text = self.oracle.query(
@@ -672,9 +687,25 @@ class CognitiveOrchestrator:
                 except Exception as ex:
                     print(f"[Orchestrator] Primary Modal GPU knowledge synthesis notice: {ex}")
 
-            # 2. Secondary Fallback: Gemini Oracle (with fast 5s timeout)
+            # 2. Secondary Fallback: Ollama Cloud Oracle (gemma4:31b) with Search Context
+            if not oracle_reply:
+                try:
+                    from ollama_oracle import get_ollama_oracle
+                    ollama = get_ollama_oracle()
+                    if ollama.is_available():
+                        print("[Orchestrator] Modal GPU unavailable. Falling back to Ollama Cloud Oracle for knowledge...")
+                        oracle_reply = ollama.query(
+                            prompt=effective_input,
+                            search_context=context_str,
+                            system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                            timeout=10
+                        )
+                except Exception as o_err:
+                    print(f"[Orchestrator] Ollama Cloud knowledge fallback notice: {o_err}")
+
+            # 3. Tertiary Fallback: Gemini Oracle (with fast 5s timeout)
             if not oracle_reply and self.oracle.is_available():
-                print("[Orchestrator] Modal GPU unavailable. Falling back to Gemini Oracle...")
+                print("[Orchestrator] Falling back to Gemini Oracle...")
                 oracle_reply = self.oracle.query(
                     prompt=prompt,
                     system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
@@ -768,9 +799,24 @@ class CognitiveOrchestrator:
             except Exception as e:
                 print(f"[Orchestrator] Primary Modal GPU notice: {e}")
 
-        # 2. Secondary Fallback: Gemini Oracle
+        # 2. Secondary Fallback: Ollama Cloud Oracle (gemma4:31b) — Fast sub-second cloud fallback
+        if not final_reply:
+            try:
+                from ollama_oracle import get_ollama_oracle
+                ollama = get_ollama_oracle()
+                if ollama.is_available():
+                    print("[Orchestrator] Modal GPU unavailable. Falling back to Ollama Cloud Oracle (gemma4:31b)...")
+                    final_reply = ollama.query(
+                        prompt=conv_prompt,
+                        system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                        timeout=10
+                    )
+            except Exception as o_err:
+                print(f"[Orchestrator] Ollama Cloud general turn fallback notice: {o_err}")
+
+        # 3. Tertiary Fallback: Gemini Oracle
         if not final_reply and self.oracle.is_available():
-            print("[Orchestrator] Modal GPU unavailable. Falling back to Gemini Oracle...")
+            print("[Orchestrator] Falling back to Gemini Oracle...")
             final_reply = self.oracle.query(
                 prompt=conv_prompt,
                 system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
