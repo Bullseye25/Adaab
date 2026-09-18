@@ -294,7 +294,7 @@ class CognitiveOrchestrator:
             return "GENERAL"
 
         # 6. Real-time Knowledge / Web Search & Missing Information Retrieval
-        # Triggers headless information gathering from Gemini or ChatGPT
+        # Triggers web search grounding via Modal GPU, Ollama Cloud, or Gemini
         knowledge_patterns = [
             # Weather & Environment
             r"موسم", r"درجہ\s*حرارت", r"weather", r"temperature", r"بارش", r"گرمی", r"سردی", r"ہوا", r"forecast", r"climate",
@@ -568,9 +568,25 @@ class CognitiveOrchestrator:
 
             reply_text = None
 
-            # 1. Primary: Modal Cloud GPU (Qwen 2.5) — Fast ~1-2s token generation
-            if self.backend_client:
+            # 1. Tier 1: Ollama Cloud Oracle (gemma4:31b) — High-parameter 31B code generation & long articles (~1.5s)
+            try:
+                from ollama_oracle import get_ollama_oracle
+                ollama = get_ollama_oracle()
+                if ollama.is_available():
+                    reply_text = ollama.query(
+                        prompt=prompt,
+                        system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                        timeout=15
+                    )
+                    if reply_text:
+                        print("[Orchestrator] Code/Article generated successfully via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
+            except Exception as o_err:
+                print(f"[Orchestrator] Ollama Cloud code generation notice: {o_err}")
+
+            # 2. Tier 2 Fallback: Modal Cloud GPU (Qwen 2.5 7B) on NVIDIA L4
+            if not reply_text and self.backend_client:
                 try:
+                    print("[Orchestrator] Falling back to Modal Qwen 2.5 GPU for code/article...")
                     messages = [
                         {"role": "system", "content": TABRAIZ_ORCHESTRATOR_SYSTEM},
                         {"role": "user", "content": prompt}
@@ -583,26 +599,11 @@ class CognitiveOrchestrator:
                     bot_text = resp.get("content", "").strip()
                     if bot_text:
                         reply_text = bot_text
-                        print("[Orchestrator] Code/Article generated successfully via Primary Modal Qwen 2.5 GPU.")
+                        print("[Orchestrator] Code/Article generated successfully via Tier 2 Modal Qwen 2.5 GPU.")
                 except Exception as ex:
                     print(f"[Orchestrator] Modal GPU code generation notice: {ex}")
 
-            # 2. Secondary Fallback: Ollama Cloud Oracle (gemma4:31b) — Fast & free 31B code generation
-            if not reply_text:
-                try:
-                    from ollama_oracle import get_ollama_oracle
-                    ollama = get_ollama_oracle()
-                    if ollama.is_available():
-                        print("[Orchestrator] Falling back to Ollama Cloud Oracle for code/article...")
-                        reply_text = ollama.query(
-                            prompt=prompt,
-                            system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                            timeout=15
-                        )
-                except Exception as o_err:
-                    print(f"[Orchestrator] Ollama Cloud code fallback notice: {o_err}")
-
-            # 3. Tertiary Fallback: Gemini Oracle
+            # 3. Tier 3 Fallback: Google Gemini Free Tier Oracle
             if not reply_text and self.oracle.is_available():
                 print("[Orchestrator] Falling back to Gemini Oracle for code/article...")
                 reply_text = self.oracle.query(
@@ -611,27 +612,11 @@ class CognitiveOrchestrator:
                     timeout=6
                 )
 
-            # 3. Tertiary Fallback: ChatGPT Web Oracle
-            if not reply_text:
-                try:
-                    from chatgpt_browser_oracle import get_chatgpt_oracle
-                    chatgpt = get_chatgpt_oracle()
-                    if chatgpt.is_available():
-                        print("[Orchestrator] Falling back to ChatGPT Web Oracle for code/article...")
-                        reply_text = chatgpt.query(
-                            prompt=prompt,
-                            system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                            timeout=25,
-                            visible=False
-                        )
-                except Exception as c_err:
-                    print(f"[Orchestrator] Code generation ChatGPT fallback notice: {c_err}")
-
             if reply_text:
                 self._memory_executor.submit(self._persist_dialogue_silently, clean_input, reply_text[:150], turn_topic, session_id)
                 return reply_text, updated_profile
 
-        # E. Real-Time Knowledge & Search (Headless Retrieval via Gemini or ChatGPT)
+        # E. Real-Time Knowledge & Search (Grounding via Modal GPU, Ollama Cloud, or Gemini)
         if intent == "KNOWLEDGE_SEARCH":
             local_fact = self.retrieve_local_pakistan_knowledge(effective_input)
             search_snippets = self.oracle.search_web(effective_input, max_results=3)
@@ -658,7 +643,7 @@ class CognitiveOrchestrator:
 کوئی ایموجی مت لگائیں اور مارک ڈاؤن یا بلٹ پوائنٹس استعمال نہ کریں۔
 """.strip()
 
-            # 1. Primary Retrieval & Synthesis: Modal Cloud GPU (Qwen 2.5) with Search Context
+            # 1. Tier 1 Primary: Modal Cloud GPU (Qwen 2.5) with Search Context Grounding
             if self.backend_client:
                 try:
                     grounded_prompt = (
@@ -683,17 +668,17 @@ class CognitiveOrchestrator:
                     bot_text = resp.get("content", "").strip()
                     if bot_text:
                         oracle_reply = bot_text
-                        print("[Orchestrator] Knowledge query synthesized via Primary Modal Qwen 2.5 GPU.")
+                        print("[Orchestrator] Knowledge query synthesized via Tier 1 Modal Qwen 2.5 GPU.")
                 except Exception as ex:
                     print(f"[Orchestrator] Primary Modal GPU knowledge synthesis notice: {ex}")
 
-            # 2. Secondary Fallback: Ollama Cloud Oracle (gemma4:31b) with Search Context
+            # 2. Tier 2 Fallback: Ollama Cloud Oracle (gemma4:31b) with Search Context Grounding
             if not oracle_reply:
                 try:
                     from ollama_oracle import get_ollama_oracle
                     ollama = get_ollama_oracle()
                     if ollama.is_available():
-                        print("[Orchestrator] Modal GPU unavailable. Falling back to Ollama Cloud Oracle for knowledge...")
+                        print("[Orchestrator] Modal GPU unavailable. Falling back to Tier 2 Ollama Cloud Oracle for knowledge...")
                         oracle_reply = ollama.query(
                             prompt=effective_input,
                             search_context=context_str,
@@ -703,30 +688,14 @@ class CognitiveOrchestrator:
                 except Exception as o_err:
                     print(f"[Orchestrator] Ollama Cloud knowledge fallback notice: {o_err}")
 
-            # 3. Tertiary Fallback: Gemini Oracle (with fast 5s timeout)
+            # 3. Tier 3 Fallback: Google Gemini Free Tier Oracle (with fast 5s timeout)
             if not oracle_reply and self.oracle.is_available():
-                print("[Orchestrator] Falling back to Gemini Oracle...")
+                print("[Orchestrator] Falling back to Tier 3 Gemini Oracle...")
                 oracle_reply = self.oracle.query(
                     prompt=prompt,
                     system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
                     timeout=5
                 )
-
-            # 3. Tertiary Fallback: Direct ChatGPT Web Oracle
-            if not oracle_reply:
-                try:
-                    from chatgpt_browser_oracle import get_chatgpt_oracle
-                    chatgpt = get_chatgpt_oracle()
-                    if chatgpt.is_available():
-                        print("[Orchestrator] Falling back to ChatGPT Web Oracle for knowledge...")
-                        oracle_reply = chatgpt.query(
-                            prompt=prompt,
-                            system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                            timeout=20,
-                            visible=False
-                        )
-                except Exception as c_err:
-                    print(f"[Orchestrator] Headless ChatGPT fallback notice: {c_err}")
 
             if oracle_reply:
                 cleaned_reply = self.clean_voice_text(oracle_reply)
@@ -778,10 +747,10 @@ class CognitiveOrchestrator:
         messages.append({"role": "user", "content": conv_prompt})
 
         # Generate Response: Prioritize Modal Qwen 2.5 GPU as Primary Brain (~1s latency),
-        # falling back gracefully to Gemini Oracle or ChatGPT Web Oracle if cloud GPU is unavailable
+        # falling back gracefully to Ollama Cloud (gemma4:31b) or Gemini Free Tier if cloud GPU is unavailable
         final_reply = None
 
-        # 1. Primary Brain: Modal Cloud GPU (Qwen 2.5-7B) on NVIDIA L4
+        # 1. Tier 1 Primary: Modal Cloud GPU (Qwen 2.5-7B) on NVIDIA L4
         if self.backend_client:
             try:
                 resp = self.backend_client.chat_completion(
@@ -795,17 +764,17 @@ class CognitiveOrchestrator:
                 content = resp.get("content", "").strip()
                 if content:
                     final_reply = content
-                    print("[Orchestrator] Turn completed via Primary Modal Qwen 2.5 GPU.")
+                    print("[Orchestrator] Turn completed via Tier 1 Modal Qwen 2.5 GPU.")
             except Exception as e:
                 print(f"[Orchestrator] Primary Modal GPU notice: {e}")
 
-        # 2. Secondary Fallback: Ollama Cloud Oracle (gemma4:31b) — Fast sub-second cloud fallback
+        # 2. Tier 2 Fallback: Ollama Cloud Oracle (gemma4:31b) — Fast sub-second cloud fallback
         if not final_reply:
             try:
                 from ollama_oracle import get_ollama_oracle
                 ollama = get_ollama_oracle()
                 if ollama.is_available():
-                    print("[Orchestrator] Modal GPU unavailable. Falling back to Ollama Cloud Oracle (gemma4:31b)...")
+                    print("[Orchestrator] Modal GPU unavailable. Falling back to Tier 2 Ollama Cloud Oracle (gemma4:31b)...")
                     final_reply = ollama.query(
                         prompt=conv_prompt,
                         system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
@@ -814,30 +783,14 @@ class CognitiveOrchestrator:
             except Exception as o_err:
                 print(f"[Orchestrator] Ollama Cloud general turn fallback notice: {o_err}")
 
-        # 3. Tertiary Fallback: Gemini Oracle
+        # 3. Tier 3 Fallback: Google Gemini Free Tier Oracle
         if not final_reply and self.oracle.is_available():
-            print("[Orchestrator] Falling back to Gemini Oracle...")
+            print("[Orchestrator] Falling back to Tier 3 Gemini Oracle...")
             final_reply = self.oracle.query(
                 prompt=conv_prompt,
                 system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
                 timeout=5
             )
-
-        # 3. Tertiary Fallback: ChatGPT Web Oracle
-        if not final_reply:
-            try:
-                from chatgpt_browser_oracle import get_chatgpt_oracle
-                chatgpt = get_chatgpt_oracle()
-                if chatgpt.is_available():
-                    print("[Orchestrator] Falling back to ChatGPT Web Oracle...")
-                    final_reply = chatgpt.query(
-                        prompt=conv_prompt,
-                        system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                        timeout=20,
-                        visible=False
-                    )
-            except Exception as c_err:
-                print(f"[Orchestrator] General turn ChatGPT fallback notice: {c_err}")
 
         if final_reply:
             final_reply = self.clean_voice_text(final_reply)
