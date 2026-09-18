@@ -6,24 +6,44 @@ import threading
 import urllib.request
 import urllib.error
 
-# Default endpoint URL (populated automatically upon running modal deploy deploy_adaab.py)
-ENDPOINT_URL = os.environ.get(
-    "ADAAB_ENDPOINT_URL",
-    "https://ammadraza01--adaab-agent-backend-adaabagentmodel-chat-co-e81752.modal.run"
-)
+def resolve_modal_endpoint() -> str:
+    """
+    Dynamically discovers the web endpoint URL for AdaabAgentModel
+    from the currently active Modal profile/app, falling back to ridaraza2499.
+    """
+    env_url = os.environ.get("ADAAB_ENDPOINT_URL")
+    if env_url:
+        return env_url
+
+    try:
+        import modal
+        cls = modal.Cls.from_name("adaab-agent-backend", "AdaabAgentModel")
+        obj = cls()
+        web_url_fn = getattr(obj.chat_completions, "get_web_url", None)
+        if callable(web_url_fn):
+            resolved = web_url_fn()
+            if resolved:
+                return resolved
+    except Exception:
+        pass
+
+    # Default to current active profile: ridaraza2499
+    return "https://ridaraza2499--adaab-agent-backend-adaabagentmodel-chat-c-40745c.modal.run"
+
+ENDPOINT_URL = resolve_modal_endpoint()
 
 def get_modal_client():
     """Returns local helper interface to Modal backend."""
-    return AdaabClient(ENDPOINT_URL)
+    return AdaabClient()
 
 class AdaabClient:
-    def __init__(self, endpoint_url: str = ENDPOINT_URL):
-        self.endpoint_url = endpoint_url
+    def __init__(self, endpoint_url: str = None):
+        self.endpoint_url = endpoint_url or resolve_modal_endpoint()
         self._heartbeat_thread = None
         self._stop_heartbeat_event = threading.Event()
         self._last_heartbeat_time = 0.0
 
-    def heartbeat(self, timeout: float = 10.0) -> dict:
+    def heartbeat(self, timeout: float = 35.0) -> dict:
         """
         Sends a fast, zero-compute keep-alive ping to the Modal GPU container.
         Resets Modal's scaledown_window (300s) without running inference or generating tokens.
@@ -88,7 +108,7 @@ class AdaabClient:
 
     def health_check(self) -> dict:
         """Pings the Modal backend to check status."""
-        res = self.heartbeat(timeout=15.0)
+        res = self.heartbeat(timeout=35.0)
         if res.get("status") == "alive":
             return {"status": "online", "code": 200, "model": res.get("model")}
         return {"status": "offline_or_cold", "error": res.get("error", "Unknown error")}
