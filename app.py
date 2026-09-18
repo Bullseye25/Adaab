@@ -459,28 +459,75 @@ body, .gradio-container {
     border-radius: 24px !important;
     display: flex !important;
     flex-direction: column !important;
+    justify-content: space-between !important;
     height: 100% !important;
     position: relative !important;
     overflow: hidden !important;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* Chatbot container: full height with bottom padding ensuring messages never hide under dock */
-.messenger-chat {
+/* Chatbot container: takes full available height above dock, outer container never scrolls */
+.messenger-chat, .messenger-chat.block {
     position: relative !important;
-    flex: 1 1 100% !important;
+    flex: 1 1 auto !important;
     width: 100% !important;
-    height: 100% !important;
-    max-height: 100% !important;
-    overflow-y: auto !important;
-    padding: 20px 24px 88px 24px !important;
-    box-sizing: border-box !important;
-    -webkit-overflow-scrolling: touch !important;
+    height: calc(100% - 76px) !important;
+    max-height: calc(100% - 76px) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 16px !important;
     background: transparent !important;
     border: none !important;
+}
+
+.messenger-chat .wrap {
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    border: none !important;
+    background: transparent !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* The actual scrollable message container in Gradio 6 */
+.messenger-chat .bubble-wrap {
+    flex: 1 1 auto !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 20px 24px 20px 24px !important;
+    box-sizing: border-box !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(0, 210, 255, 0.45) rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Glowing Neon Cyan Custom Scrollbar for Conversation */
+.messenger-chat .bubble-wrap::-webkit-scrollbar {
+    width: 8px !important;
+    display: block !important;
+}
+.messenger-chat .bubble-wrap::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-radius: 8px !important;
+    margin: 8px 0 !important;
+}
+.messenger-chat .bubble-wrap::-webkit-scrollbar-thumb {
+    background: rgba(0, 210, 255, 0.45) !important;
+    border-radius: 8px !important;
+    border: 2px solid #171a21 !important;
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.25) !important;
+}
+.messenger-chat .bubble-wrap::-webkit-scrollbar-thumb:hover {
+    background: #00d2ff !important;
+    box-shadow: 0 0 14px rgba(0, 210, 255, 0.6) !important;
 }
 
 /* Hide default Gradio chatbot header buttons (share, trash, copy) */
@@ -666,14 +713,11 @@ body, .gradio-container {
     border-color: rgba(255, 255, 255, 0.16) !important;
 }
 
-/* Bottom Floating Dock: Permanently Pinned at the Bottom */
-.messenger-dock {
-    position: absolute !important;
-    bottom: 14px !important;
-    left: 18px !important;
-    right: 18px !important;
+/* Bottom Floating Dock: In-Flow Flex Pinned at the Bottom */
+.messenger-dock, .row.messenger-dock {
+    flex: 0 0 56px !important;
     height: 56px !important;
-    margin: 0 !important;
+    margin: 6px 18px 14px 18px !important;
     padding: 6px 10px 6px 10px !important;
     display: flex !important;
     flex-direction: row !important;
@@ -686,6 +730,7 @@ body, .gradio-container {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
+    position: relative !important;
     z-index: 999 !important;
 }
 
@@ -920,19 +965,31 @@ body, .gradio-container {
         height: calc(100dvh - 54px) !important;
         max-height: calc(100dvh - 54px) !important;
         position: relative !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        overflow: hidden !important;
     }
-    .messenger-chat {
-        padding: 12px 14px 76px 14px !important;
-        height: 100% !important;
-        max-height: 100% !important;
-    }
-    .messenger-dock {
-        position: absolute !important;
-        bottom: 8px !important;
-        left: 8px !important;
-        right: 8px !important;
-        height: 52px !important;
+    .messenger-chat, .messenger-chat.block {
+        flex: 1 1 auto !important;
+        height: calc(100% - 64px) !important;
+        max-height: calc(100% - 64px) !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        padding: 0 !important;
         margin: 0 !important;
+    }
+    .messenger-chat .bubble-wrap {
+        padding: 12px 14px 16px 14px !important;
+    }
+    .messenger-dock, .row.messenger-dock {
+        flex: 0 0 52px !important;
+        height: 52px !important;
+        margin: 4px 8px 8px 8px !important;
+        position: relative !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: auto !important;
     }
 }
 
@@ -1746,14 +1803,12 @@ function setupChatObserver() {
     console.log('[Adaab] Chatbot MutationObserver initialized for automated voice playback.');
 
     const checkAndPlayLatest = () => {
-        // Smooth auto-scroll to bottom so mobile user immediately sees the response
+        // Smooth auto-scroll only the inner bubble-wrap container so outer containers never shift
         try {
-            const scrollEls = [chatContainer, chatContainer.querySelector('.wrap'), chatContainer.querySelector('.messages')];
-            scrollEls.forEach(el => {
-                if (el && el.scrollHeight > el.clientHeight) {
-                    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-                }
-            });
+            const bubbleWrap = chatContainer.querySelector('.bubble-wrap') || chatContainer.querySelector('.messages');
+            if (bubbleWrap && bubbleWrap.scrollHeight > bubbleWrap.clientHeight) {
+                bubbleWrap.scrollTo({ top: bubbleWrap.scrollHeight, behavior: 'smooth' });
+            }
         } catch(e) {}
 
         // Re-enable controls as soon as assistant response arrives
