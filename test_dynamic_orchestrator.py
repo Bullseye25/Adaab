@@ -251,48 +251,60 @@ class TestDynamicPreStandardModes(unittest.TestCase):
         self.assertIn('test_img.png', reply)
 
     def test_orchestrate_turn_deep_exploration_parameters(self):
+        import unittest.mock
         recorded_calls = []
         class MockDeepClient:
             def chat_completion(self, messages, **kwargs):
                 recorded_calls.append((messages, kwargs))
                 return {'content': 'یہ ہے تفصیل سے مکمل علمی جائزہ جو ہر پہلو کا احاطہ کرتا ہے۔'}
         orch_with_mock = CognitiveOrchestrator(backend_client=MockDeepClient())
-        reply, prof = orch_with_mock.orchestrate_turn(
-            'پاکستان میں مصنوعی ذہانت کے مستقبل پر تفصیل سے روشنی ڈالیں',
-            conversation_history=[]
-        )
+        orch_with_mock.oracle.is_available = lambda: False
+        with unittest.mock.patch('ollama_oracle.get_ollama_oracle') as mock_ollama:
+            mock_ollama.return_value.is_available.return_value = False
+            reply, prof = orch_with_mock.orchestrate_turn(
+                'پاکستان میں مصنوعی ذہانت کے مستقبل پر تفصیل سے روشنی ڈالیں',
+                conversation_history=[]
+            )
         self.assertTrue(len(recorded_calls) > 0)
         messages, kwargs = recorded_calls[0]
         self.assertEqual(kwargs.get('max_tokens'), 850, 'DEEP_EXPLORATION must allocate 850 tokens for comprehensive depth')
         self.assertIn('Deep Exploration Mode', messages[0]['content'])
 
     def test_orchestrate_turn_poetry_parameters(self):
+        import unittest.mock
         recorded_calls = []
         class MockPoetryClient:
             def chat_completion(self, messages, **kwargs):
                 recorded_calls.append((messages, kwargs))
                 return {'content': 'ستاروں سے آگے جہاں اور بھی ہیں\nابھی عشق کے امتحان اور بھی ہیں'}
         orch_with_mock = CognitiveOrchestrator(backend_client=MockPoetryClient())
-        reply, prof = orch_with_mock.orchestrate_turn(
-            'علامہ اقبال کا کوئی شعر سنائیں',
-            conversation_history=[]
-        )
+        orch_with_mock.oracle.is_available = lambda: False
+        with unittest.mock.patch('ollama_oracle.get_ollama_oracle') as mock_ollama:
+            mock_ollama.return_value.is_available.return_value = False
+            reply, prof = orch_with_mock.orchestrate_turn(
+                'علامہ اقبال کا کوئی شعر سنائیں',
+                conversation_history=[]
+            )
         self.assertTrue(len(recorded_calls) > 0)
         messages, kwargs = recorded_calls[0]
         self.assertEqual(kwargs.get('temperature'), 0.75, 'Poetry mode must use temperature=0.75 for creative rhythm')
         self.assertIn('Adab & Poetry Mode', messages[0]['content'])
 
     def test_orchestrate_turn_code_tech_parameters(self):
+        import unittest.mock
         recorded_calls = []
         class MockCodeClient:
             def chat_completion(self, messages, **kwargs):
                 recorded_calls.append((messages, kwargs))
                 return {'content': 'آپ کا مطلوبہ کوڈ تیار ہے۔\n\n```python\ndef add(a, b):\n    return a + b\n```'}
         orch_with_mock = CognitiveOrchestrator(backend_client=MockCodeClient())
-        reply, prof = orch_with_mock.orchestrate_turn(
-            'پائتھون میں دو نمبرز جمع کرنے کا کوڈ لکھیں',
-            conversation_history=[]
-        )
+        orch_with_mock.oracle.is_available = lambda: False
+        with unittest.mock.patch('ollama_oracle.get_ollama_oracle') as mock_ollama:
+            mock_ollama.return_value.is_available.return_value = False
+            reply, prof = orch_with_mock.orchestrate_turn(
+                'پائتھون میں دو نمبرز جمع کرنے کا کوڈ لکھیں',
+                conversation_history=[]
+            )
         self.assertTrue(len(recorded_calls) > 0)
         messages, kwargs = recorded_calls[0]
         self.assertEqual(kwargs.get('max_tokens'), 900, 'Code mode must allocate 900 tokens for complete scripts')

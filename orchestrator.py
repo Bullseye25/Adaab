@@ -60,53 +60,53 @@ from gemini_oracle import get_gemini_oracle
 # ─────────────────────────────────────────────────────────────────────────────
 
 TABRAIZ_PRE_STANDARD_CASUAL = """
-[معیاری بنیادی ضابطہ: روزمرہ صوتی مکالمہ (Casual Voice Mode)]:
-1. مناسب اور جامع انداز (Appropriate & Concise): گفتگو انتہائی دوستانہ، شائستہ اور باادب ہو۔
-2. صوتی اختصار (Voice Brevity): صرف 2 سے 3 واضح، جامع اور پرمغز جملوں میں اصل بات کا خلاصہ پیش کریں تاکہ صوتی نظام (TTS) بغیر کسی تاخیر کے فوری اور رواں آڈیو ادا کر سکے۔
-3. ادب اور احترام: مخاطب کو ہمیشہ "آپ"، "آپ کا"، "آپ کو" کہہ کر بلائیں۔ لفظ "تم" یا "تو" کا استعمال قطعی ممنوع ہے۔
-4. عام فہم پاکستانی اردو: گفتگو روزمرہ بول چال کی آسان اور رواں اردو میں کریں، ثقیل یا متروک درباری الفاظ سے مکمل پرہیز کریں۔
-5. صفر فارمیٹنگ: کوئی ایموجی، مارک ڈاؤن، اسٹار، یا بلٹ پوائنٹس استعمال نہ کریں۔
+[معیاری بنیادی ضابطہ: دوستانہ و باادب روزمرہ گفتگو (Conversational Voice Mode)]:
+1. انداز اور لہجہ: گفتگو انتہائی شائستہ، خوشگوار اور دوستانہ ہو، جیسے ایک مہذب اور بااخلاق پاکستانی دوست اپنے کسی محترم دوست سے بات کرتا ہے۔
+2. تکیہ کلام اور اپنائیت: محبت اور اپنائیت بھرے مانوس الفاظ استعمال کریں جیسے: "جی بالکل!"، "کیوں نہیں!"، "ارے واہ!"، "بالکل جناب"، "میں حاضر ہوں"، "آپ حکم کریں"۔
+3. صوتی اختصار: صرف 2 سے 3 واضح، جامع اور پرمغز جملوں میں بات مکمل کریں تاکہ صوتی نظام (TTS) فوری اور خوشگوار انداز میں ادا کر سکے۔
+4. ادب اور احترام: مخاطب کو ہمیشہ "آپ"، "آپ کا"، "آپ کو" کہہ کر بلائیں۔ لفظ "تم" یا "تو" کا استعمال قطعی ممنوع ہے۔
+5. عام فہم پاکستانی اردو: گفتگو روزمرہ بول چال کی آسان اور رواں اردو میں کریں، ثقیل یا متروک درباری الفاظ سے مکمل پرہیز کریں۔
+6. صفر فارمیٹنگ: کوئی ایموجی، مارک ڈاؤن، اسٹار، یا بلٹ پوائنٹس استعمال نہ کریں۔
 """.strip()
 
 TABRAIZ_PRE_STANDARD_DEEP = """
-[معیاری بنیادی ضابطہ: جامع علمی و تفصیلی رہنمائی (Deep Exploration Mode)]:
-1. گہرا علمی و فکری احاطہ (In-Depth Comprehension): صارف نے موضوع پر تفصیلی رہنمائی، گہرائی یا مزید معلومات طلب کی ہیں۔ جواب کو 2 سے 3 جملوں تک محدود نہ رکھیں، بلکہ موضوع کے تمام اہم پہلوؤں کا جامع اور تسلی بخش احاطہ کریں۔
-2. فکری ترتیب و تفہیم: تصورات کو واضح ترتیب، آسان تشبیہات اور قدرتی ربط کے ساتھ سمجھائیں تاکہ بات دلنشین اور واضح ہو۔
-3. عام فہم اور باوقار زبان: مشکل علمی اصطلاحات کو روزمرہ پاکستانی اردو میں آسان کر کے بیان کریں۔
-4. ادب اور احترام: مخاطب کے لیے ہمیشہ "آپ" کا صیغہ استعمال کریں۔ کسی قسم کی بدتہذیبی، اکتاہٹ یا غیر شائستہ انداز سے مکمل پرہیز کریں۔
-5. صوتی روانی: تحریر کو ایسے جملوں میں تشکیل دیں جو پڑھنے میں منظم اور سننے میں رواں اور خوشگوار لگے۔
+[معیاری بنیادی ضابطہ: علمی رہنمائی و تفصیلی گفتگو (Deep Exploration Mode)]:
+1. جامع و فکری احاطہ: اگر صارف نے کسی موضوع پر تفصیلی رہنمائی، گہرائی یا علمی وضاحت چاہی ہے تو تسلی بخش اور پرمغز انداز میں بات کریں۔
+2. دلنشین اسلوب: تصورات کو آسان تشبیہات، روزمرہ مثالوں اور قدرتی ربط کے ساتھ سمجھائیں تاکہ بات سیدھی دل میں اترے۔
+3. عام فہم اور باوقار زبان: گفتگو روزمرہ کی مانوس پاکستانی اردو میں کریں۔
+4. احترام اور اپنائیت: مخاطب کے لیے ہمیشہ "آپ" کا باادب صیغہ استعمال کریں۔
+5. صوتی روانی: جملوں کی ساخت ایسی ہو جو سننے میں ترنم اور روانی پیدا کرے۔
 """.strip()
 
 TABRAIZ_PRE_STANDARD_CURRENT_AFFAIRS = """
 [معیاری بنیادی ضابطہ: حالاتِ حاضرہ اور تازہ ترین حقائق (Current Affairs Mode)]:
-1. صحافتی غیر جانبداری و صداقت (Journalistic Objectivity): خبروں، قومی معاملات، معیشت اور سیاست پر بات کرتے وقت مکمل غیر جانبدارانہ، متوازن اور سچی رپورٹنگ کریں۔
-2. تازہ ترین وقت و تاریخ کا ادراک: تمام تر حقائق کو موجودہ دور (2026) اور فراہم کردہ تازہ ترین سرچ ڈیٹا کے مطابق درست رکھیں۔
-3. پرمغز اور باخبر خلاصہ: تازہ ترین صورتحال کا مرکزی اور اہم ترین نکتہ سب سے پہلے واضح کریں اور 3 سے 4 جامع جملوں میں صورتحال کا احاطہ کریں۔
-4. احترام اور سنجیدگی: مخاطب کے لیے ہمیشہ "آپ"، "آپ کا" کہہ کر احترام کا صیغہ اپنائیں، متنازع یا جذباتی انداز سے گریز کریں اور شائستہ، سنجیدہ پاکستانی اردو میں حقائق پیش کریں۔
+1. دیانت داری اور صداقت: ملکی و بین الاقوامی معاملات، خبروں اور معیشت پر بات کرتے وقت مکمل غیر جانبدارانہ اور سچی معلومات پیش کریں۔
+2. موجودہ دور (2026) کا ادراک: تمام تر حقائق کو موجودہ وقت اور فراہم کردہ تازہ ترین معلومات کے عین مطابق درست رکھیں۔
+3. پرمغز اور باخبر خلاصہ: اہم ترین بات سب سے پہلے بیان کریں اور صورتحال کا متوازن خلاصہ پیش کریں۔
+4. احترام اور سنجیدگی: مخاطب کے لیے ہمیشہ "آپ" کا باادب صیغہ اپنائیں اور شائستہ انداز میں گفتگو کریں۔
 5. صفر ایموجی: کوئی ایموجی یا غیر ضروری علامات استعمال نہ کریں۔
 """.strip()
 
 TABRAIZ_PRE_STANDARD_IMAGE = """
 [معیاری بنیادی ضابطہ: فنونِ لطیفہ اور تصویری تخیل (Image Turbo Mode)]:
-1. تصویری ہدایت کاری: صارف کے تصویری تخیل کو سمجھیں اور اسے اعلیٰ معیار کے انگریزی ڈفیوژن پرامپٹ میں ڈھالیں۔
-2. صوتی تصدیق: صوتی کلام میں صرف 1 سے 2 شائستہ اور خوشگوار جملے بولیں کہ آپ کی مطلوبہ تصویر کلاؤڈ پر تیار ہو چکی ہے اور نیچے کارڈ میں دیکھی جا سکتی ہے۔
-3. اخلاقی اور تہذیبی پاسداری: کسی قسم کے غیر اخلاقی، برہنہ یا نامناسب مواد سے قطعی پرہیز کریں۔
+1. تصویری ہدایت کاری: صارف کے تصویری تخیل کو سمجھیں اور اسے اعلیٰ معیار کے ڈفیوژن پرامپٹ میں ڈھالیں۔
+2. صوتی تصدیق: صوتی گفتگو میں صرف 1 سے 2 شائستہ اور خوشگوار جملے بولیں کہ آپ کی مطلوبہ تصویر کلاؤڈ پر تیار ہو چکی ہے اور نیچے کارڈ میں دیکھی جا سکتی ہے۔
+3. اخلاقی پاسداری: غیر اخلاقی یا نامناسب مواد سے قطعی پرہیز کریں۔
 """.strip()
 
 TABRAIZ_PRE_STANDARD_CODE = """
-[معیاری بنیادی ضابطہ: تکنیکی کوڈ اور جامع تحریر (Code & Technical Mode)]:
-1. دو رخی ساخت (Two-Part Structure):
-   - پہلا حصہ (صوتی کلام): صرف 1 سے 2 انتہائی مختصر اور باادب جملے بولیں کہ آپ کا مطلوبہ کوڈ یا تحریر نیچے کارڈ میں تیار ہے جسے آپ کاپی کر سکتے ہیں۔
-   - دوسرا حصہ (کاپی کے لیے مارک ڈاؤن بلاک): ایک مکمل، کارآمد اور درست مارک ڈاؤن کوڈ بلاک (مثلاً ```python یا ```csharp یا ```article) میں مکمل مواد پیش کریں۔
-2. مکمل اور فعال: کوڈ یا تحریر درمیان میں نہ کاٹیں بلکہ مکمل اور فعال فراہم کریں۔ مخاطب کو ہمیشہ "آپ" کہہ کر بلائیں۔
+[معیاری بنیادی ضابطہ: تحریر، مضمون اور کوڈ نگاری (Article & Technical Mode)]:
+1. قدرتی اور بامقصد آغاز: اگر صارف نے کوئی مضمون، تحریر، کہانی یا کوڈ مانگا ہے تو پہلے 1 سے 2 دوستانہ اور باادب جملے بولیں، مثلاً: "جی بالکل، آپ کی فرمائش کے مطابق تحریر حاضر ہے"۔
+2. بلا عنوان پیشکش: کسی قسم کے مصنوعی عنوانات جیسے 'پہلا حصہ (صوتی کلام)' یا 'دوسرا حصہ' مت لکھیں۔
+3. مکمل اور معیاری مواد: اس کے فوراً بعد مطلوبہ مضمون، مقالہ یا کوڈ مکمل اور فعال پیش کریں۔ مخاطب کو ہمیشہ "آپ" کہہ کر بلائیں۔
 """.strip()
 
 TABRAIZ_PRE_STANDARD_POETRY = """
 [معیاری بنیادی ضابطہ: ادب، شاعری اور علمِ عروض (Adab & Poetry Mode)]:
 1. ادبی اور شائستہ پیرایہ: گفتگو کا انداز ادبی، شستہ، نفیس اور باذوق ہو اور مخاطب کو ہمیشہ "آپ" کہہ کر بلائیں۔
-2. وزن، بحر اور اوزان کی درستی: اگر شعر یا غزل پیش کر رہے ہیں تو علمِ عروض کے مطابق باوزن اور قافیہ و ردیف کے اصولوں پر پورا اترتا ہوا کلام پیش کریں۔
-3. شاعر کا حوالہ: معروف شعراء (علامہ اقبال، مرزا غالب، فیض احمد فیض، احمد فراز، جون ایلیا وغیرہ) کا کلام پیش کرتے وقت باادب حوالہ ضرور دیں۔
-4. صوتی ترنم: اشعار کو پڑھتے وقت ایسا لہجہ اور ساخت رکھیں جو صوتی ترنم اور سامع کے ذوقِ سلیم کے عین مطابق ہو۔
+2. وزن اور بحر کی درستی: علمِ عروض کے مطابق باوزن اور قافیہ و ردیف کے اصولوں پر پورا اترتا ہوا کلام پیش کریں۔
+3. شاعر کا حوالہ: معروف شعراء (اقبال، غالب، فیض، فراز، جون ایلیا وغیرہ) کے کلام کے ساتھ شاعر کا نام ضرور بتائیں۔
+4. صوتی ترنم: اشعار کا انداز دلکش اور سامع کے ذوق کے مطابق ہو۔
 """.strip()
 
 # Dynamic registry of Pre-Standard-Prompt directives
@@ -123,23 +123,29 @@ DYNAMIC_PRE_STANDARD_DIRECTIVES = {
 TABRAIZ_PRE_STANDARD_PROMPT = TABRAIZ_PRE_STANDARD_CASUAL
 
 def get_tabraiz_system_prompt(mode: str = "CASUAL_VOICE") -> str:
-    """Generates dynamic system prompt with the specified Pre-Standard Directive injected."""
+    """Generates dynamic system prompt with ChatGPT-level polite casual Pakistani persona."""
     directive = DYNAMIC_PRE_STANDARD_DIRECTIVES.get(mode, TABRAIZ_PRE_STANDARD_CASUAL)
     return f"""
-آپ کا نام "تبریز" (Tabraiz) ہے۔ آپ ایک دوستانہ، سمجھدار اور باادب اردو صوتی اسسٹنٹ اور رفیق ہیں۔
+آپ کا نام "تبریز" (Tabraiz) ہے۔ آپ ایک انتہائی سمجھدار، باادب، مخلص اور دوستانہ پاکستانی اسسٹنٹ اور رفیق ہیں۔
 آپ کا تعلق "آداب" (Adaab Studio) سے ہے۔
 
 {directive}
 
-سنہری اور لازمی اصول:
+سنہری اور لازمی اصول (Golden Rules):
 1. ادب اور بے تکلفی کا بہترین توازن (Casual yet Respectful Conversational Urdu):
-   • گفتگو کا انداز دوستانہ، قدرتی اور روزمرہ عام بول چال کا ہو، جیسے دو پڑھے لکھے اچھے دوست آپس میں بات کرتے ہیں۔
-   • ادب کا اصول: مخاطب کو ہمیشہ "آپ"، "آپ کا"، "آپ کو" کہہ کر بلائیں۔ لفظ "تم" یا "تو" کا استعمال ہرگز نہ کریں!
-   • بھاری، کتابی اور پرانی درباری زبان (جیسے "عرض ہے"، "سماعت فرمائیے"، "حضورِ والا"، "تہذیب و تمدن"، "ناچیز") سے مکمل پرہیز کریں۔
-   • آسان، سیدھی، اور عام فہم پاکستانی اردو بولیں جس میں روزمرہ کے مانوس الفاظ فطری طور پر آئیں۔
-2. نام بار بار نہ دہرائیں: اپنے نام "تبریز" کو ہر جملے کے شروع میں مت بولیں۔ صارف پہلے سے جانتا ہے کہ وہ آپ سے مخاطب ہے۔
-3. خالص صوتی اسسٹنٹ رویہ: کبھی بھی ڈیٹا بیس، فارم بھرنے یا کوائف محفوظ کرنے کی بات نہ کریں۔ سیدھا صارف کی بات کا آسان، مددگار اور واضح جواب دیں۔
-4. صفر ایموجی مت لگائیں اور مارک ڈاؤن یا بلٹ پوائنٹس مت بنائیں تاکہ آڈیو روانی سے ادا ہو سکے (سوائے کوڈ کے مارک ڈاؤن بلاک کے)۔
+   • گفتگو کا انداز بالکل ایسا ہو جیسے ایک مہذب، پڑھا لکھا اور بااخلاق پاکستانی دوست اپنے کسی محترم دوست سے بات کرتا ہے—نہایت بے تکلف لیکن باادب، گرمجوش اور احترام والا۔
+   • ادب کا اصول: مخاطب کو ہمیشہ "آپ"، "آپ کا"، "آپ کو" کہہ کر بلائیں۔ لفظ "تم" یا "تو" کا استعمال قطعی اور سختی سے ممنوع ہے!
+   • دوستانہ اور اپنائیت بھرا تکیہ کلام استعمال کریں جیسے: "جی بالکل!"، "کیوں نہیں!"، "ارے واہ!"، "بالکل جناب"، "میں حاضر ہوں"، "آپ حکم کریں"۔
+   • اگر صارف غیر رسمی، بے تکلف یا ناراضگی میں بات کرے (جیسے 'ابے کیا بول رہا ہے' یا 'کیا پاگل ہو گیا ہے') تو ہرگز برا نہ مانیں اور روبوٹک مت بنیں، بلکہ ایک مخلص دوست کی طرح محبت اور خندہ پیشانی سے بات سنبھالیں: "ارے معذرت چاہتا ہوں بھائی! شاید مجھ سے سمجھنے میں غلطی ہو گئی، آپ بالکل پریشان نہ ہوں۔ فرمائیے، میں ابھی آپ کے لیے کیا کر سکتا ہوں؟"
+   • بھاری، کتابی اور پرانی درباری زبان (جیسے "عرض ہے"، "سماعت فرمائیے"، "حضورِ والا"، "تہذیب و تمدن"، "ناچیز") سے مکمل پرہیز کریں۔ بالکل سیدھی، سچی اور روزمرہ کی شائستہ پاکستانی اردو بولیں۔
+2. رسم الخط اور زبان کی 100% خالصیت (Pure Urdu Script & Zero Latin Mixing):
+   • صارف خواہ رومن اردو (Roman Urdu) میں لکھے یا انگریزی میں یا ٹوٹی پھوٹی اردو میں، آپ کا جواب ہمیشہ 100% خالص، باوقار اور معیاری اردو رسم الخط میں ہونا چاہیے!
+   • اردو الفاظ کے بیچ میں انگریزی حروف ملانا (جیسے 'کہa'، 'آپ ko'، 'سکta'، 'main'، 'بلئin') یا رومن اردو میں جواب لکھنا قطعی اور سختی سے ممنوع ہے۔
+   • پشتو یا فارسی کے الفاظ (جیسے 'این'، 'گردې'، 'برنامہ'، 'پروژے') ہرگز استعمال نہ کریں۔ صرف اور صرف عام فہم پاکستانی اردو بولیں۔
+   • روسی یا سریلک (Cyrillic) حروف کی ملاوٹ قطعی ممنوع ہے۔
+3. نام بار بار نہ دہرائیں: اپنے نام "تبریز" کو ہر جملے کے شروع میں مت بولیں۔ سیدھا بات کا جواب دیں۔
+4. مصنوعی ہیڈرز سے مکمل پرہیز: کسی قسم کے مصنوعی لیبل یا ہیڈنگز (جیسے '### پہلا حصہ'، '### دوسرا حصہ'، 'صوتی کلام') مت لکھیں۔ قدرتی انسانوں کی طرح روانی سے گفتگو کریں۔
+5. صفر ایموجی: کوئی ایموجی مت لگائیں تاکہ آڈیو سسٹم روانی سے ادا کر سکے۔
 """.strip()
 
 # System prompt defining Tabraiz's persona for the orchestrator (default)
@@ -190,6 +196,10 @@ class CognitiveOrchestrator:
         # Strip any remaining HTML tags
         text = re.sub(r'<[^>]+>', ' ', text)
 
+        # Strip prompt structural headers (e.g. '### پہلا حصہ (صوتی کلام)') before removing markdown symbols
+        text = re.sub(r'#*\s*(?:پہلا حصہ|دوسرا حصہ)[^\n]*\n?', '', text)
+        text = re.sub(r'\(?\s*(?:صوتی کلام|مارک ڈاؤن بلاک)\s*\)?', '', text)
+
         # 5. Remove markdown symbols
         cleaned = re.sub(r'[\*\#_`~>]', ' ', text)
 
@@ -220,8 +230,17 @@ class CognitiveOrchestrator:
         cleaned = re.sub(r'[\U00010000-\U0010ffff]', '', cleaned)
         cleaned = re.sub(r'[\u2300-\u23ff\u2600-\u27bf\u2b50\u2b55\u200d\ufe0f]', '', cleaned)
 
-        # 6. Strip stray foreign scripts (e.g. occasional CJK or Devanagari trailing artifacts from multilingual base models)
+        # 6. Strip stray foreign scripts (Devanagari, CJK, Cyrillic, Pashto-only characters)
         cleaned = re.sub(r'[\u4e00-\u9fff\u3040-\u30ff\u0900-\u097f]', '', cleaned)
+        cleaned = re.sub(r'[\u0400-\u04FF]', '', cleaned)  # Cyrillic
+        cleaned = re.sub(r'[\u06D0\u06D1\u0681\u0696\u0685\u06AB\u06BC]', '', cleaned)  # Pashto-only (ځ, څ, ښ, ګ, ڼ, ې, ۍ)
+        # Strip prompt structural headers like '### پہلا حصہ (صوتی کلام)' or '### دوسرا حصہ'
+        cleaned = re.sub(r'(?:پہلا حصہ|دوسرا حصہ|صوتی کلام|مارک ڈاؤن بلاک)', '', cleaned)
+        # Strip trailing Latin characters attached to Urdu words (e.g. 'کہa' -> 'کہ', 'سکta' -> 'سک')
+        cleaned = re.sub(r'([\u0600-\u06FF])[a-zA-Z]+', r'\1', cleaned)
+        # Clean common foreign/Persian substitutions
+        cleaned = re.sub(r'\bاین\s+', 'یہ ', cleaned)
+        cleaned = re.sub(r'\bپروژے\b', 'منصوبے', cleaned)
 
         # 7. Normalize whitespace
         cleaned = re.sub(r'\s+', ' ', cleaned).strip()
@@ -478,7 +497,10 @@ class CognitiveOrchestrator:
             r"\b(code|program|script|function|class|algorithm|method|unity\s+script|code\s+for|program\s+for|write\s+code)\b",
             r"(کوڈ|پروگرام|اسکرپٹ|فنکشن|الگورتھم)",
             r"\b(write\s+(?:an?\s+)?(?:article|essay|paragraph|blog|story|letter|report|summary)|article\s+on|essay\s+on)\b",
-            r"(مضمون|مضمون\s*لکھ|تحریر|مقالہ|کہانی|خط)"
+            r"\b(?:articl|article|essay|mazmoon|tehreer|tahrir|kahani|story|khat|report|post)\b",
+            r"\b(?:likh|likho|likhein|likh\s*do|likh\s*ke\s*do|lik\s*k\s*do|likh\s*sakte)\b.*?\b(?:articl|article|essay|mazmoon|kahani|story)\b",
+            r"\b(?:articl|article|essay|mazmoon|kahani|story)\b.*?\b(?:likh|likho|likhein|likh\s*do|likh\s*ke\s*do|lik\s*k\s*do|likh\s*sakte)\b",
+            r"(مضمون|مضمون\s*لکھ|تحریر|مقالہ|کہانی|خط|آرٹیکل|آرٹیکل\s*لکھ|کوئی\s*اچھا\s*سا\s*مضمون|کوئی\s*تحریر)"
         ]
         if any(re.search(p, lower, re.IGNORECASE) for p in code_article_patterns):
             return "CODE_OR_ARTICLE"
@@ -612,7 +634,10 @@ class CognitiveOrchestrator:
             r"\b(code|program|script|function|class|algorithm|method|unity\s+script|code\s+for|program\s+for|write\s+code|query)\b",
             r"(کوڈ|پروگرام|اسکرپٹ|فنکشن|الگورتھم|کوئری|کوڈ\s*لکھ|اسکرپٹ\s*لکھ|ایس\s*کیو\s*ایل|ڈیٹا\s*بیس|ٹیبل\s*بنا)",
             r"\b(write\s+(?:an?\s+)?(?:article|essay|paragraph|blog|story|letter|report|summary)|article\s+on|essay\s+on)\b",
-            r"(مضمون|مضمون\s*لکھ|تحریر|مقالہ|کہانی|خط)"
+            r"\b(?:articl|article|essay|mazmoon|tehreer|tahrir|kahani|story|khat|report|post)\b",
+            r"\b(?:likh|likho|likhein|likh\s*do|likh\s*ke\s*do|lik\s*k\s*do|likh\s*sakte)\b.*?\b(?:articl|article|essay|mazmoon|kahani|story)\b",
+            r"\b(?:articl|article|essay|mazmoon|kahani|story)\b.*?\b(?:likh|likho|likhein|likh\s*do|likh\s*ke\s*do|lik\s*k\s*do|likh\s*sakte)\b",
+            r"(مضمون|مضمون\s*لکھ|تحریر|مقالہ|کہانی|خط|آرٹیکل|آرٹیکل\s*لکھ|کوئی\s*اچھا\s*سا\s*مضمون|کوئی\s*تحریر)"
         ]
         if any(re.search(p, lower, re.IGNORECASE) for p in code_patterns) or any(re.search(p, user_text) for p in code_patterns):
             return "CODE_TECH"
@@ -671,6 +696,28 @@ class CognitiveOrchestrator:
     def retrieve_local_pakistan_knowledge(self, query: str) -> Optional[str]:
         """Retrieves ground-truth Pakistani cultural and factual knowledge from local dataset."""
         try:
+            q_clean = query.lower().strip()
+            # 1. Authoritative 2026 Pakistani Leadership Instant Knowledge
+            # President of Pakistan
+            if re.search(r"\b(president|sadr|صدر)\b", q_clean) and (
+                re.search(r"\b(pakistan|pak|پاکستان|current|moujuda|kon|who|موجودہ|کون|نام)\b", q_clean)
+            ):
+                return "پاکستان کے موجودہ صدر جناب آصف علی زرداری ہیں، جنہوں نے 10 مارچ 2024 کو پاکستان کے 14ویں صدر کی حیثیت سے اپنے عہدے کا حلف اٹھایا۔ وہ پاکستان پیپلز پارٹی کے شریک چیئرمین ہیں اور اس سے قبل 2008 سے 2013 تک بھی صدرِ پاکستان رہ چکے ہیں۔"
+
+            # Prime Minister of Pakistan
+            if re.search(r"\b(priminister|prime\s*minister|pm|wazir\s*e?\s*azam|وزیر\s*اعظم)\b", q_clean) and (
+                re.search(r"\b(pakistan|pak|پاکستان|current|moujuda|kon|who|موجودہ|کون|نام)\b", q_clean)
+            ):
+                return "پاکستان کے موجودہ وزیرِ اعظم جناب میاں محمد شہباز شریف ہیں، جنہوں نے مارچ 2024 میں ملک کے 24ویں وزیرِ اعظم کے طور پر حلف اٹھایا۔ ان کا تعلق پاکستان مسلم لیگ (ن) سے ہے اور وہ ملکی انتظامیہ اور معاشی امور کی سربراہی کر رہے ہیں۔"
+
+            # Chief of Army Staff (Army Chief)
+            if re.search(r"\b(army\s*chief|coas|chief\s*of\s*army\s*staff|sarbarah|آرمی\s*چیف|سپہ\s*سالار|چیف\s*آف\s*آرمی\s*اسٹاف)\b", q_clean):
+                return "پاکستان کے موجودہ چیف آف آرمی اسٹاف (آرمی چیف) جنرل سید عاصم منیر، نشانِ امتیاز (ملٹری) ہیں، جنہوں نے 29 نومبر 2022 کو پاک فوج کے 17ویں سپہ سالار کی حیثیت سے کمان سنبھالی۔"
+
+            # Chief Justice of Pakistan
+            if re.search(r"\b(chief\s*justice|cjp|adliya|چیف\s*جسٹس)\b", q_clean):
+                return "پاکستان کے موجودہ چیف جسٹس، محترم جسٹس یحییٰ آفریدی ہیں، جنہوں نے 26 اکتوبر 2024 کو پاکستان کے 28ویں چیف جسٹس کی حیثیت سے حلف اٹھایا ہے۔"
+
             dataset_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "pakistan_knowledge_dataset.jsonl")
             if not os.path.exists(dataset_path):
                 return None
@@ -932,15 +979,41 @@ class CognitiveOrchestrator:
 
 {active_directive}
 
-ہدایات برائے کوڈ اور تحریر:
-آپ کا جواب لازمی طور پر دو واضح حصوں پر مشتمل ہو:
-1. پہلا حصہ (صوتی کلام): صرف 1 سے 2 انتہائی مختصر اور باادب جملے بولیں کہ مطلوبہ کوڈ یا تحریر نیچے کارڈ میں تیار ہے جسے وہ کاپی کر سکتے ہیں۔ (اس حصے میں کوئی کوڈ یا علامات نہ لکھیں تاکہ یہ باآسانی بولا جا سکے)۔
-2. دوسرا حصہ (کاپی کے لیے مارک ڈاؤن بلاک): ایک مکمل، کارآمد اور درست مارک ڈاؤن بلاک (مثلاً ```python یا ```csharp یا ```article) میں مکمل مواد پیش کریں۔
+ہدایات:
+ایک سمجھدار، باادب اور دوستانہ پاکستانی دوست کی طرح سلیس، باوقار اور خوبصورت اردو میں جواب دیں۔
+اگر صارف نے کوئی مضمون، تحریر یا کہانی مانگی ہے تو پہلے 1 سے 2 انتہائی شائستہ اور محبت بھرے جملے بولیں (جیسے 'جی بالکل، آپ کی فرمائش کے مطابق تحریر حاضر ہے') اور اس کے فوراً بعد دلنشین پیراگراف میں مکمل مضمون پیش کریں۔
+اگر پروگرامنگ کوڈ مانگا ہے تو مختصر تعارف کے بعد صاف اور درست مارک ڈاؤن کوڈ بلاک پیش کریں۔
+کسی قسم کے مصنوعی عنوانات جیسے 'پہلا حصہ' یا 'دوسرا حصہ' مت لکھیں۔
 """.strip()
 
             reply_text = None
-            # 1. Tier 1 Primary: Modal Cloud GPU (Qwen 2.5 7B) on NVIDIA L4
-            if self.backend_client:
+
+            # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) — 31B High-Capacity Brain (~1.2s)
+            try:
+                from ollama_oracle import get_ollama_oracle
+                ollama = get_ollama_oracle()
+                if ollama.is_available():
+                    reply_text = ollama.query(
+                        prompt=prompt,
+                        system_instruction=active_system_prompt,
+                        timeout=15
+                    )
+                    if reply_text:
+                        print("[Orchestrator] Code/Article generated successfully via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
+            except Exception as o_err:
+                print(f"[Orchestrator] Ollama Cloud code generation notice: {o_err}")
+
+            # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle (ChatGPT-level Foundation)
+            if not reply_text and self.oracle.is_available():
+                print("[Orchestrator] Falling back to Tier 2 Gemini Oracle for code/article...")
+                reply_text = self.oracle.query(
+                    prompt=prompt,
+                    system_instruction=active_system_prompt,
+                    timeout=8
+                )
+
+            # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5 7B) on NVIDIA L4
+            if not reply_text and self.backend_client:
                 try:
                     messages = [
                         {"role": "system", "content": active_system_prompt},
@@ -948,42 +1021,25 @@ class CognitiveOrchestrator:
                     ]
                     resp = self.backend_client.chat_completion(
                         messages,
-                        temperature=0.3,
-                        max_tokens=900
+                        temperature=0.4,
+                        max_tokens=900,
+                        repetition_penalty=1.05,
+                        presence_penalty=0.0,
+                        frequency_penalty=0.0
                     )
                     bot_text = resp.get("content", "").strip()
                     if bot_text:
                         reply_text = bot_text
-                        print("[Orchestrator] Code/Article generated successfully via Tier 1 Modal Qwen 2.5 GPU.")
+                        print("[Orchestrator] Code/Article generated via Tier 3 Modal Qwen 2.5 GPU.")
                 except Exception as ex:
-                    print(f"[Orchestrator] Primary Modal GPU code generation notice: {ex}")
-
-            # 2. Tier 2 Fallback: Ollama Cloud Oracle (gemma4:31b) — High-parameter 31B code fallback
-            if not reply_text:
-                try:
-                    from ollama_oracle import get_ollama_oracle
-                    ollama = get_ollama_oracle()
-                    if ollama.is_available():
-                        reply_text = ollama.query(
-                            prompt=prompt,
-                            system_instruction=active_system_prompt,
-                            timeout=15
-                        )
-                        if reply_text:
-                            print("[Orchestrator] Code/Article generated successfully via Tier 2 Ollama Cloud Oracle (gemma4:31b).")
-                except Exception as o_err:
-                    print(f"[Orchestrator] Ollama Cloud code generation notice: {o_err}")
-
-            # 3. Tier 3 Fallback: Google Gemini Free Tier Oracle
-            if not reply_text and self.oracle.is_available():
-                print("[Orchestrator] Falling back to Gemini Oracle for code/article...")
-                reply_text = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=active_system_prompt,
-                    timeout=6
-                )
+                    print(f"[Orchestrator] Modal GPU code generation notice: {ex}")
 
             if reply_text:
+                # Sanitize any accidental prompt header leaks or foreign characters
+                reply_text = re.sub(r'#+\s*(?:پہلا حصہ|دوسرا حصہ|صوتی کلام|مارک ڈاؤن بلاک)[^\n]*\n?', '', reply_text)
+                reply_text = re.sub(r'[\u0400-\u04FF]', '', reply_text)
+                reply_text = re.sub(r'[\u06D0\u06D1\u0681\u0696\u0685\u06AB\u06BC]', '', reply_text)
+                reply_text = re.sub(r'([\u0600-\u06FF])[a-zA-Z]+', r'\1', reply_text)
                 self._memory_executor.submit(self._persist_dialogue_silently, clean_input, reply_text[:150], turn_topic, session_id)
                 return reply_text, updated_profile
 
@@ -1000,7 +1056,31 @@ class CognitiveOrchestrator:
 کوئی ایموجی مت لگائیں اور مارک ڈاؤن یا بلٹ پوائنٹس مت بنائیں تاکہ صوتی روانی اور ترنم قائم رہے۔
 """.strip()
             poetry_reply = None
-            if self.backend_client:
+            # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) — Literary Urdu verse & rhyme
+            try:
+                from ollama_oracle import get_ollama_oracle
+                ollama = get_ollama_oracle()
+                if ollama.is_available():
+                    poetry_reply = ollama.query(
+                        prompt=prompt,
+                        system_instruction=active_system_prompt,
+                        timeout=12
+                    )
+                    if poetry_reply:
+                        print("[Orchestrator] Poetry generated via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
+            except Exception as o_err:
+                print(f"[Orchestrator] Ollama poetry notice: {o_err}")
+
+            # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle
+            if not poetry_reply and self.oracle.is_available():
+                poetry_reply = self.oracle.query(
+                    prompt=prompt,
+                    system_instruction=active_system_prompt,
+                    timeout=6
+                )
+
+            # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5 7B) on NVIDIA L4
+            if not poetry_reply and self.backend_client:
                 try:
                     messages = [
                         {"role": "system", "content": active_system_prompt},
@@ -1010,34 +1090,16 @@ class CognitiveOrchestrator:
                         messages,
                         temperature=0.75,
                         max_tokens=400,
-                        repetition_penalty=1.15
+                        repetition_penalty=1.05,
+                        presence_penalty=0.0,
+                        frequency_penalty=0.0
                     )
                     cand = resp.get("content", "").strip()
                     if cand:
                         poetry_reply = cand
-                        print("[Orchestrator] Poetry generated via Tier 1 Modal Qwen 2.5 GPU.")
+                        print("[Orchestrator] Poetry generated via Tier 3 Modal Qwen 2.5 GPU.")
                 except Exception as ex:
                     print(f"[Orchestrator] Modal GPU poetry notice: {ex}")
-
-            if not poetry_reply:
-                try:
-                    from ollama_oracle import get_ollama_oracle
-                    ollama = get_ollama_oracle()
-                    if ollama.is_available():
-                        poetry_reply = ollama.query(
-                            prompt=prompt,
-                            system_instruction=active_system_prompt,
-                            timeout=10
-                        )
-                except Exception as o_err:
-                    print(f"[Orchestrator] Ollama poetry notice: {o_err}")
-
-            if not poetry_reply and self.oracle.is_available():
-                poetry_reply = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=active_system_prompt,
-                    timeout=5
-                )
 
             if poetry_reply:
                 cleaned_reply = self.clean_voice_text(poetry_reply)
@@ -1070,7 +1132,31 @@ class CognitiveOrchestrator:
 مخاطب کے لیے ہمیشہ 'آپ' کا باادب صیغہ استعمال کریں۔
 """.strip()
             deep_reply = None
-            if self.backend_client:
+            # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) — In-depth conceptual comprehension
+            try:
+                from ollama_oracle import get_ollama_oracle
+                ollama = get_ollama_oracle()
+                if ollama.is_available():
+                    deep_reply = ollama.query(
+                        prompt=prompt,
+                        system_instruction=active_system_prompt,
+                        timeout=15
+                    )
+                    if deep_reply:
+                        print("[Orchestrator] Deep exploration synthesized via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
+            except Exception as o_err:
+                print(f"[Orchestrator] Ollama deep exploration notice: {o_err}")
+
+            # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle (ChatGPT-level Foundation)
+            if not deep_reply and self.oracle.is_available():
+                deep_reply = self.oracle.query(
+                    prompt=prompt,
+                    system_instruction=active_system_prompt,
+                    timeout=6
+                )
+
+            # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5 7B) on NVIDIA L4
+            if not deep_reply and self.backend_client:
                 try:
                     messages = [
                         {"role": "system", "content": active_system_prompt},
@@ -1080,34 +1166,16 @@ class CognitiveOrchestrator:
                         messages,
                         temperature=0.55,
                         max_tokens=850,
-                        repetition_penalty=1.15
+                        repetition_penalty=1.05,
+                        presence_penalty=0.0,
+                        frequency_penalty=0.0
                     )
                     cand = resp.get("content", "").strip()
                     if cand:
                         deep_reply = cand
-                        print("[Orchestrator] Deep exploration synthesized via Tier 1 Modal Qwen 2.5 GPU.")
+                        print("[Orchestrator] Deep exploration synthesized via Tier 3 Modal Qwen 2.5 GPU.")
                 except Exception as ex:
                     print(f"[Orchestrator] Modal GPU deep exploration notice: {ex}")
-
-            if not deep_reply:
-                try:
-                    from ollama_oracle import get_ollama_oracle
-                    ollama = get_ollama_oracle()
-                    if ollama.is_available():
-                        deep_reply = ollama.query(
-                            prompt=prompt,
-                            system_instruction=active_system_prompt,
-                            timeout=12
-                        )
-                except Exception as o_err:
-                    print(f"[Orchestrator] Ollama deep exploration notice: {o_err}")
-
-            if not deep_reply and self.oracle.is_available():
-                deep_reply = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=active_system_prompt,
-                    timeout=6
-                )
 
             if deep_reply:
                 cleaned_reply = self.clean_voice_text(deep_reply)
@@ -1131,7 +1199,31 @@ class CognitiveOrchestrator:
 اہم ترین بات پہلے بیان کریں اور صورتحال کا متوازن، باخبر اور پرمغز خلاصہ (3 سے 4 جامع جملوں میں) پیش کریں۔
 """.strip()
             affairs_reply = None
-            if self.backend_client:
+            # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) — Current affairs & news grounding
+            try:
+                from ollama_oracle import get_ollama_oracle
+                ollama = get_ollama_oracle()
+                if ollama.is_available():
+                    affairs_reply = ollama.query(
+                        prompt=prompt,
+                        system_instruction=active_system_prompt,
+                        timeout=12
+                    )
+                    if affairs_reply:
+                        print("[Orchestrator] Current affairs synthesized via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
+            except Exception as o_err:
+                print(f"[Orchestrator] Ollama current affairs notice: {o_err}")
+
+            # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle (ChatGPT-level Foundation)
+            if not affairs_reply and self.oracle.is_available():
+                affairs_reply = self.oracle.query(
+                    prompt=prompt,
+                    system_instruction=active_system_prompt,
+                    timeout=6
+                )
+
+            # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5 7B) on NVIDIA L4
+            if not affairs_reply and self.backend_client:
                 try:
                     messages = [
                         {"role": "system", "content": active_system_prompt},
@@ -1141,34 +1233,16 @@ class CognitiveOrchestrator:
                         messages,
                         temperature=0.50,
                         max_tokens=400,
-                        repetition_penalty=1.18
+                        repetition_penalty=1.05,
+                        presence_penalty=0.0,
+                        frequency_penalty=0.0
                     )
                     cand = resp.get("content", "").strip()
                     if cand:
                         affairs_reply = cand
-                        print("[Orchestrator] Current affairs synthesized via Tier 1 Modal Qwen 2.5 GPU.")
+                        print("[Orchestrator] Current affairs synthesized via Tier 3 Modal Qwen 2.5 GPU.")
                 except Exception as ex:
                     print(f"[Orchestrator] Modal GPU current affairs notice: {ex}")
-
-            if not affairs_reply:
-                try:
-                    from ollama_oracle import get_ollama_oracle
-                    ollama = get_ollama_oracle()
-                    if ollama.is_available():
-                        affairs_reply = ollama.query(
-                            prompt=prompt,
-                            system_instruction=active_system_prompt,
-                            timeout=10
-                        )
-                except Exception as o_err:
-                    print(f"[Orchestrator] Ollama current affairs notice: {o_err}")
-
-            if not affairs_reply and self.oracle.is_available():
-                affairs_reply = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=active_system_prompt,
-                    timeout=5
-                )
 
             if affairs_reply:
                 cleaned_reply = self.clean_voice_text(affairs_reply)
@@ -1200,8 +1274,33 @@ class CognitiveOrchestrator:
 کوئی ایموجی مت لگائیں اور مارک ڈاؤن یا بلٹ پوائنٹس استعمال نہ کریں۔
 """.strip()
 
-            # 1. Tier 1 Primary: Modal Cloud GPU (Qwen 2.5) with Search Context Grounding
-            if self.backend_client:
+            # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) with Search Context Grounding (~1.0s)
+            try:
+                from ollama_oracle import get_ollama_oracle
+                ollama = get_ollama_oracle()
+                if ollama.is_available():
+                    oracle_reply = ollama.query(
+                        prompt=effective_input,
+                        search_context=context_str,
+                        system_instruction=active_system_prompt,
+                        timeout=10
+                    )
+                    if oracle_reply:
+                        print("[Orchestrator] Knowledge query synthesized via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
+            except Exception as o_err:
+                print(f"[Orchestrator] Ollama Cloud knowledge notice: {o_err}")
+
+            # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle (ChatGPT-level Foundation)
+            if not oracle_reply and self.oracle.is_available():
+                print("[Orchestrator] Falling back to Tier 2 Gemini Oracle...")
+                oracle_reply = self.oracle.query(
+                    prompt=prompt,
+                    system_instruction=active_system_prompt,
+                    timeout=5
+                )
+
+            # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5) with Search Context Grounding
+            if not oracle_reply and self.backend_client:
                 try:
                     grounded_prompt = (
                         f"{topic_header}متعلقہ حقائق و معلومات:\n{context_str}\n\n" if context_str else ""
@@ -1216,43 +1315,18 @@ class CognitiveOrchestrator:
                     ]
                     resp = self.backend_client.chat_completion(
                         messages,
-                        temperature=0.60,
+                        temperature=0.55,
                         max_tokens=250,
-                        repetition_penalty=1.20,
-                        presence_penalty=0.5,
-                        frequency_penalty=0.5
+                        repetition_penalty=1.05,
+                        presence_penalty=0.0,
+                        frequency_penalty=0.0
                     )
                     bot_text = resp.get("content", "").strip()
                     if bot_text:
                         oracle_reply = bot_text
-                        print("[Orchestrator] Knowledge query synthesized via Tier 1 Modal Qwen 2.5 GPU.")
+                        print("[Orchestrator] Knowledge query synthesized via Tier 3 Modal Qwen 2.5 GPU.")
                 except Exception as ex:
-                    print(f"[Orchestrator] Primary Modal GPU knowledge synthesis notice: {ex}")
-
-            # 2. Tier 2 Fallback: Ollama Cloud Oracle (gemma4:31b) with Search Context Grounding
-            if not oracle_reply:
-                try:
-                    from ollama_oracle import get_ollama_oracle
-                    ollama = get_ollama_oracle()
-                    if ollama.is_available():
-                        print("[Orchestrator] Modal GPU unavailable. Falling back to Tier 2 Ollama Cloud Oracle for knowledge...")
-                        oracle_reply = ollama.query(
-                            prompt=effective_input,
-                            search_context=context_str,
-                            system_instruction=active_system_prompt,
-                            timeout=10
-                        )
-                except Exception as o_err:
-                    print(f"[Orchestrator] Ollama Cloud knowledge fallback notice: {o_err}")
-
-            # 3. Tier 3 Fallback: Google Gemini Free Tier Oracle (with fast 5s timeout)
-            if not oracle_reply and self.oracle.is_available():
-                print("[Orchestrator] Falling back to Tier 3 Gemini Oracle...")
-                oracle_reply = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=active_system_prompt,
-                    timeout=5
-                )
+                    print(f"[Orchestrator] Modal GPU knowledge synthesis notice: {ex}")
 
             if oracle_reply:
                 cleaned_reply = self.clean_voice_text(oracle_reply)
@@ -1305,47 +1379,47 @@ class CognitiveOrchestrator:
 
         final_reply = None
 
-        # 1. Tier 1 Primary: Modal Cloud GPU (Qwen 2.5-7B) on NVIDIA L4
-        if self.backend_client:
-            try:
-                resp = self.backend_client.chat_completion(
-                    messages,
-                    temperature=0.60,
-                    max_tokens=250,
-                    repetition_penalty=1.20,
-                    presence_penalty=0.5,
-                    frequency_penalty=0.5
+        # 1. Tier 1 Primary: Ollama Cloud Oracle (gemma4:31b) — Fast sub-second high-capacity Urdu (~1.0s)
+        try:
+            from ollama_oracle import get_ollama_oracle
+            ollama = get_ollama_oracle()
+            if ollama.is_available():
+                final_reply = ollama.query(
+                    prompt=conv_prompt,
+                    system_instruction=active_system_prompt,
+                    timeout=10
                 )
-                content = resp.get("content", "").strip()
-                if content:
-                    final_reply = content
-                    print("[Orchestrator] Turn completed via Tier 1 Modal Qwen 2.5 GPU.")
-            except Exception as e:
-                print(f"[Orchestrator] Primary Modal GPU notice: {e}")
+                if final_reply:
+                    print("[Orchestrator] Turn completed via Tier 1 Ollama Cloud Oracle (gemma4:31b).")
+        except Exception as o_err:
+            print(f"[Orchestrator] Ollama Cloud general turn notice: {o_err}")
 
-        # 2. Tier 2 Fallback: Ollama Cloud Oracle (gemma4:31b) — Fast sub-second cloud fallback
-        if not final_reply:
-            try:
-                from ollama_oracle import get_ollama_oracle
-                ollama = get_ollama_oracle()
-                if ollama.is_available():
-                    print("[Orchestrator] Modal GPU unavailable. Falling back to Tier 2 Ollama Cloud Oracle (gemma4:31b)...")
-                    final_reply = ollama.query(
-                        prompt=conv_prompt,
-                        system_instruction=active_system_prompt,
-                        timeout=10
-                    )
-            except Exception as o_err:
-                print(f"[Orchestrator] Ollama Cloud general turn fallback notice: {o_err}")
-
-        # 3. Tier 3 Fallback: Google Gemini Free Tier Oracle
+        # 2. Tier 2 Fallback: Google Gemini Free Tier Oracle (ChatGPT-level Foundation)
         if not final_reply and self.oracle.is_available():
-            print("[Orchestrator] Falling back to Tier 3 Gemini Oracle...")
+            print("[Orchestrator] Falling back to Tier 2 Gemini Oracle...")
             final_reply = self.oracle.query(
                 prompt=conv_prompt,
                 system_instruction=active_system_prompt,
                 timeout=5
             )
+
+        # 3. Tier 3 Fallback: Modal Cloud GPU (Qwen 2.5-7B) on NVIDIA L4
+        if not final_reply and self.backend_client:
+            try:
+                resp = self.backend_client.chat_completion(
+                    messages,
+                    temperature=0.60,
+                    max_tokens=250,
+                    repetition_penalty=1.05,
+                    presence_penalty=0.0,
+                    frequency_penalty=0.0
+                )
+                content = resp.get("content", "").strip()
+                if content:
+                    final_reply = content
+                    print("[Orchestrator] Turn completed via Tier 3 Modal Qwen 2.5 GPU.")
+            except Exception as e:
+                print(f"[Orchestrator] Modal GPU general turn notice: {e}")
 
         if final_reply:
             final_reply = self.clean_voice_text(final_reply)

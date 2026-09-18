@@ -144,9 +144,9 @@ class AdaabClient:
         temperature: float = 0.65,
         top_p: float = 0.9,
         max_tokens: int = 800,
-        repetition_penalty: float = 1.20,
-        presence_penalty: float = 0.5,
-        frequency_penalty: float = 0.5,
+        repetition_penalty: float = 1.05,
+        presence_penalty: float = 0.0,
+        frequency_penalty: float = 0.0,
         max_retries: int = 3,
         retry_delay: float = 5.0
     ) -> dict:
