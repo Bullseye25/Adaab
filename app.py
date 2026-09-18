@@ -234,7 +234,8 @@ body, .gradio-container {
     display: flex;
     flex-direction: column;
     height: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 16px;
 }
 
 /* Sidebar Logo with glowing blue mic & sound waves */
@@ -311,69 +312,143 @@ body, .gradio-container {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-/* Sidebar Middle: Large Circular + Button (New Project) */
-.sidebar-project-section {
+/* Sidebar Notification Badge & Popover */
+.nav-icon-badge-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-badge-dot {
+    position: absolute;
+    top: -2px;
+    right: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00d2ff;
+    box-shadow: 0 0 8px #00d2ff;
+    animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+/* Interactive Notification Popover Window */
+.adaab-notification-popover {
+    position: fixed;
+    top: 64px;
+    left: 220px;
+    width: 320px;
+    background: #141720;
+    border: 1px solid rgba(0, 210, 255, 0.25);
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 20px rgba(0, 210, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 10000;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    animation: fadeSlideInLeft 0.25s ease-out;
+}
+
+@media (max-width: 768px) {
+    .adaab-notification-popover {
+        left: 14px;
+        right: 14px;
+        width: auto;
+        top: 64px;
+    }
+}
+
+.notif-header {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    margin: auto 0;
-    padding: 16px 0;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.notif-title-row {
+    display: flex;
+    align-items: center;
     gap: 8px;
+    color: #e2eaf8;
+    font-size: 0.9rem;
+    font-weight: 600;
 }
 
-.sidebar-new-project-circle {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: #191c25;
-    border: 1.5px solid rgba(255, 255, 255, 0.14);
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.notif-close-btn {
+    background: transparent;
+    border: none;
+    color: #888e9b;
+    font-size: 1.3rem;
+    line-height: 1;
     cursor: pointer;
-    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-}
-
-.sidebar-new-project-circle:hover {
-    border-color: #00d2ff;
-    background: #212634;
-    color: #00d2ff;
-    transform: scale(1.06);
-    box-shadow: 0 0 16px rgba(0, 210, 255, 0.35);
-}
-
-.sidebar-new-project-circle:active {
-    transform: scale(0.94);
-}
-
-.sidebar-project-label {
-    font-size: 0.84rem;
-    color: var(--text-muted);
-    font-weight: 500;
-    letter-spacing: 0.2px;
-}
-
-/* Sidebar Bottom: Help */
-.sidebar-bottom-section {
-    padding: 6px 12px;
-}
-
-.sidebar-help-btn {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    color: #6d7588;
-    font-size: 0.86rem;
-    text-decoration: none;
-    cursor: pointer;
+    padding: 0 4px;
     transition: color 0.2s ease;
 }
 
-.sidebar-help-btn:hover {
+.notif-close-btn:hover {
+    color: #ffffff;
+}
+
+.notif-list {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.notif-dot-active {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00e5a0;
+    box-shadow: 0 0 6px #00e5a0;
+    margin-top: 5px;
+    flex-shrink: 0;
+}
+
+.notif-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.notif-item-title {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.notif-item-desc {
+    font-size: 0.8rem;
     color: #9ba4b8;
+    line-height: 1.4;
+}
+
+.notif-time {
+    font-size: 0.72rem;
+    color: #5d677d;
+    margin-top: 2px;
 }
 
 /* Right Main Card Container */
@@ -384,21 +459,22 @@ body, .gradio-container {
     border-radius: 24px !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
     height: 100% !important;
     position: relative !important;
     overflow: hidden !important;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* Chatbot container: fills all height between top and bottom dock */
+/* Chatbot container: full height with bottom padding ensuring messages never hide under dock */
 .messenger-chat {
-    flex: 1 1 0% !important;
-    min-height: 0 !important;
-    height: 0 !important;
-    max-height: calc(100% - 84px) !important;
+    position: relative !important;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
     overflow-y: auto !important;
-    padding: 20px 24px 10px 24px !important;
+    padding: 20px 24px 88px 24px !important;
+    box-sizing: border-box !important;
     -webkit-overflow-scrolling: touch !important;
     display: flex !important;
     flex-direction: column !important;
@@ -592,21 +668,25 @@ body, .gradio-container {
 
 /* Bottom Floating Dock: Permanently Pinned at the Bottom */
 .messenger-dock {
-    flex: 0 0 auto !important;
-    background: #1d212a !important;
-    border: 1px solid rgba(255, 255, 255, 0.09) !important;
-    border-radius: 40px !important;
-    margin: 8px 18px 16px 18px !important;
+    position: absolute !important;
+    bottom: 14px !important;
+    left: 18px !important;
+    right: 18px !important;
+    height: 56px !important;
+    margin: 0 !important;
     padding: 6px 10px 6px 10px !important;
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
     gap: 10px !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+    background: #1d212a !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 40px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
-    z-index: 50 !important;
+    z-index: 999 !important;
 }
 
 /* Clean up Gradio container wrappers inside dock */
@@ -823,34 +903,36 @@ body, .gradio-container {
         width: 100% !important;
         align-items: center !important;
         justify-content: space-between !important;
+        gap: 0 !important;
     }
     .adaab-sidebar-logo {
         margin-bottom: 0 !important;
         padding: 0 !important;
     }
-    .sidebar-nav-menu, .sidebar-bottom-section, .sidebar-project-label {
-        display: none !important;
-    }
-    .sidebar-project-section {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    .sidebar-new-project-circle {
-        width: 36px !important;
-        height: 36px !important;
+    .sidebar-nav-menu {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
     }
     .adaab-main-card {
         border-radius: 0 !important;
         border: none !important;
         height: calc(100dvh - 54px) !important;
         max-height: calc(100dvh - 54px) !important;
+        position: relative !important;
     }
     .messenger-chat {
-        padding: 12px 14px 6px 14px !important;
-        max-height: calc(100% - 70px) !important;
+        padding: 12px 14px 76px 14px !important;
+        height: 100% !important;
+        max-height: 100% !important;
     }
     .messenger-dock {
-        margin: 4px 10px 8px 10px !important;
+        position: absolute !important;
+        bottom: 8px !important;
+        left: 8px !important;
+        right: 8px !important;
+        height: 52px !important;
+        margin: 0 !important;
     }
 }
 
@@ -1861,6 +1943,54 @@ function initAutoplayController() {
     }, { passive: true, once: true });
 });
 
+window.toggleNotificationPanel = function() {
+    let panel = document.getElementById('adaab-notification-modal');
+    if (panel) {
+        panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'flex' : 'none';
+        return;
+    }
+    panel = document.createElement('div');
+    panel.id = 'adaab-notification-modal';
+    panel.className = 'adaab-notification-popover';
+    panel.innerHTML = `
+        <div class="notif-header">
+            <div class="notif-title-row">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#00d2ff" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span>اطلاعات و اعلانات (Notifications)</span>
+            </div>
+            <button class="notif-close-btn" onclick="document.getElementById('adaab-notification-modal').style.display='none'">&times;</button>
+        </div>
+        <div class="notif-list">
+            <div class="notif-item">
+                <div class="notif-dot-active"></div>
+                <div class="notif-content">
+                    <div class="notif-item-title">نظام مکمل طور پر فعال ہے</div>
+                    <div class="notif-item-desc">تبریز اے آئی اسسٹنٹ، نیورل وائس اور نالج سرچ سروسز مکمل تیار ہیں۔</div>
+                    <span class="notif-time">ابھی ابھی</span>
+                </div>
+            </div>
+            <div class="notif-item">
+                <div class="notif-dot-active"></div>
+                <div class="notif-content">
+                    <div class="notif-item-title">معیاری صوتی ہدایات لاگو ہیں</div>
+                    <div class="notif-item-desc">تمام جوابات شائستہ، مناسب اور جامع خلاصے (2 سے 3 جملوں) میں پیش کیے جائیں گے۔</div>
+                    <span class="notif-time">مستقل فعال</span>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(panel);
+    document.addEventListener('click', function(e) {
+        const btn = document.getElementById('sidebar-notification-btn');
+        if (panel && panel.style.display !== 'none' && !panel.contains(e.target) && (!btn || !btn.contains(e.target))) {
+            panel.style.display = 'none';
+        }
+    });
+};
+
 setTimeout(initAutoplayController, 250);
 // setupChatObserver: attach once and stay attached — no need to poll
 setTimeout(setupChatObserver, 300);
@@ -2027,29 +2157,17 @@ def build_app(active_port: int = 7865, public_url: str = None):
                         </div>
 
                                                 <nav class="sidebar-nav-menu">
-                            <a href="javascript:void(0)" class="nav-item active" title="ہوم (Home)">
-                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                                <span>Home</span>
-                            </a>
-                            <a href="javascript:void(0)" class="nav-item" title="سابقہ گفتگو (History)">
-                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                <span>History</span>
+                            <a href="javascript:void(0)" class="nav-item active" id="sidebar-notification-btn" title="اطلاعات (Notification)" onclick="toggleNotificationPanel()">
+                                <div class="nav-icon-badge-wrap">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                    </svg>
+                                    <span class="nav-badge-dot"></span>
+                                </div>
+                                <span>Notification</span>
                             </a>
                         </nav>
-
-                        <div class="sidebar-project-section">
-                            <button type="button" class="sidebar-new-project-circle" onclick="document.getElementById('hidden_clear_btn').click()" title="نئی گفتگو شروع کریں (New Project / Start New Chat)">
-                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            </button>
-                            <span class="sidebar-project-label">New Project</span>
-                        </div>
-
-                        <div class="sidebar-bottom-section">
-                            <a href="javascript:void(0)" class="sidebar-help-btn" onclick="alert('آداب اسٹوڈیو: اردو صوتی اور متنی معاون۔ مائیک بٹن دبا کر بولیں یا پیغام تحریر کریں۔')" title="معاونت (Help)">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                                <span>Help</span>
-                            </a>
-                        </div>
                     </div>
                     """
                 )

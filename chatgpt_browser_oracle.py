@@ -237,14 +237,15 @@ class ChatGPTBrowserOracle:
         prompt: str,
         search_context: Optional[str] = None,
         system_instruction: Optional[str] = None,
-        timeout: int = 45
+        timeout: int = 45,
+        visible: bool = False
     ) -> Optional[str]:
         """
         Executes a prompt against ChatGPT via authentic browser automation.
         Types prompt using CDP Input.insertText, clicks send, waits for streaming
-        to complete, and extracts the response text.
+        to complete, and extracts the response text. Supports headless execution.
         """
-        if not self.ensure_browser_running(visible=True):
+        if not self.ensure_browser_running(visible=visible):
             return None
 
         tab = self.get_chatgpt_tab()
