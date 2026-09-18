@@ -169,10 +169,13 @@ class CognitiveOrchestrator:
         cleaned = re.sub(r'[\U00010000-\U0010ffff]', '', cleaned)
         cleaned = re.sub(r'[\u2300-\u23ff\u2600-\u27bf\u2b50\u2b55\u200d\ufe0f]', '', cleaned)
 
-        # 6. Normalize whitespace
+        # 6. Strip stray foreign scripts (e.g. occasional CJK or Devanagari trailing artifacts from multilingual base models)
+        cleaned = re.sub(r'[\u4e00-\u9fff\u3040-\u30ff\u0900-\u097f]', '', cleaned)
+
+        # 7. Normalize whitespace
         cleaned = re.sub(r'\s+', ' ', cleaned).strip()
 
-        # 7. Detect and prune severe n-gram loops and duplicate sentences
+        # 8. Detect and prune severe n-gram loops and duplicate sentences
         return self.detect_and_prune_loops(cleaned)
 
     def detect_and_prune_loops(self, text: str) -> str:
@@ -261,9 +264,12 @@ class CognitiveOrchestrator:
         if any(re.search(p, lower, re.IGNORECASE) for p in identity_patterns):
             return "IDENTITY"
 
-        # 2. Greeting & Etiquette
+        # 2. Greeting & Etiquette (including inquiries about well-being)
         greeting_patterns = [
-            r"^(?:ہیلو|سلام|السلام\s*علیکم|آداب|hello|hi|hey|salam|assalam\s*o\s*alaikum)[\s!۔،]*$"
+            r"^(?:ہیلو|سلام|السلام\s*علیکم|وعلیکم\s*السلام|آداب|hello|hi|hey|salam|assalam\s*o?\s*alaikum)[\s!۔،]*$",
+            r"\b(kia\s*hal\s*hai|kya\s*hal\s*hai|kya\s*haal\s*hai|kya\s*hal|kia\s*hal|kese\s*ho|kaisay\s*hain|kaise\s*hain|kaisa\s*hai|kaisi\s*ho|kaisi\s*hain|sub\s*kheriat|theek\s*ho|ap\s*kese\s*hain|aap\s*kaise\s*hain)\b",
+            r"(کیا\s*حال\s*ہے|کیسے\s*ہیں|کیسی\s*ہو|کیسی\s*ہیں|خیریت\s*ہے|سب\s*خیریت|مزاج\s*کیسا\s*ہے|آپ\s*کیسے\s*ہیں|طبیعت\s*کیسی\s*ہے)",
+            r"\b(how\s+are\s+you|how\s+r\s+u|how\s+are\s+u|how\s+do\s+you\s+do|how\s+is\s+it\s+going|how's\s+it\s+going)\b"
         ]
         if any(re.search(p, lower, re.IGNORECASE) for p in greeting_patterns):
             return "GREETING"
@@ -283,7 +289,11 @@ class CognitiveOrchestrator:
         if any(re.search(p, lower, re.IGNORECASE) for p in code_article_patterns):
             return "CODE_OR_ARTICLE"
 
-        # 4. Real-time Knowledge / Web Search & Missing Information Retrieval
+        # 5. Arithmetic & Mathematical Calculation (Handled directly by Qwen GPU without web scraping)
+        if re.search(r'\d+\s*[\+\-\*\/xX÷]\s*\d+', lower) or re.search(r'\b(calculate|sum of|plus|minus|multiply|divided\s*by|حساب|جمع|ضرب|تفریق|تقسیم)\b', lower):
+            return "GENERAL"
+
+        # 6. Real-time Knowledge / Web Search & Missing Information Retrieval
         # Triggers headless information gathering from Gemini or ChatGPT
         knowledge_patterns = [
             # Weather & Environment
@@ -507,13 +517,23 @@ class CognitiveOrchestrator:
             self._memory_executor.submit(self._persist_dialogue_silently, clean_input, cleaned_reply, "تعارف اور شناخت", session_id)
             return cleaned_reply, updated_profile
 
-        # B. Greeting (Zero onboarding interrogation)
+        # B. Greeting & Well-being Inquiries (Instant 0.01s polite response)
         if intent == "GREETING":
+            is_wellbeing = any(re.search(p, clean_input.lower(), re.IGNORECASE) for p in [
+                r"\b(hal|haal|kese|kaise|kaisa|kaisi|theek|kheriat|how\s+are|how\s+do)\b",
+                r"(حال|کیسے|کیسی|خیریت|مزاج|طبیعت)"
+            ])
             name = updated_profile.get("display_name") or updated_profile.get("name")
-            if name and name != "محترم مہمان":
-                reply = f"وعلیکم السلام {name} صاحب! کیسے ہیں آپ؟ بتائیں، آج میں آپ کی کیا مدد کر سکتا ہوں؟"
+            if is_wellbeing:
+                if name and name != "محترم مہمان":
+                    reply = f"وعلیکم السلام {name} صاحب! الحمدللہ، میں بالکل خیریت سے ہوں۔ آپ سنائیں، آپ کا مزاج کیسا ہے؟ بتائیں، آج میں آپ کی کیا مدد کر سکتا ہوں؟"
+                else:
+                    reply = "وعلیکم السلام! الحمدللہ، میں بالکل خیریت سے ہوں۔ آپ سنائیں، آپ کا مزاج کیسا ہے؟ بتائیں، آج میں آپ کی کیا مدد کر سکتا ہوں؟"
             else:
-                reply = "وعلیکم السلام! کیسے ہیں آپ؟ بتائیں، میں آپ کی کیا مدد کر سکتا ہوں؟"
+                if name and name != "محترم مہمان":
+                    reply = f"وعلیکم السلام {name} صاحب! کیسے ہیں آپ؟ بتائیں، آج میں آپ کی کیا مدد کر سکتا ہوں؟"
+                else:
+                    reply = "وعلیکم السلام! کیسے ہیں آپ؟ بتائیں، میں آپ کی کیا مدد کر سکتا ہوں؟"
             cleaned_reply = self.clean_voice_text(reply)
             self._memory_executor.submit(self._persist_dialogue_silently, clean_input, cleaned_reply, "سلام اور آداب", session_id)
             return cleaned_reply, updated_profile
@@ -546,29 +566,10 @@ class CognitiveOrchestrator:
 - اگر مضمون ہے تو ```article کے ٹیگ میں باقاعدہ پیراگراف کے ساتھ لکھیں۔
 """.strip()
 
-            oracle_reply = None
-            if self.oracle.is_available():
-                oracle_reply = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                    timeout=6
-                )
+            reply_text = None
 
-            if not oracle_reply:
-                try:
-                    from chatgpt_browser_oracle import get_chatgpt_oracle
-                    chatgpt = get_chatgpt_oracle()
-                    if chatgpt.is_available():
-                        oracle_reply = chatgpt.query(
-                            prompt=prompt,
-                            system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                            timeout=25,
-                            visible=False
-                        )
-                except Exception as c_err:
-                    print(f"[Orchestrator] Code generation fallback notice: {c_err}")
-
-            if not oracle_reply and self.backend_client:
+            # 1. Primary: Modal Cloud GPU (Qwen 2.5) — Fast ~1-2s token generation
+            if self.backend_client:
                 try:
                     messages = [
                         {"role": "system", "content": TABRAIZ_ORCHESTRATOR_SYSTEM},
@@ -576,18 +577,44 @@ class CognitiveOrchestrator:
                     ]
                     resp = self.backend_client.chat_completion(
                         messages,
-                        temperature=0.4,
+                        temperature=0.3,
                         max_tokens=800
                     )
                     bot_text = resp.get("content", "").strip()
                     if bot_text:
-                        oracle_reply = bot_text
+                        reply_text = bot_text
+                        print("[Orchestrator] Code/Article generated successfully via Primary Modal Qwen 2.5 GPU.")
                 except Exception as ex:
-                    print(f"[Orchestrator] Modal code generation notice: {ex}")
+                    print(f"[Orchestrator] Modal GPU code generation notice: {ex}")
 
-            if oracle_reply:
-                self._memory_executor.submit(self._persist_dialogue_silently, clean_input, oracle_reply[:150], turn_topic, session_id)
-                return oracle_reply, updated_profile
+            # 2. Secondary Fallback: Gemini Oracle
+            if not reply_text and self.oracle.is_available():
+                print("[Orchestrator] Falling back to Gemini Oracle for code/article...")
+                reply_text = self.oracle.query(
+                    prompt=prompt,
+                    system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                    timeout=6
+                )
+
+            # 3. Tertiary Fallback: ChatGPT Web Oracle
+            if not reply_text:
+                try:
+                    from chatgpt_browser_oracle import get_chatgpt_oracle
+                    chatgpt = get_chatgpt_oracle()
+                    if chatgpt.is_available():
+                        print("[Orchestrator] Falling back to ChatGPT Web Oracle for code/article...")
+                        reply_text = chatgpt.query(
+                            prompt=prompt,
+                            system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                            timeout=25,
+                            visible=False
+                        )
+                except Exception as c_err:
+                    print(f"[Orchestrator] Code generation ChatGPT fallback notice: {c_err}")
+
+            if reply_text:
+                self._memory_executor.submit(self._persist_dialogue_silently, clean_input, reply_text[:150], turn_topic, session_id)
+                return reply_text, updated_profile
 
         # E. Real-Time Knowledge & Search (Headless Retrieval via Gemini or ChatGPT)
         if intent == "KNOWLEDGE_SEARCH":
@@ -616,42 +643,19 @@ class CognitiveOrchestrator:
 کوئی ایموجی مت لگائیں اور مارک ڈاؤن یا بلٹ پوائنٹس استعمال نہ کریں۔
 """.strip()
 
-            # 1. Primary Retrieval: Oracle (Gemini with fast 5s timeout & auto-failover to ChatGPT)
-            if self.oracle.is_available():
-                oracle_reply = self.oracle.query(
-                    prompt=prompt,
-                    system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                    timeout=5
-                )
-
-            # 2. Secondary Retrieval: Direct ChatGPT Web Oracle (if not already handled)
-            if not oracle_reply:
+            # 1. Primary Retrieval & Synthesis: Modal Cloud GPU (Qwen 2.5) with Search Context
+            if self.backend_client:
                 try:
-                    from chatgpt_browser_oracle import get_chatgpt_oracle
-                    chatgpt = get_chatgpt_oracle()
-                    if chatgpt.is_available():
-                        print("[Orchestrator] Gemini unavailable. Quickly switching to ChatGPT...")
-                        oracle_reply = chatgpt.query(
-                            prompt=prompt,
-                            system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
-                            timeout=20,
-                            visible=False
-                        )
-                except Exception as c_err:
-                    print(f"[Orchestrator] Headless ChatGPT fallback notice: {c_err}")
-
-            # 3. Tertiary Headless Retrieval: Modal GPU (Qwen 2.5) with Search Context
-            if not oracle_reply and self.backend_client and context_str:
-                try:
-                    fallback_prompt = (
-                        f"{topic_header}معلومات:\n{context_str}\n\n"
+                    grounded_prompt = (
+                        f"{topic_header}متعلقہ حقائق و معلومات:\n{context_str}\n\n" if context_str else ""
+                    ) + (
                         f"صارف کا سوال: {effective_input}\n\n"
                         f"{TABRAIZ_PRE_STANDARD_PROMPT}\n"
-                        f"اس معلومات کی روشنی میں روزمرہ اور عام فہم اردو میں صرف 2 سے 3 جملوں میں مناسب اور جامع خلاصہ پیش کریں۔ مخاطب کو ہمیشہ 'آپ' کہیں اور 'تم' سے پرہیز کریں۔"
+                        f"اگر اوپر معلومات فراہم کی گئی ہیں تو ان کی روشنی میں روزمرہ اور عام فہم اردو میں صرف 2 سے 3 جملوں میں مناسب، باادب اور جامع خلاصہ پیش کریں۔ مخاطب کو ہمیشہ 'آپ' کہیں اور 'تم' سے پرہیز کریں۔ کوئی ایموجی مت لگائیں اور مارک ڈاؤن یا بلٹ پوائنٹس استعمال نہ کریں۔"
                     )
                     messages = [
                         {"role": "system", "content": TABRAIZ_ORCHESTRATOR_SYSTEM},
-                        {"role": "user", "content": fallback_prompt}
+                        {"role": "user", "content": grounded_prompt}
                     ]
                     resp = self.backend_client.chat_completion(
                         messages,
@@ -664,8 +668,34 @@ class CognitiveOrchestrator:
                     bot_text = resp.get("content", "").strip()
                     if bot_text:
                         oracle_reply = bot_text
+                        print("[Orchestrator] Knowledge query synthesized via Primary Modal Qwen 2.5 GPU.")
                 except Exception as ex:
-                    print(f"[Orchestrator] Modal fallback notice: {ex}")
+                    print(f"[Orchestrator] Primary Modal GPU knowledge synthesis notice: {ex}")
+
+            # 2. Secondary Fallback: Gemini Oracle (with fast 5s timeout)
+            if not oracle_reply and self.oracle.is_available():
+                print("[Orchestrator] Modal GPU unavailable. Falling back to Gemini Oracle...")
+                oracle_reply = self.oracle.query(
+                    prompt=prompt,
+                    system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                    timeout=5
+                )
+
+            # 3. Tertiary Fallback: Direct ChatGPT Web Oracle
+            if not oracle_reply:
+                try:
+                    from chatgpt_browser_oracle import get_chatgpt_oracle
+                    chatgpt = get_chatgpt_oracle()
+                    if chatgpt.is_available():
+                        print("[Orchestrator] Falling back to ChatGPT Web Oracle for knowledge...")
+                        oracle_reply = chatgpt.query(
+                            prompt=prompt,
+                            system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
+                            timeout=20,
+                            visible=False
+                        )
+                except Exception as c_err:
+                    print(f"[Orchestrator] Headless ChatGPT fallback notice: {c_err}")
 
             if oracle_reply:
                 cleaned_reply = self.clean_voice_text(oracle_reply)
@@ -707,34 +737,53 @@ class CognitiveOrchestrator:
                     if u: messages.append({"role": "user", "content": u})
                     if a: messages.append({"role": "assistant", "content": a})
 
-        # Add current user turn
-        messages.append({"role": "user", "content": effective_input})
-
-        # Generate Response: Prioritize Gemini Oracle for fluent native conversational Urdu,
-        # falling back gracefully to Modal L4 GPU or ChatGPT Web Oracle
-        final_reply = None
-
+        # Add current user turn with Standard Prompt formatting
         topic_str = f"سابقہ موضوع: {active_topic}\n" if active_topic else ""
         conv_prompt = (
             f"{topic_str}صارف کا پیغام: {effective_input}\n"
             f"{TABRAIZ_PRE_STANDARD_PROMPT}\n"
             f"روزمرہ بول چال کی قدرتی اور آسان اردو میں باادب اور انتہائی مناسب انداز میں صرف 2 سے 3 جملوں کا جامع خلاصہ پیش کریں۔ مخاطب کے لیے ہمیشہ 'آپ' کا احترام رکھیں، 'تم' مت کہیں۔ کوئی جملہ بار بار مت دہرائیں۔"
         )
+        messages.append({"role": "user", "content": conv_prompt})
 
-        if self.oracle.is_available():
+        # Generate Response: Prioritize Modal Qwen 2.5 GPU as Primary Brain (~1s latency),
+        # falling back gracefully to Gemini Oracle or ChatGPT Web Oracle if cloud GPU is unavailable
+        final_reply = None
+
+        # 1. Primary Brain: Modal Cloud GPU (Qwen 2.5-7B) on NVIDIA L4
+        if self.backend_client:
+            try:
+                resp = self.backend_client.chat_completion(
+                    messages,
+                    temperature=0.60,
+                    max_tokens=250,
+                    repetition_penalty=1.20,
+                    presence_penalty=0.5,
+                    frequency_penalty=0.5
+                )
+                content = resp.get("content", "").strip()
+                if content:
+                    final_reply = content
+                    print("[Orchestrator] Turn completed via Primary Modal Qwen 2.5 GPU.")
+            except Exception as e:
+                print(f"[Orchestrator] Primary Modal GPU notice: {e}")
+
+        # 2. Secondary Fallback: Gemini Oracle
+        if not final_reply and self.oracle.is_available():
+            print("[Orchestrator] Modal GPU unavailable. Falling back to Gemini Oracle...")
             final_reply = self.oracle.query(
                 prompt=conv_prompt,
                 system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
                 timeout=5
             )
 
-        # If Gemini did not answer, quickly switch to ChatGPT
+        # 3. Tertiary Fallback: ChatGPT Web Oracle
         if not final_reply:
             try:
                 from chatgpt_browser_oracle import get_chatgpt_oracle
                 chatgpt = get_chatgpt_oracle()
                 if chatgpt.is_available():
-                    print("[Orchestrator] Gemini unavailable. Quickly switching to ChatGPT...")
+                    print("[Orchestrator] Falling back to ChatGPT Web Oracle...")
                     final_reply = chatgpt.query(
                         prompt=conv_prompt,
                         system_instruction=TABRAIZ_ORCHESTRATOR_SYSTEM,
@@ -743,21 +792,6 @@ class CognitiveOrchestrator:
                     )
             except Exception as c_err:
                 print(f"[Orchestrator] General turn ChatGPT fallback notice: {c_err}")
-
-        # If still no reply, fall back to Modal GPU
-        if not final_reply and self.backend_client:
-            try:
-                resp = self.backend_client.chat_completion(
-                    messages, 
-                    temperature=0.60, 
-                    max_tokens=250,
-                    repetition_penalty=1.20,
-                    presence_penalty=0.5,
-                    frequency_penalty=0.5
-                )
-                final_reply = resp.get("content", "")
-            except Exception as e:
-                print(f"[Orchestrator] Backend completion notice: {e}")
 
         if final_reply:
             final_reply = self.clean_voice_text(final_reply)
