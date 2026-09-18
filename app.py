@@ -246,32 +246,36 @@ body, .gradio-container {
 }
 
 /* Tablet / Desktop Frame Layout */
-.adaab-tablet-frame {
+.adaab-tablet-frame, .row.adaab-tablet-frame {
     display: flex !important;
     flex-direction: row !important;
+    flex-wrap: nowrap !important;
     width: 100% !important;
-    max-width: 1320px !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    margin: 0 auto !important;
-    padding: 16px 20px !important;
-    gap: 16px !important;
+    max-width: 1400px !important;
+    height: 98vh !important;
+    height: 98dvh !important;
+    margin: 1vh auto !important;
+    padding: 12px 18px !important;
+    gap: 18px !important;
     align-items: stretch !important;
     box-sizing: border-box !important;
+    overflow: hidden !important;
 }
 
 /* Left Sidebar */
-.adaab-sidebar {
+.adaab-sidebar, .column.adaab-sidebar {
     flex: 0 0 190px !important;
     width: 190px !important;
     min-width: 190px !important;
+    max-width: 190px !important;
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
+    justify-content: flex-start !important;
     padding: 8px 4px !important;
     background: transparent !important;
     border: none !important;
+    overflow: hidden !important;
 }
 
 .sidebar-inner {
@@ -496,27 +500,29 @@ body, .gradio-container {
 }
 
 /* Right Main Card Container */
-.adaab-main-card {
-    flex: 1 1 auto !important;
+.adaab-main-card, .column.adaab-main-card {
+    flex: 1 1 0% !important;
+    width: 100% !important;
+    min-width: 0 !important;
     background: #171a21 !important;
     border: 1px solid rgba(255, 255, 255, 0.07) !important;
     border-radius: 24px !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
+    justify-content: flex-start !important;
     height: 100% !important;
+    max-height: 100% !important;
     position: relative !important;
     overflow: hidden !important;
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* Chatbot container: takes full available height above dock, outer container never scrolls */
+/* Chatbot container: takes all available flex space above dock */
 .messenger-chat, .messenger-chat.block {
     position: relative !important;
-    flex: 1 1 auto !important;
+    flex: 1 1 0% !important;
     width: 100% !important;
-    height: calc(100% - 76px) !important;
-    max-height: calc(100% - 76px) !important;
+    height: 100% !important;
     min-height: 0 !important;
     overflow: hidden !important;
     padding: 0 !important;
@@ -528,8 +534,8 @@ body, .gradio-container {
 }
 
 .messenger-chat .wrap {
+    flex: 1 1 0% !important;
     height: 100% !important;
-    max-height: 100% !important;
     min-height: 0 !important;
     overflow: hidden !important;
     border: none !important;
@@ -540,9 +546,8 @@ body, .gradio-container {
 
 /* The actual scrollable message container in Gradio 6 */
 .messenger-chat .bubble-wrap {
-    flex: 1 1 auto !important;
+    flex: 1 1 0% !important;
     height: 100% !important;
-    max-height: 100% !important;
     min-height: 0 !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
@@ -1053,8 +1058,24 @@ body, .gradio-container {
 }
 
 /* Hidden elements */
-.hidden-control, #voice_reply_player, #ptt_raw_input, #ptt_trigger_btn, #ptt_status_box, .compact-audio-player { 
+.adaab-hidden-bridge,
+.row.adaab-hidden-bridge,
+.hidden-control, 
+#voice_reply_player, 
+#ptt_raw_input, 
+#ptt_trigger_btn, 
+#ptt_status_box, 
+#hidden_clear_btn,
+.compact-audio-player { 
     display: none !important; 
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    visibility: hidden !important;
 }
 
 /* Mobile Responsive */
@@ -2038,21 +2059,8 @@ let greetingAutoplayDone = false;
 let greetingAttemptInProgress = false;
 
 function showAutoplayPrompt() {
-    let pill = document.getElementById('autoplay-welcome-pill');
-    if (!pill) {
-        pill = document.createElement('div');
-        pill.id = 'autoplay-welcome-pill';
-        pill.className = 'autoplay-welcome-pill';
-        pill.innerHTML = '<span class="pulse-sound-dot"></span> <img src="' + ICON_SPEAKER_DATA + '" class="hint-icon-img" style="width:16px;height:16px;vertical-align:middle;display:inline-block;margin-left:4px;" alt="" /> تعارفی پیغام سننے کے لیے ٹیپ فرمائیں (Tap to hear Tabraiz welcome you)';
-        pill.onclick = (e) => {
-            e.stopPropagation();
-            greetingAutoplayDone = false; // allow retry
-            greetingAttemptInProgress = false;
-            startWelcomeAudioNow();
-        };
-        const target = document.querySelector('.messenger-wrapper') || document.body;
-        if (target) target.insertBefore(pill, target.firstChild);
-    }
+    // Obsolete banner — audio playback is handled directly by the conversation pill
+    return;
 }
 
 function hideAutoplayPrompt() {
@@ -2459,10 +2467,11 @@ def build_app(active_port: int = 7865, public_url: str = None):
                     send_btn = gr.Button("Send", elem_id="send-btn", scale=1, variant="primary")
 
                 # Hidden bridge controls for PTT JavaScript trigger & clean reset
-                ptt_raw_input = gr.Textbox(elem_id="ptt_raw_input", elem_classes=["hidden-control"])
-                ptt_trigger_btn = gr.Button("TRIGGER_PTT", elem_id="ptt_trigger_btn", elem_classes=["hidden-control"])
-                ptt_status_box = gr.Textbox(elem_id="ptt_status_box", elem_classes=["hidden-control"])
-                hidden_clear_btn = gr.Button("CLEAR", elem_id="hidden_clear_btn", elem_classes=["hidden-control"])
+                with gr.Row(elem_classes=["adaab-hidden-bridge"]):
+                    ptt_raw_input = gr.Textbox(elem_id="ptt_raw_input", elem_classes=["hidden-control"])
+                    ptt_trigger_btn = gr.Button("TRIGGER_PTT", elem_id="ptt_trigger_btn", elem_classes=["hidden-control"])
+                    ptt_status_box = gr.Textbox(elem_id="ptt_status_box", elem_classes=["hidden-control"])
+                    hidden_clear_btn = gr.Button("CLEAR", elem_id="hidden_clear_btn", elem_classes=["hidden-control"])
 
         # Event connections
         ptt_trigger_btn.click(
