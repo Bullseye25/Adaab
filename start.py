@@ -29,7 +29,7 @@ def main():
 
     print("=" * 72)
     print(" Adaab — Conversational Voice AI Studio ".center(72, "="))
-    print(f" Cloud Backend: Modal (NVIDIA L4) | Active Workspace: {active_modal} ".center(72, " "))
+    print(" Cloud Backend: Modal.com (NVIDIA L4 GPU) ".center(72, " "))
     print(" Policy: 0% Local GPU Used | 0% Google Storage (GCS) Cost ".center(72, " "))
     print("=" * 72)
 
@@ -67,7 +67,7 @@ def main():
     elif choice in ["2", "modal", "cloud", "backend", "7", "8", "9", "10"]:
         print("\n" + "=" * 70)
         print(" Modal.com Cloud GPU Backend (NVIDIA L4) ".center(70, "="))
-        print(f" Active Account Profile: {active_modal} ")
+        print(" Serverless GPU Container | 0% Local GPU Used ".center(70, " "))
         print("=" * 70)
         print(" 1. Test Live Cloud Backend Inference (Qwen 2.5 7B on L4 GPU)")
         print(" 2. Deploy / Redeploy Adaab Backend to Modal")
@@ -278,7 +278,7 @@ def main():
                 print(f" Status:       {health.get('status', 'online')}")
                 print(f" Device:       {health.get('device', 'NVIDIA L4 GPU')}")
                 print(f" Latency:      {elapsed}s")
-                print(f" Account:      {active_modal}")
+                print(" Platform:     Modal.com Serverless Cloud")
                 print(" Policy:       0% Local PC GPU Used")
                 print("=" * 70)
             except Exception as e:
