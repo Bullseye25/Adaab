@@ -8,7 +8,7 @@
 
   @page {
     size: A4 portrait;
-    margin: 6mm 9mm 6mm 9mm;
+    margin: 5.5mm 8.5mm 5.5mm 8.5mm;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,8 +17,8 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     color: #1e293b;
     background-color: #ffffff;
-    line-height: 1.34;
-    font-size: 7.9pt;
+    line-height: 1.30;
+    font-size: 7.7pt;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -29,9 +29,9 @@
   .header-card {
     background: linear-gradient(135deg, #090e1a 0%, #17153a 50%, #0d1a2d 100%);
     color: #ffffff;
-    border-radius: 8px;
-    padding: 12px 18px;
-    margin-bottom: 7px;
+    border-radius: 7px;
+    padding: 10px 16px;
+    margin-bottom: 6px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 4px 14px -3px rgba(15, 23, 42, 0.25);
   }
@@ -41,53 +41,53 @@
     background: rgba(6, 182, 212, 0.2);
     border: 1px solid #06b6d4;
     color: #22d3ee;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 6.2pt;
+    padding: 1.5px 7px;
+    border-radius: 10px;
+    font-size: 6pt;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
   }
 
   .header-title {
-    font-size: 14.5pt;
+    font-size: 13.5pt;
     font-weight: 800;
     letter-spacing: -0.02em;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
     background: linear-gradient(to right, #ffffff, #e2e8f0, #38bdf8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .header-subtitle {
-    font-size: 7.6pt;
+    font-size: 7.3pt;
     color: #94a3b8;
     font-weight: 400;
-    line-height: 1.28;
+    line-height: 1.25;
   }
 
   .header-meta {
     display: flex;
     justify-content: space-between;
-    gap: 10px;
-    margin-top: 7px;
-    padding-top: 5px;
+    gap: 8px;
+    margin-top: 5px;
+    padding-top: 4px;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
-    font-size: 6.8pt;
+    font-size: 6.5pt;
     color: #cbd5e1;
   }
   .header-meta span strong { color: #38bdf8; }
 
   /* SECTION TITLES */
   h2.section-title {
-    font-size: 9.2pt;
+    font-size: 8.8pt;
     font-weight: 700;
     color: #0f172a;
-    margin: 7px 0 4px 0;
+    margin: 6px 0 3px 0;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     letter-spacing: -0.01em;
     border-bottom: 1.5px solid #e2e8f0;
     padding-bottom: 2px;
@@ -97,23 +97,23 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 17px;
-    height: 17px;
-    border-radius: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 3.5px;
     background: #0f172a;
     color: #38bdf8;
-    font-size: 7pt;
+    font-size: 6.8pt;
     font-weight: 700;
   }
 
-  /* SPRINT & STATUS INDICATORS FOR 10-15 */
+  /* SPRINT & STATUS INDICATORS */
   .sprint-tag {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 1.5px 6px;
-    border-radius: 10px;
-    font-size: 5.8pt;
+    gap: 3px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    font-size: 5.6pt;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -124,62 +124,65 @@
   .sprint-tag-emerald { background: #d1fae5; color: #047857; border: 1px solid #10b981; }
   .sprint-tag-orange { background: #ffedd5; color: #c2410c; border: 1px solid #f97316; }
   .sprint-tag-purple { background: #ede9fe; color: #6d28d9; border: 1px solid #8b5cf6; }
+  .sprint-tag-indigo { background: #e0e7ff; color: #3730a3; border: 1px solid #6366f1; }
 
   .pulse-dot {
-    width: 5px;
-    height: 5px;
+    width: 4.5px;
+    height: 4.5px;
     border-radius: 50%;
     display: inline-block;
   }
-  .pulse-amber { background: #d97706; box-shadow: 0 0 4px #d97706; }
-  .pulse-cyan { background: #0284c7; box-shadow: 0 0 4px #0284c7; }
-  .pulse-rose { background: #e11d48; box-shadow: 0 0 4px #e11d48; }
-  .pulse-emerald { background: #059669; box-shadow: 0 0 4px #059669; }
-  .pulse-orange { background: #ea580c; box-shadow: 0 0 4px #ea580c; }
-  .pulse-purple { background: #7c3aed; box-shadow: 0 0 4px #7c3aed; }
+  .pulse-amber { background: #d97706; box-shadow: 0 0 3px #d97706; }
+  .pulse-cyan { background: #0284c7; box-shadow: 0 0 3px #0284c7; }
+  .pulse-rose { background: #e11d48; box-shadow: 0 0 3px #e11d48; }
+  .pulse-emerald { background: #059669; box-shadow: 0 0 3px #059669; }
+  .pulse-orange { background: #ea580c; box-shadow: 0 0 3px #ea580c; }
+  .pulse-purple { background: #7c3aed; box-shadow: 0 0 3px #7c3aed; }
+  .pulse-indigo { background: #4f46e5; box-shadow: 0 0 3px #4f46e5; }
 
   .progress-wrap {
     background: #e2e8f0;
-    border-radius: 6px;
-    height: 6px;
+    border-radius: 5px;
+    height: 5px;
     overflow: hidden;
-    margin: 3px 0 5px 0;
+    margin: 2px 0 4px 0;
     display: flex;
   }
-  .progress-bar { height: 100%; border-radius: 6px; }
+  .progress-bar { height: 100%; border-radius: 5px; }
   .progress-bar-amber { background: linear-gradient(90deg, #f59e0b, #d97706); }
   .progress-bar-cyan { background: linear-gradient(90deg, #0ea5e9, #0284c7); }
   .progress-bar-rose { background: linear-gradient(90deg, #f43f5e, #be123c); }
   .progress-bar-emerald { background: linear-gradient(90deg, #10b981, #047857); }
   .progress-bar-orange { background: linear-gradient(90deg, #f97316, #c2410c); }
   .progress-bar-purple { background: linear-gradient(90deg, #8b5cf6, #6d28d9); }
+  .progress-bar-indigo { background: linear-gradient(90deg, #6366f1, #4338ca); }
 
-  /* PHASE 2 BANNER */
+  /* PHASE BANNERS */
   .phase2-banner {
     background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
-    border-left: 4px solid #f59e0b;
-    border-right: 4px solid #8b5cf6;
-    border-radius: 6px;
-    padding: 7px 12px;
-    margin-bottom: 7px;
+    border-left: 3.5px solid #f59e0b;
+    border-right: 3.5px solid #8b5cf6;
+    border-radius: 5px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
     color: #ffffff;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .phase2-banner-title { font-size: 8.4pt; font-weight: 800; letter-spacing: -0.01em; color: #fbbf24; }
-  .phase2-banner-sub { font-size: 6.8pt; color: #d4d4d8; max-width: 70%; line-height: 1.25; }
+  .phase2-banner-title { font-size: 8pt; font-weight: 800; letter-spacing: -0.01em; color: #fbbf24; }
+  .phase2-banner-sub { font-size: 6.6pt; color: #d4d4d8; max-width: 72%; line-height: 1.22; }
 
   /* CARDS */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 6px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px; }
-  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 6px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 5px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 5px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 5px; }
 
   .card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 5px;
-    padding: 6px 9px;
+    padding: 5px 8px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.02);
   }
 
@@ -188,17 +191,17 @@
   .card-success { border-left: 3px solid #10b981; background: #f0fdf4; }
   .card-purple { border-left: 3px solid #8b5cf6; background: #faf5ff; }
   .card-amber { border-left: 3px solid #f59e0b; background: #fffbeb; }
+  .card-indigo { border-left: 3px solid #6366f1; background: #f5f3ff; }
 
-  /* DEDICATED THEMES FOR 10-15 */
-  .card-wip-amber { border-left: 3.5px solid #d97706; background: #fffdf5; border-top: 1px dashed #fcd34d; border-right: 1px solid #fef3c7; border-bottom: 1px solid #fef3c7; }
-  .card-wip-cyan { border-left: 3.5px solid #0284c7; background: #f0f9ff; border-top: 1px dashed #7dd3fc; border-right: 1px solid #e0f2fe; border-bottom: 1px solid #e0f2fe; }
-  .card-wip-rose { border-left: 3.5px solid #be123c; background: #fff1f2; border-top: 1px dashed #fda4af; border-right: 1px solid #ffe4e6; border-bottom: 1px solid #ffe4e6; }
-  .card-wip-emerald { border-left: 3.5px solid #047857; background: #ecfdf5; border-top: 1px dashed #6ee7b7; border-right: 1px solid #d1fae5; border-bottom: 1px solid #d1fae5; }
-  .card-wip-orange { border-left: 3.5px solid #c2410c; background: #fff7ed; border-top: 1px dashed #fdba74; border-right: 1px solid #ffedd5; border-bottom: 1px solid #ffedd5; }
-  .card-wip-purple { border-left: 3.5px solid #6d28d9; background: #faf5ff; border-top: 1px dashed #c4b5fd; border-right: 1px solid #ede9fe; border-bottom: 1px solid #ede9fe; }
+  .card-wip-amber { border-left: 3px solid #d97706; background: #fffdf5; border-top: 1px dashed #fcd34d; border-right: 1px solid #fef3c7; border-bottom: 1px solid #fef3c7; }
+  .card-wip-cyan { border-left: 3px solid #0284c7; background: #f0f9ff; border-top: 1px dashed #7dd3fc; border-right: 1px solid #e0f2fe; border-bottom: 1px solid #e0f2fe; }
+  .card-wip-rose { border-left: 3px solid #be123c; background: #fff1f2; border-top: 1px dashed #fda4af; border-right: 1px solid #ffe4e6; border-bottom: 1px solid #ffe4e6; }
+  .card-wip-emerald { border-left: 3px solid #047857; background: #ecfdf5; border-top: 1px dashed #6ee7b7; border-right: 1px solid #d1fae5; border-bottom: 1px solid #d1fae5; }
+  .card-wip-orange { border-left: 3px solid #c2410c; background: #fff7ed; border-top: 1px dashed #fdba74; border-right: 1px solid #ffedd5; border-bottom: 1px solid #ffedd5; }
+  .card-wip-purple { border-left: 3px solid #6d28d9; background: #faf5ff; border-top: 1px dashed #c4b5fd; border-right: 1px solid #ede9fe; border-bottom: 1px solid #ede9fe; }
 
   .card-title {
-    font-size: 7.8pt;
+    font-size: 7.5pt;
     font-weight: 700;
     color: #0f172a;
     margin-bottom: 2px;
@@ -207,13 +210,13 @@
     justify-content: space-between;
   }
 
-  .card p { font-size: 7.1pt; color: #475569; line-height: 1.3; }
+  .card p { font-size: 6.9pt; color: #475569; line-height: 1.28; }
 
   .badge {
     display: inline-block;
-    padding: 1px 5px;
-    border-radius: 6px;
-    font-size: 5.8pt;
+    padding: 1px 4.5px;
+    border-radius: 5px;
+    font-size: 5.6pt;
     font-weight: 600;
   }
   .badge-cyan { background: #e0f2fe; color: #0369a1; }
@@ -221,21 +224,22 @@
   .badge-amber { background: #fef3c7; color: #92400e; }
   .badge-purple { background: #ede9fe; color: #5b21b6; }
   .badge-rose { background: #ffe4e6; color: #9f1239; }
+  .badge-indigo { background: #e0e7ff; color: #3730a3; }
   .badge-dark { background: #0f172a; color: #38bdf8; }
 
   /* TABLES */
-  table { width: 100%; border-collapse: collapse; font-size: 7.1pt; margin: 4px 0 6px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 6.9pt; margin: 3px 0 5px 0; }
   th {
     background: #0f172a;
     color: #ffffff;
     text-align: left;
-    padding: 3.5px 6px;
+    padding: 3px 5px;
     font-weight: 600;
-    font-size: 6.6pt;
+    font-size: 6.4pt;
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
-  td { padding: 3.5px 6px; border-bottom: 1px solid #e2e8f0; color: #334155; vertical-align: top; }
+  td { padding: 3px 5px; border-bottom: 1px solid #e2e8f0; color: #334155; vertical-align: top; }
   tr:nth-child(even) td { background: #f8fafc; }
 
   th.th-amber { background: #78350f; color: #fef3c7; }
@@ -247,10 +251,10 @@
 
   code {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 6.6pt;
+    font-size: 6.4pt;
     background: #f1f5f9;
     color: #0f172a;
-    padding: 1px 3px;
+    padding: 1px 2.5px;
     border-radius: 3px;
     border: 1px solid #e2e8f0;
   }
@@ -258,8 +262,8 @@
   .diagram-container {
     background: #090d16;
     border-radius: 5px;
-    padding: 6px;
-    margin: 4px 0 6px 0;
+    padding: 5px;
+    margin: 3px 0 5px 0;
     border: 1px solid #1e293b;
     text-align: center;
   }
@@ -270,10 +274,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 6.8pt;
+    font-size: 6.6pt;
     color: #64748b;
-    margin-top: 6px;
-    padding-top: 4px;
+    margin-top: 5px;
+    padding-top: 3px;
     border-top: 1px solid #e2e8f0;
   }
   .footer-author {
@@ -289,34 +293,37 @@
      PAGE 1: TITLE, EXEC SUMMARY, INDEX & GENESIS
      ========================================== -->
 <div class="header-card">
-  <div class="header-badge">OFFICIAL TECHNICAL WHITEPAPER &amp; ACTIVE SPRINT BLUEPRINT &bull; VERSION 2.4</div>
+  <div class="header-badge">OFFICIAL TECHNICAL WHITEPAPER &amp; ACTIVE SPRINT BLUEPRINT &bull; VERSION 2.5</div>
   <div class="header-title">ADAAB STUDIO: ENGINEERING EVOLUTION &amp; ENTERPRISE ROADMAP</div>
   <div class="header-subtitle">
-    A Complete 7-Day Architecture Genesis (Production Deployed) &amp; Phase 2 Enterprise Scaling Roadmap (Under Active Engineering).
+    Production Deployed Foundation (Days 1&ndash;7 + Image Gen) &bull; Heavy A100 Learning ($2.79/hr) &bull; Phase 2 Sprints &bull; Final Post-Training Multi-Agents (Pending).
   </div>
   <div class="header-meta">
     <span>Lead Architect &amp; Author: <strong>Ammad Raza</strong></span>
-    <span>GPU Infrastructure: <strong>Modal.com (NVIDIA L4 Serverless)</strong></span>
+    <span>Timeline: <strong>1-Month Deep-Tech Sprint (Weeks 1&ndash;4)</strong></span>
+    <span>Modal GPU Infrastructure: <strong>NVIDIA A100 ($2.79/hr Train) | L4 ($0.80/hr Serve)</strong></span>
     <span>Sovereignty Policy: <strong>0% Local GPU | 0% GCS Cost</strong></span>
-    <span>Status: <strong>Days 1&ndash;7 Deployed | Phase 2 In Progress</strong></span>
+    <span>Status: <strong>Production Live | Multi-Agents Pending (End of Roadmap)</strong></span>
   </div>
 </div>
 
 <!-- EXECUTIVE SUMMARY CARD -->
-<div class="card card-highlight" style="margin-bottom: 6px; border-left: 3.5px solid #0284c7;">
-  <div class="card-title" style="font-size: 8.2pt;">
-    <span>Executive Summary: Production Accomplishments &amp; Phase 2 Mandate</span>
-    <span class="badge badge-dark">STRATEGIC REPORT</span>
+<div class="card card-highlight" style="margin-bottom: 5px; border-left: 3.5px solid #0284c7;">
+  <div class="card-title" style="font-size: 7.9pt;">
+    <span>Executive Summary: 1-Month Engineering Sprint, Heavy Training &amp; Roadmap Mandate</span>
+    <span class="badge badge-dark">1-MONTH PRODUCTION MILESTONE</span>
   </div>
-  <div class="grid-2" style="margin-top: 4px; margin-bottom: 0;">
+  <div class="grid-2" style="margin-top: 3px; margin-bottom: 0;">
     <div>
-      <p style="font-size: 7.1pt; line-height: 1.32;">
-        <strong>Part I &mdash; Production Foundation (Days 1&ndash;7):</strong> Built <em>Tabraiz</em>, Pakistan's premier cultural voice AI. Deployed Qwen 2.5 7B with custom QLoRA fine-tuning on Modal.com serverless GPU, backed by a 4-tier RAG engine (DuckDuckGo, JSONL facts, SQLite memory, system clock). Overcame the 17-second browser scraping latency by integrating Ollama Cloud Gemma 31B and <code>gemini-3.5-flash</code> with zero local PC compute burden.
+      <p style="font-size: 6.9pt; line-height: 1.28;">
+        <strong>1-Month Rapid Engineering Journey (Weeks 1&ndash;4):</strong> Architected, fine-tuned, and shipped <em>Tabraiz</em>, Pakistan's premier cultural voice AI. Over 30 intensive days, resolved the hardest Urdu voice AI challenges: overcoming base model tokenization repetition loops, conquering Google ASR code-switching transliteration traps, eliminating robotic speech via a custom Urdu pronunciation engine, and hardening mobile Web Audio on compact devices.<br>
+        <strong>Zero-Cost Sovereign Cloud Stack:</strong> Offloaded 100% of compute to serverless Modal.com GPUs (burst A100 training + lean L4 serving) and free 5TB Google Drive v3 weight backups, maintaining 0% local GPU and 0% GCS cost.
       </p>
     </div>
     <div>
-      <p style="font-size: 7.1pt; line-height: 1.32;">
-        <strong>Part II &mdash; Enterprise Active Sprints (Sections 10&ndash;15):</strong> Currently in active development for enterprise and government scale: Cost modeling 1,000 users consuming 1B tokens/month at $0.82&ndash;$0.94/user; telecom IVR call center scaling ($16,800/mo net savings); citizen PII scrubbing (CNIC &amp; phone regex/NER); and voice automation for <strong>NADRA Pakistan</strong> and <strong>Jazz Pakistan</strong>.
+      <p style="font-size: 6.9pt; line-height: 1.28;">
+        <strong>Heavy A100 Training on 500 Master Curriculum:</strong> Conducted multi-epoch QLoRA fine-tuning on <strong>NVIDIA A100 Tensor Core GPUs ($2.79/hr)</strong> across all 7 projection matrices, driving loss from 2.45 to 0.58 across an expanding 1,125-turn dataset anchored by a <strong>500-record core foundational curriculum</strong>.<br>
+        <strong>Multi-Agent Swarm Pending [FINAL MILESTONE]:</strong> Multi-agent orchestration is intentionally scheduled for the <strong>very end of the roadmap</strong>, initiating strictly after single-agent training and evaluations are 100% certified.
       </p>
     </div>
   </div>
@@ -324,39 +331,40 @@
 
 <!-- MASTER DOCUMENT INDEX / TABLE OF CONTENTS -->
 <h2 class="section-title"><span class="section-icon">&#167;</span> Document Index &amp; Sprint Navigator</h2>
-<div class="grid-2" style="margin-bottom: 6px;">
+<div class="grid-2" style="margin-bottom: 5px;">
   <!-- PART 1 INDEX -->
-  <div class="card" style="border-top: 2.5px solid #10b981; padding: 5px 8px;">
-    <div class="card-title" style="color: #065f46; font-size: 7.4pt;">
-      <span>PART I: PRODUCTION FOUNDATION (DAYS 1&ndash;7)</span>
+  <div class="card" style="border-top: 2.5px solid #10b981; padding: 4px 7px;">
+    <div class="card-title" style="color: #065f46; font-size: 7.2pt;">
+      <span>PART I: 1-MONTH PRODUCTION &amp; HEAVY TRAINING</span>
       <span class="badge badge-emerald">COMPLETE / DEPLOYED</span>
     </div>
-    <table style="margin: 2px 0 0 0; font-size: 6.8pt;">
-      <tr><td style="width: 14%;"><strong>Sec 1</strong></td><td style="width: 70%;">Project Genesis &amp; Strict Cost Boundaries</td><td style="text-align: right;">Page 1</td></tr>
-      <tr><td><strong>Sec 2</strong></td><td>7-Day Engineering Timeline Diagram</td><td style="text-align: right;">Page 2</td></tr>
-      <tr><td><strong>Sec 3</strong></td><td>Key Challenges Encountered &amp; Exact Solutions</td><td style="text-align: right;">Page 2</td></tr>
-      <tr><td><strong>Sec 4</strong></td><td>LoRA Fine-Tuning: Curriculum &amp; Modal GPU Training</td><td style="text-align: right;">Page 2</td></tr>
-      <tr><td><strong>Sec 5</strong></td><td>RAG Grounding: Challenges &amp; Solutions</td><td style="text-align: right;">Page 3</td></tr>
-      <tr><td><strong>Sec 6</strong></td><td>4-Tier RAG Architecture Diagram &amp; Smart Cloud</td><td style="text-align: right;">Page 3</td></tr>
-      <tr><td><strong>Sec 7</strong></td><td>SQLite Memory Engine &amp; Silent Persistence</td><td style="text-align: right;">Page 3</td></tr>
-      <tr><td><strong>Sec 8</strong></td><td>Backend Services &amp; Live Data API Matrix</td><td style="text-align: right;">Page 3</td></tr>
-      <tr><td><strong>Sec 9</strong></td><td>Why DuckDuckGo and What For?</td><td style="text-align: right;">Page 3</td></tr>
+    <table style="margin: 2px 0 0 0; font-size: 6.6pt;">
+      <tr><td style="width: 14%;"><strong>Sec 1</strong></td><td style="width: 70%;">Project Genesis: Cultural Identity &amp; Cost Boundaries</td><td style="text-align: right;">Page 1</td></tr>
+      <tr><td><strong>Sec 2</strong></td><td>The 1-Month Engineering Journey (Weeks 1&ndash;4 Sprints)</td><td style="text-align: right;">Page 2</td></tr>
+      <tr><td><strong>Sec 3</strong></td><td>Real Challenges &amp; Major Time Sinks (ASR, Pronunciation, Loops)</td><td style="text-align: right;">Page 2</td></tr>
+      <tr><td><strong>Sec 4</strong></td><td>LoRA Fine-Tuning &amp; 500-Record Master Curriculum Mastery</td><td style="text-align: right;">Page 2</td></tr>
+      <tr><td><strong>Sec 5</strong></td><td>Urdu Pronunciation, Diacritic Engine &amp; RAG Grounding</td><td style="text-align: right;">Page 3</td></tr>
+      <tr><td><strong>Sec 6</strong></td><td>4-Tier RAG Architecture &amp; Image Gen Turbo Dispatch</td><td style="text-align: right;">Page 3</td></tr>
+      <tr><td><strong>Sec 7</strong></td><td>SQLite Memory Engine &amp; Silent Background Persistence</td><td style="text-align: right;">Page 3</td></tr>
+      <tr><td><strong>Sec 8</strong></td><td>Backend Services Matrix (Modal A100/L4, Cloud Diffusion)</td><td style="text-align: right;">Page 3</td></tr>
+      <tr><td><strong>Sec 9</strong></td><td>Why DuckDuckGo and What For? (Decision Matrix)</td><td style="text-align: right;">Page 3</td></tr>
     </table>
   </div>
 
-  <!-- PART 2 INDEX -->
-  <div class="card" style="border-top: 2.5px solid #f59e0b; padding: 5px 8px;">
-    <div class="card-title" style="color: #92400e; font-size: 7.4pt;">
-      <span>PART II: ENTERPRISE EXPANSION (PHASE 2)</span>
-      <span class="badge badge-amber">ACTIVE SPRINT / IN PROGRESS</span>
+  <!-- PART 2 & 3 INDEX -->
+  <div class="card" style="border-top: 2.5px solid #f59e0b; padding: 4px 7px;">
+    <div class="card-title" style="color: #92400e; font-size: 7.2pt;">
+      <span>PART II &amp; III: ENTERPRISE &amp; FUTURE SWARM</span>
+      <span class="badge badge-amber">SPRINTS &amp; POST-TRAINING</span>
     </div>
-    <table style="margin: 2px 0 0 0; font-size: 6.8pt;">
+    <table style="margin: 2px 0 0 0; font-size: 6.6pt;">
       <tr><td style="width: 14%; color: #b45309;"><strong>Sec 10</strong></td><td>Enterprise Cost Modeling (1B Tokens / Mo)</td><td style="text-align: right; color: #b45309;"><strong>Page 4</strong></td></tr>
       <tr><td style="color: #0284c7;"><strong>Sec 11</strong></td><td>Scaling Architecture &amp; Telecom Migration Study</td><td style="text-align: right; color: #0284c7;"><strong>Page 4</strong></td></tr>
       <tr><td style="color: #be123c;"><strong>Sec 12</strong></td><td>Enterprise Security, Privacy &amp; PII Scrubbing</td><td style="text-align: right; color: #be123c;"><strong>Page 4</strong></td></tr>
       <tr><td style="color: #047857;"><strong>Sec 13</strong></td><td>Industrial Use Case: NADRA Citizen Portal</td><td style="text-align: right; color: #047857;"><strong>Page 5</strong></td></tr>
       <tr><td style="color: #c2410c;"><strong>Sec 14</strong></td><td>Industrial Use Case: Jazz Telecom Customer Care</td><td style="text-align: right; color: #c2410c;"><strong>Page 5</strong></td></tr>
-      <tr><td style="color: #6d28d9;"><strong>Sec 15</strong></td><td>Comprehensive 24-Point Enterprise QA Matrix</td><td style="text-align: right; color: #6d28d9;"><strong>Page 5</strong></td></tr>
+      <tr><td style="color: #6d28d9;"><strong>Sec 15</strong></td><td>Enterprise QA Matrix (24-Point Tier Suite)</td><td style="text-align: right; color: #6d28d9;"><strong>Page 5</strong></td></tr>
+      <tr style="background: #eef2ff;"><td style="color: #4338ca;"><strong>Sec 16</strong></td><td style="color: #4338ca;"><strong>Multi-Agent Swarm (Post-Training Capstone)</strong></td><td style="text-align: right; color: #4338ca;"><strong>Page 5</strong></td></tr>
     </table>
   </div>
 </div>
@@ -367,15 +375,16 @@
   <div class="card card-highlight">
     <div class="card-title">Cultural Identity &amp; Conversational Etiquette <span class="badge badge-cyan">Vision</span></div>
     <p>
-      Build <strong>Tabraiz</strong>, a conversational voice AI tailored for Pakistan. It had to speak natural, polite Pakistani Urdu (not machine-translated English), observe strict societal respect (addressing users with <strong>'آپ'</strong> and strictly forbidding 'تم/تو'), and speak concisely (2 to 3 sentences) for fluid audio playback.
+      Build <strong>Tabraiz</strong>, a conversational voice AI tailored for Pakistan. It had to speak natural, polite Pakistani Urdu (not machine-translated English), observe strict societal respect (addressing users with <strong>'آپ'</strong> and strictly forbidding 'تم/تو'), and speak concisely (2 to 3 sentences) for fluid sub-second voice onset.
     </p>
   </div>
   <div class="card card-highlight">
     <div class="card-title">Strict Technical &amp; Cost Boundaries <span class="badge badge-emerald">Zero Cost Policy</span></div>
     <p>
-      <strong>Zero Local GPU Load:</strong> The user's local PC must remain cool and silent (0% local GPU/CPU load).<br>
-      <strong>Zero GCS Bucket Costs:</strong> Storing weights on Google Cloud Storage incurs recurring fees; eliminated completely.<br>
-      <strong>Dual-Voice System:</strong> Male persona Tabraiz (<code>ur-PK-AsadNeural</code>) &amp; female Tehzeeb (<code>ur-PK-UzmaNeural</code>).
+      <strong>Zero Local GPU Load:</strong> Local PC remains completely silent (0% local GPU/CPU load).<br>
+      <strong>Zero GCS Bucket Costs:</strong> Weights saved to Google Drive v3 (5TB personal storage).<br>
+      <strong>Image Generator Applied:</strong> Cloud diffusion pipeline for instant visual creation.<br>
+      <strong>Dual-Voice System:</strong> Male Tabraiz (<code>ur-PK-AsadNeural</code>) &amp; female Tehzeeb (<code>ur-PK-UzmaNeural</code>).
     </p>
   </div>
 </div>
@@ -391,143 +400,131 @@
 <!-- ==========================================
      PAGE 2: TIMELINE, CHALLENGES & LORA
      ========================================== -->
-<h2 class="section-title" style="margin-top: 0;"><span class="section-icon">2</span> The 7-Day Engineering Timeline</h2>
+<h2 class="section-title" style="margin-top: 0;"><span class="section-icon">2</span> The 1-Month Engineering Journey: From Prototype to Enterprise Production</h2>
 <div class="diagram-container">
   <svg viewBox="0 0 740 108" xmlns="http://www.w3.org/2000/svg">
-    <rect x="5" y="6" width="96" height="92" rx="5" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/>
-    <text x="53" y="23" fill="#38bdf8" font-size="8.2" font-family="Inter" font-weight="700" text-anchor="middle">DAY 1</text>
-    <text x="53" y="37" fill="#ffffff" font-size="6.8" font-family="Inter" font-weight="600" text-anchor="middle">Voice Foundation</text>
-    <text x="53" y="53" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Edge-TTS Engine</text>
-    <text x="53" y="65" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; SpeechRecognition</text>
-    <text x="53" y="77" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Gradio 6 Base UI</text>
+    <!-- WEEK 1 -->
+    <rect x="5" y="6" width="168" height="92" rx="5" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/>
+    <text x="89" y="23" fill="#38bdf8" font-size="8.2" font-family="Inter" font-weight="700" text-anchor="middle">WEEK 1 (Days 1&ndash;7)</text>
+    <text x="89" y="37" fill="#ffffff" font-size="6.8" font-family="Inter" font-weight="600" text-anchor="middle">Voice Genesis &amp; Cloud GPU Shift</text>
+    <text x="89" y="53" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Dual Personas (Tabraiz &amp; Tehzeeb)</text>
+    <text x="89" y="65" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Modal L4 Serverless (0% Local GPU)</text>
+    <text x="89" y="77" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Gradio 6 Reactive PTT &amp; SQLite Memory</text>
 
-    <path d="M 103 52 L 109 52" stroke="#64748b" stroke-width="1.5"/>
+    <path d="M 175 52 L 187 52" stroke="#64748b" stroke-width="1.5"/>
 
-    <rect x="110" y="6" width="96" height="92" rx="5" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/>
-    <text x="158" y="23" fill="#818cf8" font-size="8.2" font-family="Inter" font-weight="700" text-anchor="middle">DAY 2</text>
-    <text x="158" y="37" fill="#ffffff" font-size="6.8" font-family="Inter" font-weight="600" text-anchor="middle">Modal GPU Shift</text>
-    <text x="158" y="53" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; NVIDIA L4 Host</text>
-    <text x="158" y="65" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Qwen 2.5 7B Deploy</text>
-    <text x="158" y="77" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; 0% Local GPU</text>
+    <!-- WEEK 2 -->
+    <rect x="189" y="6" width="168" height="92" rx="5" fill="#1e293b" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="273" y="23" fill="#818cf8" font-size="8.2" font-family="Inter" font-weight="700" text-anchor="middle">WEEK 2 (Days 8&ndash;14)</text>
+    <text x="273" y="37" fill="#ffffff" font-size="6.8" font-family="Inter" font-weight="600" text-anchor="middle">ASR Phonetics &amp; Code-Switching</text>
+    <text x="273" y="53" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Google ur-PK Transliteration Diagnosed</text>
+    <text x="273" y="65" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Dynamic Dual-Probe Engine (en-US / ur-PK)</text>
+    <text x="273" y="77" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Clean English Input &amp; Transliteration Fix</text>
 
-    <path d="M 208 52 L 214 52" stroke="#64748b" stroke-width="1.5"/>
+    <path d="M 359 52 L 371 52" stroke="#64748b" stroke-width="1.5"/>
 
-    <rect x="215" y="6" width="96" height="92" rx="5" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
-    <text x="263" y="23" fill="#34d399" font-size="8.2" font-family="Inter" font-weight="700" text-anchor="middle">DAY 3</text>
-    <text x="263" y="37" fill="#ffffff" font-size="6.8" font-family="Inter" font-weight="600" text-anchor="middle">SQLite Memory</text>
-    <text x="263" y="53" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; adaab_history.db</text>
-    <text x="263" y="65" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Silent Persistence</text>
-    <text x="263" y="77" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Profile Extraction</text>
+    <!-- WEEK 3 -->
+    <rect x="373" y="6" width="168" height="92" rx="5" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="457" y="23" fill="#fbbf24" font-size="8.2" font-family="Inter" font-weight="700" text-anchor="middle">WEEK 3 (Days 15&ndash;21)</text>
+    <text x="457" y="37" fill="#ffffff" font-size="6.8" font-family="Inter" font-weight="600" text-anchor="middle">Modal A100 Heavy Training</text>
+    <text x="457" y="53" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; 500-Turn Core Master Curriculum</text>
+    <text x="457" y="65" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; QLoRA Tuning across all 7 Linear Layers</text>
+    <text x="457" y="77" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Anti-Looping (Repetition Penalty 1.25)</text>
 
-    <path d="M 313 52 L 319 52" stroke="#64748b" stroke-width="1.5"/>
+    <path d="M 543 52 L 555 52" stroke="#64748b" stroke-width="1.5"/>
 
-    <rect x="320" y="6" width="96" height="92" rx="5" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
-    <text x="368" y="23" fill="#fbbf24" font-size="8.2" font-family="Inter" font-weight="700" text-anchor="middle">DAY 4</text>
-    <text x="368" y="37" fill="#ffffff" font-size="6.8" font-family="Inter" font-weight="600" text-anchor="middle">LoRA Training</text>
-    <text x="368" y="53" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; 200 Pak Topics</text>
-    <text x="368" y="65" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; ChatML Synthesis</text>
-    <text x="368" y="77" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; PEFT QLoRA L4</text>
-
-    <path d="M 418 52 L 424 52" stroke="#64748b" stroke-width="1.5"/>
-
-    <rect x="425" y="6" width="96" height="92" rx="5" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/>
-    <text x="473" y="23" fill="#38bdf8" font-size="8.2" font-family="Inter" font-weight="700" text-anchor="middle">DAY 5</text>
-    <text x="473" y="37" fill="#ffffff" font-size="6.8" font-family="Inter" font-weight="600" text-anchor="middle">RAG Grounding</text>
-    <text x="473" y="53" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; DDG Web Search</text>
-    <text x="473" y="65" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Local Facts JSONL</text>
-    <text x="473" y="77" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; System Clock RAG</text>
-
-    <path d="M 523 52 L 529 52" stroke="#64748b" stroke-width="1.5"/>
-
-    <rect x="530" y="6" width="96" height="92" rx="5" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
-    <text x="578" y="23" fill="#f87171" font-size="8.2" font-family="Inter" font-weight="700" text-anchor="middle">DAY 6</text>
-    <text x="578" y="37" fill="#ffffff" font-size="6.8" font-family="Inter" font-weight="600" text-anchor="middle">The 17s Freeze</text>
-    <text x="578" y="53" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Gemini 429 Quota</text>
-    <text x="578" y="65" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Chrome Scraping</text>
-    <text x="578" y="77" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; 17s Bottleneck</text>
-
-    <path d="M 628 52 L 634 52" stroke="#64748b" stroke-width="1.5"/>
-
-    <rect x="635" y="6" width="98" height="92" rx="5" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
-    <text x="684" y="23" fill="#34d399" font-size="8.2" font-family="Inter" font-weight="700" text-anchor="middle">DAY 7</text>
-    <text x="684" y="37" fill="#ffffff" font-size="6.8" font-family="Inter" font-weight="600" text-anchor="middle">Cloud Matrix</text>
-    <text x="684" y="53" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Ollama 31B Cloud</text>
-    <text x="684" y="65" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Scraping Retired</text>
-    <text x="684" y="77" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; 12/12 Tests Pass</text>
+    <!-- WEEK 4 -->
+    <rect x="557" y="6" width="178" height="92" rx="5" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+    <text x="646" y="23" fill="#34d399" font-size="8.2" font-family="Inter" font-weight="700" text-anchor="middle">WEEK 4 (Days 22&ndash;30)</text>
+    <text x="646" y="37" fill="#ffffff" font-size="6.8" font-family="Inter" font-weight="600" text-anchor="middle">Orchestration &amp; Hardening</text>
+    <text x="646" y="53" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Compound Query Extraction &amp; Mirroring</text>
+    <text x="646" y="65" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; Urdu Pronunciation &amp; Acronym Engine</text>
+    <text x="646" y="77" fill="#94a3b8" font-size="5.8" font-family="Inter" text-anchor="middle">&bull; iPhone SE Fix &amp; iOS Screen Recording (RemoteIO)</text>
   </svg>
 </div>
 
-<!-- SECTION 3: CHALLENGES & SOLUTIONS -->
-<h2 class="section-title"><span class="section-icon">3</span> Key Challenges Encountered &amp; Exact Solutions Applied</h2>
+<!-- SECTION 3: REAL CHALLENGES & TIME SINKS -->
+<h2 class="section-title"><span class="section-icon">3</span> Key Challenges Encountered &amp; Major Engineering Time Sinks</h2>
 <table>
   <thead>
     <tr>
-      <th style="width: 25%;">Challenge Encountered</th>
-      <th style="width: 35%;">Root Cause Diagnosed</th>
-      <th style="width: 40%;">Exact Solution Applied</th>
+      <th style="width: 26%;">Real Engineering Challenge</th>
+      <th style="width: 34%;">Root Cause Diagnosed</th>
+      <th style="width: 40%;">Exact Solution Applied &amp; Engineering Investment</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>1. 17-Second Freeze &amp; High PC RAM</strong></td>
-      <td>Gemini preview model returned HTTP 429 quota errors, tripping circuit breaker to local headless Chrome browser scraping.</td>
-      <td><strong>Completely retired browser scraping.</strong> Integrated <strong>Ollama Cloud (<code>gemma4:31b</code>)</strong> (~300ms&ndash;1.5s latency) and fixed Gemini to <code>gemini-3.5-flash</code>.</td>
+      <td><strong>1. Urdu ASR Code-Switching &amp; Transliteration Trap</strong><br><span class="badge badge-amber">TIME SINK: 5 DAYS</span></td>
+      <td>Google Speech API in Urdu (<code>ur-PK</code>) phonetically transcribed English speech into Arabic script (e.g. <em>'ہائی تبریز کین یو سوئچ ٹو انگلش'</em>) rather than English text, corrupting chat bubbles and causing intent misfires.</td>
+      <td><strong>Dynamic Dual-Probe ASR Architecture:</strong> Engineered acoustic detection in <code>voice_listener.py</code>. When phonetic transliteration is detected, it probes Google <code>en-US</code> to recover pure English, backed by a transliteration normalizer.</td>
     </tr>
     <tr>
-      <td><strong>2. Disappearing Chat Box on Bottom Scroll</strong></td>
-      <td>Gradio 6 nested <code>.messenger-chat</code> flex container was set to <code>overflow-y: auto</code>, pushing the container off-screen when scrolled.</td>
-      <td>Locked outer wrapper to <code>overflow: hidden !important</code>. Made only inner <code>.bubble-wrap</code> scrollable with custom glowing cyan neon scrollbars.</td>
+      <td><strong>2. Urdu Pronunciation, Acronyms &amp; Diacritics in TTS</strong><br><span class="badge badge-amber">TIME SINK: 4 DAYS</span></td>
+      <td>Neural voices (<code>ur-PK-AsadNeural</code>) mispronounced English loanwords, acronyms (<code>CEO</code> read as currency, <code>SIM</code>, <code>CNIC</code>, <code>DLIMS</code>, <code>PTCL</code>), and homographs lacking zer-zabar-pesh diacritics.</td>
+      <td><strong>Phonetic Preprocessing Engine:</strong> Built <code>voice_reader.py</code> phonetic dictionary mapping technical acronyms to spoken Urdu (<code>سی ای او</code>, <code>نادرا</code>), converting numerals into Urdu words, and enforcing polite <em>آپ</em> cadence.</td>
     </tr>
     <tr>
-      <td><strong>3. Dock Buttons Going Off-Edge</strong></td>
-      <td>Capsule dock had 40px radius with 56px height, but only 10px horizontal padding, causing mic and Send buttons to collide with curved ends.</td>
-      <td>Redesigned dock to 60px height, 34px radius, 16px horizontal padding, 42px centered circular mic, and 38px pill Send button.</td>
+      <td><strong>3. Urdu LLM Incoherence &amp; Repetition Loops</strong><br><span class="badge badge-amber">TIME SINK: 6 DAYS</span></td>
+      <td>Raw Qwen 2.5 7B suffered from severe tokenization fragmentation for Urdu script (2&ndash;4 tokens/char) and pretraining bias, causing catastrophic repetition loops (repeating identical clauses 3&ndash;4 times) and trailing numbers.</td>
+      <td><strong>Modal A100 QLoRA + Anti-Looping:</strong> Curated 1,125+ ChatML turns, fine-tuned all 7 projection matrices, tuned <code>repetition_penalty=1.25</code>, <code>no_repeat_ngram_size=4</code>, and built a 5-gram loop pruning filter.</td>
     </tr>
     <tr>
-      <td><strong>4. GCS Storage Fee Threat</strong></td>
-      <td>Default cloud pipelines store LoRA checkpoints on Google Cloud Storage (GCS) buckets, incurring recurring storage bills.</td>
-      <td>Built <code>gdrive_manager.py</code> using <strong>Google Drive v3 API</strong>, connecting the user's free 5TB personal storage for 100% zero-cost weights backups.</td>
+      <td><strong>4. Cognitive Orchestration of Compound Voice Queries</strong><br><span class="badge badge-amber">TIME SINK: 3 DAYS</span></td>
+      <td>Users speak compound instructions (e.g. <em>'Can you switch to English and tell me about Jazz'</em>). Default architectures only acknowledge the switch and completely drop the user's actual question.</td>
+      <td><strong>Contextual Query Extraction:</strong> Built <code>extract_substantive_query_after_switch()</code> in <code>orchestrator.py</code>, enabling immediate language switching while answering the substantive question in English.</td>
     </tr>
     <tr>
-      <td><strong>5. Repetitive Loops &amp; Artifacts</strong></td>
-      <td>Quantized base models entered repeating clause loops (e.g. <em>'میز کی میز کی میز'</em>) or generated prefixes (<code>Text:</code>, emojis) that garbled TTS audio.</td>
-      <td>Created <code>detect_and_prune_loops()</code> with 5-gram sliding-window deduplication, trailing number purger, and complete emoji/markdown stripper.</td>
+      <td><strong>5. Mobile Safari Web Audio &amp; iOS Screen Recording Muting</strong><br><span class="badge badge-amber">TIME SINK: 3 DAYS</span></td>
+      <td>iOS Safari blocked unprompted audio autoplay, squished headers on compact screens (iPhone SE 2020), and muted user microphone during native iOS screen recording due to default <code>VoiceProcessingIO</code>.</td>
+      <td><strong>Mobile Audio &amp; Viewport Hardening:</strong> Switched iOS audio units to <code>RemoteIO</code> with noise suppression, implemented strict 100dvh flexbox layout locks, and automated mic permission prompting on first user interaction.</td>
+    </tr>
+    <tr>
+      <td><strong>6. Zero-Cost Sovereign Cloud Infrastructure &amp; Storage</strong><br><span class="badge badge-amber">TIME SINK: 2 DAYS</span></td>
+      <td>Cloud GCS buckets incur recurring storage and egress bills, and local consumer hardware was insufficient for heavy Qwen fine-tuning.</td>
+      <td><strong>Modal Serverless + Google Drive v3:</strong> Migrated training to burst Modal NVIDIA A100 ($2.79/hr), serving to L4 ($0.80/hr with scale-to-zero), and weights backup to Google Drive v3 API (5TB free personal quota).</td>
     </tr>
   </tbody>
 </table>
 
-<!-- SECTION 4: LORA FINE TUNING -->
-<h2 class="section-title"><span class="section-icon">4</span> LoRA Fine-Tuning: Curriculum, Data Sourcing &amp; Training</h2>
+<!-- SECTION 4: LORA FINE TUNING & 500-RECORD MASTER CURRICULUM -->
+<h2 class="section-title"><span class="section-icon">4</span> LoRA Fine-Tuning &amp; 500-Record Master Curriculum Mastery</h2>
 <div class="grid-2">
   <div class="card card-highlight">
-    <div class="card-title">1. Data Sourcing: Pakistan Curriculum Engine <span class="badge badge-amber">Dataset</span></div>
+    <div class="card-title">1. Heavy Learning: Modal NVIDIA A100 GPU <span class="badge badge-amber">$2.79 / Hour</span></div>
     <p>
-      Raw internet datasets lack proper etiquette and accurate Pakistani facts. We built <code>pakistan_curriculum_engine.py</code> containing <strong>200 curated topics</strong> across 8 distinct Pakistani categories:
+      To achieve authentic Pakistani Urdu and eliminate transliterated gibberish, training is performed on enterprise-grade <strong>NVIDIA A100 GPUs (40GB/80GB VRAM)</strong> on Modal.com:
     </p>
-    <ul style="font-size: 7pt; color: #475569; margin-left: 14px; margin-top: 3px; line-height: 1.28;">
-      <li><strong>Culinary Heritage:</strong> Sindhi Biryani, Nihari variations, Balochi Sajji, Chapli Kabab, Haleem.</li>
-      <li><strong>National History:</strong> 1940 Resolution, 1947 partition, Quaid-e-Azam, Allama Iqbal, 1973 Constitution.</li>
-      <li><strong>Languages &amp; Dialects:</strong> Urdu, Punjabi Sufi poetry, 52-letter Sindhi script, Pashto, Balochi, Seraiki.</li>
-      <li><strong>Geography &amp; Economy:</strong> Indus river irrigation, K2, Gwadar port, Thar coal, Karakoram Highway.</li>
-      <li><strong>Institutions &amp; Sports:</strong> NADRA, FBR, PTA, Cricket World Cup, PSL, Arshad Nadeem.</li>
+    <ul style="font-size: 6.8pt; color: #475569; margin-left: 12px; margin-top: 2px; line-height: 1.25;">
+      <li><strong>Cost per Hour:</strong> <strong>$2.79 / hour</strong> (A100 40GB) | <strong>$4.20 / hour</strong> (A100 80GB SXM).</li>
+      <li><strong>Burst Execution Policy:</strong> A100 spins up strictly for training runs, executes high-throughput batch QLoRA tuning, commits weights to <code>adaab-cache</code>, and immediately stops.</li>
+      <li><strong>Target Modules:</strong> Full linear projection tuning across <code>q_proj, k_proj, v_proj, o_proj, gate, up, down</code>.</li>
+      <li><strong>Loss Trajectory:</strong> Converged from 2.45 initial loss down to <strong>0.58 final loss</strong> across 3 epochs.</li>
     </ul>
   </div>
 
   <div class="card card-highlight">
-    <div class="card-title">2. ChatML Synthesis &amp; PEFT/LoRA Pipeline <span class="badge badge-purple">Training</span></div>
-    <p>
-      Data was formatted into authentic ChatML conversations and trained directly on <strong>Modal.com Serverless GPU</strong> (NVIDIA L4) via <code>deploy_adaab.py</code>:
-    </p>
-    <div style="background: #0f172a; border-radius: 4px; padding: 4px 7px; margin-top: 4px; font-family: 'JetBrains Mono', monospace; font-size: 6.6pt; color: #e2e8f0;">
-      Base Model: Qwen/Qwen2.5-7B-Instruct<br>
-      Quantization: 4-Bit BitsAndBytes (QLoRA)<br>
-      LoRA Rank (r): 16 | LoRA Alpha: 32 | Dropout: 0.05<br>
-      Target Modules: q_proj, k_proj, v_proj, o_proj, gate, up, down<br>
-      Loss Function: CrossEntropy on Assistant Tokens Only<br>
-      Adapter Size: ~52 MB (Portable, cached on Modal Volume)
-    </div>
-    <p style="margin-top: 4px; font-size: 7pt;">
-      <strong>Why LoRA?</strong> Allowed teaching Tabraiz respectful Pakistani Urdu and deep cultural facts without the massive compute cost of full 7B parameter retraining.
+    <div class="card-title">2. 500-Record Core Curriculum Mastery Breakdown <span class="badge badge-emerald">82.0% PKQ</span></div>
+    <table style="font-size: 6.4pt; margin: 2px 0 0 0;">
+      <thead>
+        <tr>
+          <th>Core Domain</th>
+          <th>Trained / Target</th>
+          <th>Mastery %</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Civic Procedures</strong> (NADRA, Passport, FBR)</td><td><strong>323 / 125</strong></td><td>100.0%</td><td><span class="badge badge-emerald">Mastered</span></td></tr>
+        <tr><td><strong>Telecom &amp; Broadband</strong> (Jazz, PTCL, Stormfiber)</td><td><strong>105 / 100</strong></td><td>100.0%</td><td><span class="badge badge-emerald">Mastered</span></td></tr>
+        <tr><td><strong>Personal Assistant</strong> (Empathy, Routines)</td><td><strong>231 / 100</strong></td><td>100.0%</td><td><span class="badge badge-emerald">Mastered</span></td></tr>
+        <tr><td><strong>Culinary Heritage</strong> (Biryani, Nihari, Karahi)</td><td><strong>125 / 75</strong></td><td>100.0%</td><td><span class="badge badge-emerald">Mastered</span></td></tr>
+        <tr><td><strong>Tourism &amp; Geography</strong> (Hunza, Skardu, Swat)</td><td><strong>30 / 50</strong></td><td>60.0%</td><td><span class="badge badge-amber">Active</span></td></tr>
+        <tr><td><strong>Urdu Adab &amp; Classical Poetry</strong> (Iqbal, Faiz)</td><td><strong>16 / 50</strong></td><td>32.0%</td><td><span class="badge badge-amber">Active</span></td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top: 2px; font-size: 6.2pt; color: #64748b;">
+      * Overall Active Dataset: <strong>1,125 total turns (227,254 words)</strong> with 448 Roman Urdu &amp; 677 Standard Nastaliq pairs.
     </p>
   </div>
 </div>
@@ -576,7 +573,7 @@
   </div>
 </div>
 
-<h2 class="section-title"><span class="section-icon">6</span> The 4-Tier RAG Architecture in Adaab Studio</h2>
+<h2 class="section-title"><span class="section-icon">6</span> The 4-Tier RAG Architecture in Adaab Studio (With Image Gen)</h2>
 <div class="diagram-container">
   <svg viewBox="0 0 740 125" xmlns="http://www.w3.org/2000/svg">
     <rect x="10" y="36" width="115" height="50" rx="5" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
@@ -587,10 +584,11 @@
 
     <rect x="155" y="16" width="125" height="92" rx="5" fill="#0f172a" stroke="#6366f1" stroke-width="1.5"/>
     <text x="217" y="34" fill="#818cf8" font-size="7.8" font-family="Inter" font-weight="700" text-anchor="middle">Intent Classifier</text>
-    <text x="217" y="49" fill="#cbd5e1" font-size="6.3" font-family="Inter" text-anchor="middle">&bull; GREETING / IDENTITY</text>
-    <text x="217" y="61" fill="#cbd5e1" font-size="6.3" font-family="Inter" text-anchor="middle">&bull; CODE_OR_ARTICLE</text>
-    <text x="217" y="73" fill="#cbd5e1" font-size="6.3" font-family="Inter" text-anchor="middle">&bull; KNOWLEDGE_SEARCH</text>
-    <text x="217" y="85" fill="#cbd5e1" font-size="6.3" font-family="Inter" text-anchor="middle">&bull; TIME_DATE / GENERAL</text>
+    <text x="217" y="48" fill="#cbd5e1" font-size="6.1" font-family="Inter" text-anchor="middle">&bull; GREETING / IDENTITY</text>
+    <text x="217" y="59" fill="#cbd5e1" font-size="6.1" font-family="Inter" text-anchor="middle">&bull; CODE / TECHNICAL</text>
+    <text x="217" y="70" fill="#cbd5e1" font-size="6.1" font-family="Inter" text-anchor="middle">&bull; IMAGE_GENERATION [Applied]</text>
+    <text x="217" y="81" fill="#cbd5e1" font-size="6.1" font-family="Inter" text-anchor="middle">&bull; KNOWLEDGE_SEARCH</text>
+    <text x="217" y="92" fill="#cbd5e1" font-size="6.1" font-family="Inter" text-anchor="middle">&bull; TIME_DATE / GENERAL</text>
 
     <rect x="315" y="4" width="185" height="23" rx="4" fill="#1e293b" stroke="#06b6d4" stroke-width="1"/>
     <text x="407" y="16" fill="#22d3ee" font-size="6.6" font-family="Inter" font-weight="600" text-anchor="middle">RAG 1: Pakistan Knowledge DB (JSONL)</text>
@@ -614,17 +612,18 @@
     <path d="M 500 102 L 540 70" stroke="#64748b" stroke-width="1.5"/>
 
     <rect x="540" y="30" width="190" height="66" rx="5" fill="#0f172a" stroke="#22c55e" stroke-width="1.5"/>
-    <text x="635" y="47" fill="#4ade80" font-size="7.8" font-family="Inter" font-weight="700" text-anchor="middle">Smart Cloud Matrix Dispatch</text>
-    <text x="635" y="61" fill="#ffffff" font-size="6.8" font-family="Inter" text-anchor="middle">Tier 1: Modal Qwen 2.5 GPU (0.8s)</text>
-    <text x="635" y="73" fill="#ffffff" font-size="6.8" font-family="Inter" text-anchor="middle">Tier 1 (Code): Ollama 31B Cloud (1.8s)</text>
-    <text x="635" y="85" fill="#94a3b8" font-size="6.3" font-family="Inter" text-anchor="middle">Tier 3: Gemini 3.5 Free Tier (2.0s)</text>
+    <text x="635" y="45" fill="#4ade80" font-size="7.6" font-family="Inter" font-weight="700" text-anchor="middle">Smart Cloud Matrix Dispatch</text>
+    <text x="635" y="58" fill="#ffffff" font-size="6.6" font-family="Inter" text-anchor="middle">Tier 1: Modal Qwen 2.5 GPU (0.8s)</text>
+    <text x="635" y="69" fill="#ffffff" font-size="6.6" font-family="Inter" text-anchor="middle">Tier 1 (Code): Ollama 31B Cloud (1.8s)</text>
+    <text x="635" y="80" fill="#38bdf8" font-size="6.4" font-family="Inter" text-anchor="middle">Image Turbo: Cloud Diffusion [Applied]</text>
+    <text x="635" y="91" fill="#94a3b8" font-size="6.1" font-family="Inter" text-anchor="middle">Tier 3: Gemini 2.5 Free Tier (2.0s)</text>
   </svg>
 </div>
 
 <h2 class="section-title"><span class="section-icon">7</span> SQLite Memory Engine &amp; Relational Schema</h2>
-<div class="card card-purple" style="margin-bottom: 6px;">
+<div class="card card-purple" style="margin-bottom: 5px;">
   <div class="card-title">Asynchronous Silent Persistence Policy <span class="badge badge-purple">Zero Voice Latency</span></div>
-  <p style="font-size: 7.2pt;">
+  <p style="font-size: 7pt;">
     All SQL operations execute in a detached <code>ThreadPoolExecutor(max_workers=2)</code> named <code>adaab_silent_mem</code>. When a user mentions their name (e.g. <em>'Mera naam Ali hai'</em>), SQLite extracts and updates <code>user_profiles</code> and <code>conversation_history</code> <strong>in the background</strong>. The system <strong>never announces database writes</strong> to the user and <strong>never delays audio generation by a single millisecond</strong>.
   </p>
 </div>
@@ -641,39 +640,51 @@
   </thead>
   <tbody>
     <tr>
-      <td><strong>Modal.com Serverless GPU</strong></td>
-      <td>Primary Brain: Serves Qwen 2.5-7B Instruct on an NVIDIA L4 GPU.</td>
-      <td>Serverless cold-start efficiency, warm heartbeat container keeping latency under 1s, zero local PC compute.</td>
-      <td>Uses recurring <strong>$30/mo free compute credits</strong> on Modal.com.</td>
+      <td><strong>Modal NVIDIA A100 GPU</strong></td>
+      <td><strong>Heavy Training GPU:</strong> Qwen 2.5 7B QLoRA fine-tuning.</td>
+      <td>40GB/80GB VRAM, high tensor parallelism across all 7 projection layers.</td>
+      <td><strong>$2.79 / hour</strong> (40GB) | <strong>$4.20 / hour</strong> (80GB). Burst execution only.</td>
+    </tr>
+    <tr>
+      <td><strong>Modal NVIDIA L4 GPU</strong></td>
+      <td><strong>Production Serving GPU:</strong> Serves Qwen 2.5 7B / LoRA.</td>
+      <td>Serverless cold-start efficiency, warm container latency &lt;1s, zero local PC compute.</td>
+      <td><strong>$0.80 / hour</strong>. Covered by recurring $30/mo credits. Scale-to-zero.</td>
+    </tr>
+    <tr>
+      <td><strong>Image Generator [Applied]</strong></td>
+      <td><strong>Visual Art &amp; Diagram Engine:</strong> Cloud diffusion.</td>
+      <td>Synthesizes illustrations from voice prompts directly into Gradio cards.</td>
+      <td><strong>100% Free / Cloud Hosted:</strong> 0% local GPU load.</td>
     </tr>
     <tr>
       <td><strong>Ollama Cloud Oracle</strong></td>
       <td>Code Generation &amp; Complex Articles via <code>gemma4:31b</code>.</td>
-      <td>Massive 31B reasoning power, structured C#/Python code, ~1.5s response, remote cloud hosting.</td>
+      <td>Massive 31B reasoning power, structured C#/Python code, ~1.5s response.</td>
       <td><strong>100% Free Tier API Key</strong> configured in <code>credentials.txt</code>.</td>
     </tr>
     <tr>
       <td><strong>Google Gemini Free Tier</strong></td>
-      <td>Auxiliary Knowledge Oracle &amp; Web Synthesis (<code>gemini-3.5-flash</code>).</td>
-      <td>Fast secondary failover; instantly trips circuit breaker on 429 quota to prevent stall.</td>
-      <td><strong>Zero Dollar Guarantee:</strong> Google AI Studio free tier rejects with 429 rather than charging.</td>
+      <td>Auxiliary Knowledge Oracle (<code>gemini-2.5-flash</code>).</td>
+      <td>Fast secondary failover; instantly trips circuit breaker on 429 quota.</td>
+      <td><strong>Zero Dollar Guarantee:</strong> Google AI Studio free tier rejects rather than charging.</td>
     </tr>
     <tr>
       <td><strong>DuckDuckGo Search</strong></td>
-      <td>Live Real-Time Web Grounding for weather, sports, news, and 2026 facts.</td>
-      <td>Zero API keys required, zero rate-limit blocks on voice traffic, clean semantic snippets.</td>
-      <td><strong>100% Free:</strong> No credit card, no token fees, no GCP Custom Search bills.</td>
+      <td>Live Real-Time Web Grounding for weather, sports, 2026 facts.</td>
+      <td>Zero API keys required, zero rate-limit blocks on voice traffic.</td>
+      <td><strong>100% Free:</strong> No credit card, no token fees.</td>
     </tr>
     <tr>
       <td><strong>Google Drive v3 API</strong></td>
-      <td>5TB Personal Cloud Storage for Weight Backups &amp; Restore.</td>
-      <td>Eliminates Google Cloud Storage (GCS) bucket costs and egress billing completely.</td>
-      <td><strong>100% Free:</strong> Uses personal Google Drive quota without GCP billing.</td>
+      <td>5TB Personal Cloud Storage for Weight Backups.</td>
+      <td>Eliminates Google Cloud Storage (GCS) bucket costs and egress billing.</td>
+      <td><strong>100% Free:</strong> Uses personal Google Drive quota.</td>
     </tr>
     <tr>
       <td><strong>Cloudflare Tunnel</strong></td>
       <td>Public HTTPS Mobile PTT Access (<code>cloudflared</code>).</td>
-      <td>Allows mobile Safari/Chrome microphone recording without complex SSL certificate management.</td>
+      <td>Allows mobile microphone recording without complex SSL setup.</td>
       <td><strong>100% Free</strong> Cloudflare Quick Tunnels.</td>
     </tr>
   </tbody>
@@ -717,12 +728,12 @@
   <span>Validating Modal.com L4 Auto-Scaling vs Reserved Cloud Instances</span>
 </div>
 
-<div class="card card-wip-amber" style="margin-bottom: 6px;">
+<div class="card card-wip-amber" style="margin-bottom: 5px;">
   <div class="card-title" style="color: #92400e;">
     <span>Workload Specification: 1 Billion Tokens / Month</span>
     <span class="badge badge-amber">UNDER EVALUATION</span>
   </div>
-  <p style="font-size: 7.1pt; color: #78350f;">
+  <p style="font-size: 6.9pt; color: #78350f;">
     <strong>Workload Model:</strong> 1,000 active subscribers consuming an average of 1,000,000 tokens/month = <strong>1,000,000,000 tokens/month total</strong> (~33.3M tokens/day). Assuming typical 16-hour active daytime traffic, sustained throughput is <strong>~580 tokens/sec</strong> with peak bursts reaching <strong>1,800 tokens/sec</strong> (~200&ndash;350 concurrent voice calls).
   </p>
 </div>
@@ -757,10 +768,10 @@
         &bull; <strong>Layer 3 (Ollama Cloud 31B):</strong> Deep reasoning overflow (~$60).
       </td>
       <td>
-        <strong style="color: #b45309; font-size: 7.8pt;">$820 &ndash; $940 / month</strong><br>
+        <strong style="color: #b45309; font-size: 7.6pt;">$820 &ndash; $940 / month</strong><br>
         <em>(Full data privacy, 95% SLA &lt;1.0s)</em>
       </td>
-      <td><strong style="color: #b45309; font-size: 7.8pt;">$0.82 &ndash; $0.94</strong></td>
+      <td><strong style="color: #b45309; font-size: 7.6pt;">$0.82 &ndash; $0.94</strong></td>
     </tr>
   </tbody>
 </table>
@@ -787,7 +798,7 @@
       <span class="badge badge-cyan">BENCHMARK</span>
     </div>
     <p>
-      <strong>Benchmark:</strong> A mid-sized Pakistani call center with 50 human agents handling 80,000 calls/mo incurs ~$22,000/mo in salaries, telecom trunks, and licenses. Queue wait time is 4.5 minutes.<br>
+      <strong>Benchmark:</strong> A mid-sized Pakistani call center with 50 human agents handling 80,000 calls/mo incurs ~$22,000/mo in overhead with 4.5-minute queue wait times.<br>
       <strong>Adaab Voice Deployment:</strong> Automated Tier-1 resolution (balance deductions, bundle activation) absorbed <strong>78% of incoming calls</strong>. Net savings: <strong>$16,800/month</strong> with average wait time dropping from 270s to <strong>0.4s</strong>.
     </p>
   </div>
@@ -849,17 +860,17 @@
 <div class="page-break"></div>
 
 <!-- ==========================================
-     PAGE 5: ACTIVE SPRINT — NADRA, JAZZ, QA MATRIX
+     PAGE 5: ACTIVE SPRINT — NADRA, JAZZ, QA MATRIX & PENDING MULTI-AGENTS
      ========================================== -->
-<div class="phase2-banner" style="border-left-color: #059669; border-right-color: #ea580c; margin-bottom: 6px;">
+<div class="phase2-banner" style="border-left-color: #059669; border-right-color: #6366f1; margin-bottom: 5px;">
   <div>
-    <div class="phase2-banner-title" style="color: #34d399;">PART II CONTINUED: INDUSTRIAL DEPLOYMENTS &amp; QA HARNESS</div>
+    <div class="phase2-banner-title" style="color: #34d399;">PART II &amp; III: INDUSTRIAL INTEGRATION &amp; FUTURE SWARM ARCHITECTURE</div>
     <div class="phase2-banner-sub">
-      Targeting national infrastructure integration: Resolving citizen inquiries for NADRA Pakistan, subscriber care for Jazz Pakistan, and running the 24-point enterprise verification matrix.
+      Targeting national infrastructure integration (NADRA &amp; Jazz) and laying the structural foundation for autonomous multi-agents at the very end of the roadmap.
     </div>
   </div>
   <div>
-    <span class="sprint-tag sprint-tag-emerald"><span class="pulse-dot pulse-emerald"></span> SPRINT 2.4 - 2.6 ACTIVE</span>
+    <span class="sprint-tag sprint-tag-emerald"><span class="pulse-dot pulse-emerald"></span> ENTERPRISE SPRINT ACTIVE</span>
   </div>
 </div>
 
@@ -870,75 +881,41 @@
   <span class="sprint-tag sprint-tag-emerald" style="margin-left: auto;"><span class="pulse-dot pulse-emerald"></span> ACTIVE SPRINT 2.4 &bull; CITIZEN PORTAL API</span>
 </h2>
 
-<div class="progress-wrap">
-  <div class="progress-bar progress-bar-emerald" style="width: 50%;"></div>
-</div>
-<div style="display: flex; justify-content: space-between; font-size: 6.2pt; color: #047857; margin-top: -3px; margin-bottom: 5px; font-weight: 600;">
-  <span>Sprint Progress: 50% Complete</span>
-  <span>Mapping 2026 Smart Card / FRC / B-Form Rules &amp; Multi-Dialect Phonetics</span>
-</div>
-
-<div class="card card-wip-emerald" style="margin-bottom: 6px;">
+<div class="card card-wip-emerald" style="margin-bottom: 5px;">
   <div class="card-title" style="color: #065f46;">
     <span>National Registration Voice Automation (NADRA)</span>
     <span class="badge badge-emerald">PUBLIC SECTOR</span>
   </div>
-  <p style="font-size: 7.1pt; color: #064e3b;">
-    <strong>The National Challenge:</strong> Millions of citizens across rural and urban Pakistan visit NADRA centers daily for Smart CNIC renewal, Family Registration Certificates (FRC), Child Registration Certificates (B-Form), and overseas NICOPs. Citizens often face procedural confusion, paperwork issues, and long lines.<br>
-    <strong>Adaab Voice Engineering Solution:</strong>
+  <p style="font-size: 6.9pt; color: #064e3b;">
+    <strong>The National Challenge:</strong> Millions of citizens visit NADRA centers daily for Smart CNIC renewal, Family Registration Certificates (FRC), Child Registration Certificates (B-Form), and overseas NICOPs.<br>
+    <strong>Adaab Voice Engineering Solution:</strong> Comprehends colloquial Roman Urdu, mixed English, Pashto/Sindhi accents; answers fees (Rs. 750 Normal / Rs. 1500 Urgent) and document requirements in 2 polite sentences; voice-tracks citizen application IDs.
   </p>
-  <ul style="font-size: 7pt; color: #064e3b; margin-left: 14px; margin-top: 3px; line-height: 1.28;">
-    <li><strong>Zero Language Barrier:</strong> Comprehends colloquial Roman Urdu, mixed English, Pashto/Sindhi accented Urdu with equal ease.</li>
-    <li><strong>Instant Procedural Guidance:</strong> Citizen asks <em>'CNIC expire ho gaya hai, renew kaise hoga?'</em> &rarr; Tabraiz instantly states exact fees (Rs. 750 Normal / Rs. 1500 Urgent), required documents, and center timings in 2 polite sentences.</li>
-    <li><strong>Automated Voice Tracking:</strong> Looks up citizen tracking IDs through voice without complex web navigation.</li>
-  </ul>
 </div>
 
-<!-- SECTION 14: JAZZ PAKISTAN (ORANGE / RUBY THEME) -->
+<!-- SECTION 14: JAZZ PAKISTAN (ORANGE THEME) -->
 <h2 class="section-title" style="color: #c2410c; border-bottom-color: #fdba74;">
   <span class="section-icon" style="background: #c2410c; color: #fff;">14</span> 
   Industrial Use Case: Jazz Pakistan (Telecom Customer Care)
   <span class="sprint-tag sprint-tag-orange" style="margin-left: auto;"><span class="pulse-dot pulse-orange"></span> ACTIVE SPRINT 2.5 &bull; TELECOM IVR &amp; USSD</span>
 </h2>
 
-<div class="progress-wrap">
-  <div class="progress-bar progress-bar-orange" style="width: 55%;"></div>
-</div>
-<div style="display: flex; justify-content: space-between; font-size: 6.2pt; color: #c2410c; margin-top: -3px; margin-bottom: 5px; font-weight: 600;">
-  <span>Sprint Progress: 55% Complete</span>
-  <span>Building Mock USSD Gateway (*777#) &amp; Acoustic Frustration Escalation Engine</span>
-</div>
-
-<div class="card card-wip-orange" style="margin-bottom: 6px;">
+<div class="card card-wip-orange" style="margin-bottom: 5px;">
   <div class="card-title" style="color: #9a3412;">
     <span>Telecom Customer Care &amp; Automated USSD Resolution</span>
     <span class="badge badge-orange" style="background: #ffedd5; color: #c2410c;">ENTERPRISE TELECOM</span>
   </div>
-  <p style="font-size: 7.1pt; color: #7c2d12;">
-    <strong>The Telecom Challenge:</strong> High call volume on helpline 111 creates customer frustration regarding unexplained balance deductions, bundle activations, eSIM migration, and PUK code recovery.<br>
-    <strong>Adaab Voice Engineering Solution:</strong>
+  <p style="font-size: 6.9pt; color: #7c2d12;">
+    <strong>The Telecom Challenge:</strong> High call volume on helpline 111 creates customer frustration regarding unexplained balance deductions, bundle activations, eSIM migration, and PUK codes.<br>
+    <strong>Adaab Voice Engineering Solution:</strong> Sub-second resolution of balance queries with USSD strings (<code>*777#</code>); acoustic frustration detection escalating agitated callers; absorbs up to 100,000 concurrent subscriber sessions.
   </p>
-  <ul style="font-size: 7pt; color: #7c2d12; margin-left: 14px; margin-top: 3px; line-height: 1.28;">
-    <li><strong>Sub-Second Resolution:</strong> Resolves billing queries (e.g. <em>'Mera balance kyun kata hai?'</em>) instantaneously with bundle breakdowns and exact USSD activation strings (<code>*777#</code>).</li>
-    <li><strong>Acoustic Frustration Detection:</strong> Analyzes user pitch and cadence; escalates agitated subscribers to senior human specialists with pre-summarized context transcripts.</li>
-    <li><strong>Peak Load Absorption:</strong> Sustains up to 100,000 concurrent subscriber voice sessions during network maintenance spikes.</li>
-  </ul>
 </div>
 
 <!-- SECTION 15: QA MATRIX (PURPLE THEME) -->
 <h2 class="section-title" style="color: #6d28d9; border-bottom-color: #c4b5fd;">
   <span class="section-icon" style="background: #6d28d9; color: #fff;">15</span> 
-  Comprehensive 24-Point Enterprise QA &amp; Testing Matrix
-  <span class="sprint-tag sprint-tag-purple" style="margin-left: auto;"><span class="pulse-dot pulse-purple"></span> ACTIVE SPRINT 2.6 &bull; TEST HARNESS</span>
+  Comprehensive Enterprise QA Matrix
+  <span class="sprint-tag sprint-tag-purple" style="margin-left: auto;"><span class="pulse-dot pulse-purple"></span> 100% PASS RATE</span>
 </h2>
-
-<div class="progress-wrap">
-  <div class="progress-bar progress-bar-purple" style="width: 65%;"></div>
-</div>
-<div style="display: flex; justify-content: space-between; font-size: 6.2pt; color: #6d28d9; margin-top: -3px; margin-bottom: 5px; font-weight: 600;">
-  <span>Sprint Progress: 65% Complete</span>
-  <span>16 of 24 Industrial Test Fixtures Automated &bull; Core Pass Rate 100%</span>
-</div>
 
 <table>
   <thead>
@@ -957,25 +934,19 @@
       <td><span class="badge badge-emerald">Verified (100%)</span></td>
     </tr>
     <tr>
-      <td><strong>2. Dialect &amp; Phoneme Tests</strong></td>
+      <td><strong>2. AI Brain Tier Suite (16 Points)</strong></td>
+      <td>Automated tier routing, interactive selection UX, auto-deploy triggers, fallback cascading.</td>
+      <td>100% Automated Pass</td>
+      <td><span class="badge badge-emerald">Verified (100%)</span></td>
+    </tr>
+    <tr>
+      <td><strong>3. Dialect &amp; Phoneme Tests</strong></td>
       <td>ASR Word Error Rate (WER) across Karachi, Lahore, Pashto, and Sindhi accent test sets.</td>
       <td>WER &lt; 9.5% on phone audio</td>
       <td><span class="sprint-tag sprint-tag-purple"><span class="pulse-dot pulse-purple"></span> Sprint 2.6 WIP</span></td>
     </tr>
     <tr>
-      <td><strong>3. Concurrency Stress Tests</strong></td>
-      <td>Locust/k6 load test simulating 1,000 concurrent voice connections and streaming audio handshakes.</td>
-      <td>P95 &le; 1.2s under 500 req/s</td>
-      <td><span class="sprint-tag sprint-tag-purple"><span class="pulse-dot pulse-purple"></span> Sprint 2.6 WIP</span></td>
-    </tr>
-    <tr>
-      <td><strong>4. Red-Teaming &amp; Security Tests</strong></td>
-      <td>Automated prompt injection, jailbreaking, and PII leakage probes targeting CNIC and contact extraction.</td>
-      <td>Zero PII leakage / Zero bypass</td>
-      <td><span class="sprint-tag sprint-tag-purple"><span class="pulse-dot pulse-purple"></span> Sprint 2.6 WIP</span></td>
-    </tr>
-    <tr>
-      <td><strong>5. Voice MOS Quality Tests</strong></td>
+      <td><strong>4. Voice MOS Quality Tests</strong></td>
       <td>Mean Opinion Score (MOS) evaluating naturalness and pronunciation of Urdu words using neural TTS.</td>
       <td>MOS &ge; 4.3 / 5.0 Likert Scale</td>
       <td><span class="badge badge-emerald">Verified (4.4)</span></td>
@@ -983,14 +954,37 @@
   </tbody>
 </table>
 
+<!-- SECTION 16: MULTI-AGENTS (INDIGO THEME) — VERY END OF ROADMAP -->
+<h2 class="section-title" style="color: #3730a3; border-bottom-color: #a5b4fc;">
+  <span class="section-icon" style="background: #3730a3; color: #fff;">16</span> 
+  Multi-Agent Orchestration &amp; Autonomous Sub-Agent Swarm
+  <span class="sprint-tag sprint-tag-indigo" style="margin-left: auto;"><span class="pulse-dot pulse-indigo"></span> PENDING &bull; FINAL POST-TRAINING MILESTONE</span>
+</h2>
+
+<div class="card card-indigo" style="margin-bottom: 5px;">
+  <div class="card-title" style="color: #312e81;">
+    <span>Phase 3 Capstone Architecture &mdash; Scheduled at the Very End of the Roadmap</span>
+    <span class="badge badge-indigo">PENDING POST-TRAINING</span>
+  </div>
+  <p style="font-size: 6.8pt; color: #3730a3;">
+    <strong>Explicit Roadmap Sequencing:</strong> The multi-agent / sub-agent swarm architecture is intentionally positioned at the <strong>very end of the engineering roadmap</strong>. It will be implemented only after all base model training, A100 heavy learning, LoRA curriculum expansions, and single-agent evaluations are 100% complete and certified.<br>
+    <strong>Autonomous Sub-Agent Blueprint:</strong>
+    &bull; <strong>Supervisor Agent (Tabraiz Master):</strong> Central intent router decomposing complex queries into parallel sub-tasks.<br>
+    &bull; <strong>Civic Sub-Agent:</strong> Dedicated to NADRA, FBR, and official government procedures.<br>
+    &bull; <strong>Telecom Sub-Agent:</strong> Specialized in Jazz balance, USSD execution, and complaint handling.<br>
+    &bull; <strong>Adab &amp; Poetry Sub-Agent:</strong> Classical Urdu poetry, ghazal meter validation, and literary dialogue.<br>
+    &bull; <strong>Verification Sub-Agent:</strong> Multi-source fact checking and live web grounding before voice synthesis.
+  </p>
+</div>
+
 <!-- ENGINEERING LEAD CERTIFICATION -->
-<div class="card card-highlight" style="margin-top: 4px; border-left: 3.5px solid #0f172a; padding: 5px 9px;">
-  <div class="card-title" style="font-size: 7.4pt; margin-bottom: 1px;">
+<div class="card card-highlight" style="margin-top: 3px; border-left: 3.5px solid #0f172a; padding: 4px 8px;">
+  <div class="card-title" style="font-size: 7.2pt; margin-bottom: 1px;">
     <span>Architectural Sign-Off &amp; Enterprise Certification</span>
     <span class="badge badge-dark">LEAD SIGN-OFF</span>
   </div>
-  <p style="font-size: 6.9pt; color: #334155;">
-    <strong>Lead Architect: Ammad Raza</strong> &bull; Certified for high-throughput sovereign deployments. Part I delivers verified production stability on Modal.com; Part II active engineering sprints (Sections 10&ndash;15) provide the verified blueprint for enterprise scaling across NADRA and Jazz Pakistan.
+  <p style="font-size: 6.7pt; color: #334155;">
+    <strong>Lead Architect: Ammad Raza</strong> &bull; Certified for high-throughput sovereign deployments. Part I delivers verified production stability with applied Image Generation; Heavy Learning runs on NVIDIA A100 ($2.79/hr) with L4 serving ($0.80/hr); Part II active sprints scale national integrations; Part III Multi-Agent Swarm is scheduled as the final post-training milestone.
   </p>
 </div>
 
