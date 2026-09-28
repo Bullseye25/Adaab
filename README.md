@@ -6,6 +6,18 @@
 
 ---
 
+## 🎬 Live Voice Demo & Conversational Interaction
+
+Experience Tabraiz A.I in action — real-time bilingual voice interaction, low-latency conversational speech synthesis, and fluid code-switching on mobile Safari:
+
+https://github.com/user-attachments/assets/tabraiz_voice_demo.mp4
+
+<video src="assets/videos/tabraiz_voice_demo.mp4" controls="controls" width="100%" style="max-height: 540px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+  Your browser does not support playing this video directly. <a href="assets/videos/tabraiz_voice_demo.mp4">Click here to download and play the video.</a>
+</video>
+
+---
+
 ## 📖 Introduction: What is Tabraiz A.I?
 
 **Tabraiz A.I** is an autonomous, bilingual conversational voice agent engineered specifically for Pakistan. 
