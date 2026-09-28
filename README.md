@@ -6,14 +6,14 @@
 
 ---
 
-## 🎬 Live Voice Demo & Conversational Interaction
+## 📹 Video Demonstration & Recorded Interaction
 
-Experience Tabraiz A.I in action — real-time bilingual voice interaction, low-latency conversational speech synthesis, and fluid code-switching on mobile Safari:
+Watch a recorded walkthrough demonstrating Tabraiz A.I's bilingual voice interaction, low-latency speech synthesis, and code-switching on mobile Safari:
 
-[![Watch Live Voice Demo](assets/videos/video_banner_card.jpg)](https://drive.google.com/file/d/1nsiN9LjdhBBjIunDu1Np1AJuUm99p4mk/view?usp=sharing)
+[![Watch Demo Recording](assets/videos/video_banner_card.jpg)](https://drive.google.com/file/d/1nsiN9LjdhBBjIunDu1Np1AJuUm99p4mk/view?usp=sharing)
 
-> 📺 **[▶ Click Here to Watch the Live Mobile Voice Demo (Google Drive HD Stream)](https://drive.google.com/file/d/1nsiN9LjdhBBjIunDu1Np1AJuUm99p4mk/view?usp=sharing)**  
-> *(Demonstrates hands-free Urdu/English voice interaction, dynamic dual-probe ASR, and sub-second voice onset on iOS).*
+> 📺 **[▶ Click Here to Watch the Video Demonstration (Google Drive HD Stream)](https://drive.google.com/file/d/1nsiN9LjdhBBjIunDu1Np1AJuUm99p4mk/view?usp=sharing)**  
+> *(Recorded screen walkthrough demonstrating Urdu/English voice interaction, dynamic dual-probe ASR, and voice synthesis on iOS).*
 
 ---
 
